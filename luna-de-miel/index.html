@@ -20,6 +20,11 @@
     --bosque:#7fc8a9; --bosque-glow:#9ddb6f; --bosque-deep:#13241f;
     --hielo:#86c5e0; --hielo-glow:#e6c878; --hielo-deep:#16242c;
     --austral:#9aa6e0; --austral-glow:#7fe3d0; --austral-deep:#171a2b;
+    /* Japón (opción 3) */
+    --sakura:#f0a6c2; --sakura-glow:#ffd3e2; --sakura-deep:#2a1620;
+    --alpes:#8fd0a0; --alpes-glow:#cfe089; --alpes-deep:#15241b;
+    --neon:#c89bf0; --neon-glow:#7fd0ff; --neon-deep:#1b1630;
+    --norte:#8fc3e6; --norte-glow:#c4e6f2; --norte-deep:#12202c;
     --accent:var(--ice); --accent-glow:var(--ice-glow); --accent-deep:var(--ice-deep);
     --serif:"Fraunces",Georgia,"Times New Roman",serif;
     --body:"Spectral",Georgia,serif;
@@ -31,6 +36,10 @@
   body[data-zone="bosque"]{--accent:var(--bosque);--accent-glow:var(--bosque-glow);--accent-deep:var(--bosque-deep);}
   body[data-zone="hielo"]{--accent:var(--hielo);--accent-glow:var(--hielo-glow);--accent-deep:var(--hielo-deep);}
   body[data-zone="austral"]{--accent:var(--austral);--accent-glow:var(--austral-glow);--accent-deep:var(--austral-deep);}
+  body[data-zone="sakura"]{--accent:var(--sakura);--accent-glow:var(--sakura-glow);--accent-deep:var(--sakura-deep);}
+  body[data-zone="alpes"]{--accent:var(--alpes);--accent-glow:var(--alpes-glow);--accent-deep:var(--alpes-deep);}
+  body[data-zone="neon"]{--accent:var(--neon);--accent-glow:var(--neon-glow);--accent-deep:var(--neon-deep);}
+  body[data-zone="norte"]{--accent:var(--norte);--accent-glow:var(--norte-glow);--accent-deep:var(--norte-deep);}
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth; background-color:#0c1014;}
   body{
@@ -95,9 +104,11 @@
 
   /* ---------- TAB SWITCHER (fixed bottom) ---------- */
   .tabs{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:60;
-    display:flex; gap:4px; padding:5px;
+    display:flex; gap:4px; padding:5px; max-width:94vw; overflow-x:auto;
     background:rgba(12,17,22,.74); backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px);
-    border:1px solid var(--line); border-radius:999px; box-shadow:0 12px 44px rgba(0,0,0,.55);}
+    border:1px solid var(--line); border-radius:999px; box-shadow:0 12px 44px rgba(0,0,0,.55);
+    scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none}
   .tab{font-family:var(--ui); font-size:12px; letter-spacing:.02em; color:var(--muted);
     background:transparent; border:0; cursor:pointer; padding:9px 17px; border-radius:999px;
     transition:color .25s ease, background .25s ease; white-space:nowrap; display:flex; gap:7px; align-items:center}
@@ -122,6 +133,8 @@
       linear-gradient(135deg,#23404e,#0e1b22);}
   .hero.bg-austral .bg{background-image:linear-gradient(180deg,rgba(12,16,20,.55),rgba(12,16,20,.82) 70%,var(--ink)),
       linear-gradient(135deg,#1f3b2f,#0e1b22);}
+  .hero.bg-japan .bg{background-image:linear-gradient(180deg,rgba(12,16,20,.5),rgba(12,16,20,.82) 70%,var(--ink)),
+      linear-gradient(135deg,#3a2030,#0e1b22);}
   .hero .bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;opacity:.42}
   .hero .wrap{position:relative}
   .hero .kick{font-family:var(--ui); font-size:12px; letter-spacing:.4em; text-transform:uppercase;
@@ -155,6 +168,10 @@
   .chapter.bosque{--c:var(--bosque);--cg:var(--bosque-glow)}
   .chapter.hielo{--c:var(--hielo);--cg:var(--hielo-glow)}
   .chapter.austral{--c:var(--austral);--cg:var(--austral-glow)}
+  .chapter.sakura{--c:var(--sakura);--cg:var(--sakura-glow)}
+  .chapter.alpes{--c:var(--alpes);--cg:var(--alpes-glow)}
+  .chapter.neon{--c:var(--neon);--cg:var(--neon-glow)}
+  .chapter.norte{--c:var(--norte);--cg:var(--norte-glow)}
   .chhead{position:relative; margin-bottom:8px}
   .chnum{font-family:var(--serif); font-size:clamp(64px,18vw,150px); line-height:.8; font-weight:400;
     color:transparent; -webkit-text-stroke:1px color-mix(in srgb,var(--c) 55%,transparent);
@@ -248,8 +265,9 @@
 
 <!-- ===== TAB SWITCHER ===== -->
 <nav class="tabs" aria-label="Opciones de vacaciones">
-  <button class="tab on" data-opt="1"><span class="ti">❄</span> Opción 1 · Hielo &amp; Mediterráneo</button>
-  <button class="tab" data-opt="2"><span class="ti">🚙</span> Opción 2 · Carretera Austral</button>
+  <button class="tab on" data-opt="1"><span class="ti">❄</span> Opción 1 · Europa</button>
+  <button class="tab" data-opt="2"><span class="ti">🚙</span> Opción 2 · Patagonia</button>
+  <button class="tab" data-opt="3"><span class="ti">🌸</span> Opción 3 · Japón</button>
 </nav>
 
 
@@ -869,6 +887,370 @@
     </section>
 
     <footer><b>Opción 2 · Carretera Austral</b> · Patagonia · Torres del Paine · Ushuaia · 25 días · abril 2027 · RAV4 propio · v1 — ajustable a gusto</footer>
+
+  </main>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- ===== OPCIÓN 3 · JAPÓN · RUTA DEL SAKURA =================== -->
+<!-- ============================================================= -->
+<div class="option" data-opt="3" hidden
+     data-legnames='{"leg-w":"Kansai &amp; el oeste","leg-c":"Alpes Japoneses","leg-e":"Tokio &amp; el Fuji","leg-n":"El norte · sakura tardío","leg-ret":"Vuelo de regreso"}'>
+
+  <!-- TIMELINE RAIL -->
+  <nav class="rail" aria-label="Línea de tiempo del viaje">
+    <div class="track">
+      <div class="fill"></div>
+      <button class="tick" data-go="hero3" style="top:1%"><span class="lbl">Inicio</span></button>
+      <button class="tick" data-go="kansai" style="top:22%"><span class="lbl">Kansai</span></button>
+      <button class="tick" data-go="alpes" style="top:44%"><span class="lbl">Alpes</span></button>
+      <button class="tick" data-go="tokio" style="top:64%"><span class="lbl">Tokio</span></button>
+      <button class="tick" data-go="norte" style="top:84%"><span class="lbl">Norte</span></button>
+      <button class="tick" data-go="cierre3" style="top:99%"><span class="lbl">Regreso</span></button>
+      <div class="arrow" role="slider" tabindex="0" aria-label="Avanzar por el viaje" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <svg width="22" height="26" viewBox="0 0 22 26"><path class="head" d="M11 25 L1 11 H7 V1 H15 V11 H21 Z"/></svg>
+      </div>
+      <div class="railhint">el viaje avanza ↓</div>
+    </div>
+  </nav>
+
+  <!-- ROUTE MAP (Japón, SO→NE) -->
+  <aside class="map" aria-label="Mapa de Japón">
+    <div class="mhead"><span class="mtitle">Carta de ruta</span><span class="mleg">Salida</span></div>
+    <svg viewBox="0 0 200 300" role="img" aria-label="Ruta del sakura: Kansai a Hokkaido">
+      <path class="grid" d="M0 75 H200 M0 150 H200 M0 225 H200 M70 0 V300 M130 0 V300"/>
+      <!-- islas estilizadas (Kyushu/Honshu/Hokkaido) -->
+      <path class="land" d="M30 252 q14 -10 22 4 q6 14 -8 22 q-16 8 -22 -6 q-4 -12 8 -20 z"/>
+      <path class="land" d="M52 236 q30 -34 70 -78 q24 -26 40 -52 q10 18 -6 40 q-30 40 -64 78 q-22 26 -42 40 q-12 -30 2 -66 z"/>
+      <path class="land" d="M150 56 q22 -8 26 12 q2 18 -16 24 q-18 4 -22 -14 q-2 -16 12 -22 z"/>
+      <!-- legs -->
+      <path class="leg" data-leg="leg-w"   d="M40 252 Q56 230 78 206"/>
+      <path class="leg" data-leg="leg-c"   d="M78 206 Q96 188 104 168"/>
+      <path class="leg" data-leg="leg-e"   d="M104 168 Q118 152 128 138"/>
+      <path class="leg" data-leg="leg-n"   d="M128 138 Q150 100 162 70"/>
+      <path class="leg" data-leg="leg-ret" d="M162 70 Q120 200 40 252"/>
+      <!-- ciudades -->
+      <circle class="city" data-city="m-hir" cx="40" cy="252" r="3.0"/><circle class="ring" cx="40" cy="252" r="5"/>
+      <text class="clabel" x="10" y="266">Hiroshima</text>
+      <circle class="city" data-city="m-osa" cx="78" cy="206" r="3.4"/><circle class="ring" cx="78" cy="206" r="5"/>
+      <text class="clabel" x="22" y="210">Kioto/Osaka</text>
+      <circle class="city" data-city="m-alp" cx="104" cy="168" r="3.0"/><circle class="ring" cx="104" cy="168" r="5"/>
+      <text class="clabel" x="110" y="166">Alpes</text>
+      <circle class="city" data-city="m-tok" cx="128" cy="138" r="3.4"/><circle class="ring" cx="128" cy="138" r="5"/>
+      <text class="clabel" x="134" y="142">Tokio</text>
+      <circle class="city" data-city="m-sen" cx="146" cy="106" r="3.0"/><circle class="ring" cx="146" cy="106" r="5"/>
+      <text class="clabel" x="152" y="104">Sendai</text>
+      <circle class="city" data-city="m-sap" cx="162" cy="70" r="3.4"/><circle class="ring" cx="162" cy="70" r="5"/>
+      <text class="clabel" x="120" y="64">Sapporo</text>
+    </svg>
+  </aside>
+
+  <main>
+
+    <section id="hero3" class="hero bg-japan" data-zone="sakura" data-leg="leg-w" data-city="m-osa">
+      <div class="bg"><img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Kiyomizu-dera_in_Kyoto-r.jpg/1280px-Kiyomizu-dera_in_Kyoto-r.jpg" alt="Kioto en primavera" onerror="this.style.display='none'"></div>
+      <div class="wrap">
+        <div class="kick">Vacaciones · alternativa 3 · 25 días</div>
+        <h1>Japón<br><em>en flor</em></h1>
+        <div class="route">La ruta del sakura · de Kioto a Hokkaido</div>
+        <div class="meta">
+          <span><b>Cuándo</b> · abril 2027</span>
+          <span><b>Duración</b> · 25 días</span>
+          <span><b>Hilo</b> · seguir la flor del cerezo, sur → norte</span>
+          <span><b>Total estimado</b> · ≈ USD 9.000–13.000 la pareja</span>
+        </div>
+        <div class="scrollcue"><span class="dn">▼</span> baja para recorrer la ruta</div>
+      </div>
+    </section>
+
+    <section id="ruta3" class="overview" data-zone="sakura" data-leg="leg-w" data-city="m-osa">
+      <div class="wrap reveal">
+        <div class="eyebrow">El viaje con un hilo conductor</div>
+        <h2>Persiguiendo la flor del cerezo de sur a norte</h2>
+        <p>En abril, la floración del cerezo avanza por Japón <b>de suroeste a noreste</b>, semana a semana. En vez de un solo lugar, el viaje sigue ese "frente del sakura": empiezas en Kansai y el oeste a inicios de mes (Kioto en su máximo esplendor), subes por los Alpes Japoneses y Tokio, y terminas en el norte —Tohoku y Hokkaido— justo cuando allá recién se abren las flores a fines de abril. Veinticinco días no sobran: dan para ver el Japón clásico y el profundo, en tren bala.</p>
+        <div class="chain">
+          <span class="node"><b>Osaka</b> (KIX)</span><span class="arr">→</span>
+          <span class="node"><b>Kioto</b> · Nara</span><span class="arr">→</span>
+          <span class="node">Himeji · <b>Hiroshima</b></span><span class="arr">→</span>
+          <span class="node"><b>Alpes</b> · Kanazawa·Takayama</span><span class="arr">→</span>
+          <span class="node"><b>Tokio</b> · Fuji</span><span class="arr">→</span>
+          <span class="node">Tohoku · <b>Hirosaki</b></span><span class="arr">→</span>
+          <span class="node"><b>Sapporo</b> (CTS)</span>
+        </div>
+        <div class="note"><b>Verificar antes de comprar:</b> el sakura es impredecible —el frente de floración varía ±1–2 semanas cada año—, así que conviene <b>salir a inicios de abril</b> y dejar Hokkaido para el final. <b>Reservar alojamiento con muchísima antelación</b>: abril es la temporada más demandada y cara de Japón. Revisar el <b>Japan Rail Pass</b> (subió de precio en 2023) frente a pases regionales según la ruta. Vuelo <b>open-jaw</b>: entrar por Osaka (KIX) y salir por Sapporo (CTS) para no devolverse.</div>
+      </div>
+    </section>
+
+    <!-- CH 1 · KANSAI & OESTE -->
+    <section id="kansai" class="chapter sakura" data-zone="sakura" data-leg="leg-w" data-city="m-osa">
+      <div class="wrap">
+        <div class="chhead reveal">
+          <div class="chnum">01</div>
+          <h2>Kansai &amp; el <em>oeste</em></h2>
+          <div class="chsub">Días 1–9 · Kioto, Nara, Osaka, Himeji y Hiroshima · ~8 noches</div>
+        </div>
+        <p class="lead reveal">El corazón histórico de Japón en plena floración: mil templos de Kioto entre cerezos, los ciervos de Nara, la cocina callejera de Osaka, el castillo blanco de Himeji y el torii flotante de Miyajima sobre el mar.</p>
+
+        <figure class="reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Itsukushima_Gate.jpg/1280px-Itsukushima_Gate.jpg" alt="Torii flotante de Miyajima" onerror="this.style.display='none'">
+          <figcaption><b>Itsukushima · Miyajima</b> · el gran torii rojo que parece flotar sobre el mar, frente a Hiroshima.</figcaption>
+        </figure>
+
+        <div class="days reveal">
+          <div class="day"><span class="dn">Día 1</span><div><h4>Despegue</h4><p>Vuelo Santiago → Japón (escala en EE.UU. u Oceanía). Se cruza la línea de fecha.</p></div></div>
+          <div class="day"><span class="dn">Día 2</span><div><h4>Llegada · Osaka</h4><p>Aterrizaje en Kansai (KIX). Primera noche y paseo por Dotonbori y sus luces.</p></div></div>
+          <div class="day"><span class="dn">Día 3</span><div><h4>Kioto · este</h4><p>Higashiyama: Kiyomizu-dera, los callejones de Gion y el Paseo del Filósofo, un canal bajo túneles de cerezos.</p></div></div>
+          <div class="day"><span class="dn">Día 4</span><div><h4>Kioto · oeste</h4><p>El bosque de bambú de Arashiyama, el Pabellón Dorado (Kinkaku-ji) y el jardín zen de Ryoan-ji.</p></div></div>
+          <div class="day"><span class="dn">Día 5</span><div><h4>Nara + Fushimi Inari</h4><p>Ciervos libres y el gran Buda de Todai-ji; al atardecer, los mil toriis rojos de Fushimi Inari.</p></div></div>
+          <div class="day"><span class="dn">Día 6</span><div><h4>Himeji → Hiroshima</h4><p>El castillo blanco más bello de Japón (deslumbrante con sakura) y tren bala al oeste.</p></div></div>
+          <div class="day"><span class="dn">Día 7</span><div><h4>Hiroshima + Miyajima</h4><p>El Parque de la Paz y el Museo; por la tarde, el torii flotante de Itsukushima.</p></div></div>
+          <div class="day"><span class="dn">Día 8</span><div><h4>Koyasan</h4><p>Monte sagrado del budismo shingon: noche en un templo (shukubo), cena vegetariana y oración del alba.</p></div></div>
+          <div class="day"><span class="dn">Día 9</span><div><h4>Hacia los Alpes</h4><p>Tren a Kanazawa, puerta del Japón central.</p></div></div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="card">
+            <h3>Costos · pareja</h3>
+            <table class="cost">
+              <tr><td>Alojamiento (8 noches)</td><td>US$720–1.150</td></tr>
+              <tr><td>Comida</td><td>US$360–560</td></tr>
+              <tr><td>Trenes locales + entradas</td><td>US$260–420</td></tr>
+              <tr class="tot"><td>Subtotal</td><td>US$1.350–2.100</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recomendaciones</h3>
+            <ul class="tips">
+              <li><b>Base en Kioto</b> 3–4 noches; Osaka y Nara son excursiones de tren cortas.</li>
+              <li><b>Templos al amanecer:</b> Fushimi Inari y Arashiyama se llenan; ve temprano.</li>
+              <li><b>IC card</b> (Suica/ICOCA) para metro y buses; <b>conbini</b> para desayunos baratísimos.</li>
+              <li><b>Koyasan</b> es el broche espiritual: reserva el templo con antelación.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flight reveal" data-zone="sakura">
+      <div class="wrap">
+        <div class="line"><span class="from">Kansai</span><span class="dash"></span><span class="plane">🚄</span><span class="dash"></span><span class="to">Alpes Japoneses</span></div>
+        <div class="det">Día 9 · shinkansen + tren regional · hacia Kanazawa</div>
+      </div>
+    </div>
+
+    <!-- CH 2 · ALPES JAPONESES -->
+    <section id="alpes" class="chapter alpes" data-zone="alpes" data-leg="leg-c" data-city="m-alp">
+      <div class="wrap">
+        <div class="chhead reveal">
+          <div class="chnum">02</div>
+          <h2>Alpes <em>Japoneses</em></h2>
+          <div class="chsub">Días 10–14 · Kanazawa, Shirakawa-go, Takayama y Nagano · ~5 noches</div>
+        </div>
+        <p class="lead reveal">El Japón rural y montañoso: jardines perfectos, aldeas de techos de paja entre la nieve, calles de madera del periodo Edo, sake artesanal y monos bañándose en aguas termales.</p>
+
+        <figure class="reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/Ogimachi%2C_Shirakawa-go%2C_Gifu_Prefecture.jpg/1280px-Ogimachi%2C_Shirakawa-go%2C_Gifu_Prefecture.jpg" alt="Aldea de Shirakawa-go" onerror="this.style.display='none'">
+          <figcaption><b>Shirakawa-go</b> · las casas <i>gassho-zukuri</i> de techos empinados, Patrimonio Mundial, entre montañas.</figcaption>
+        </figure>
+
+        <div class="days reveal">
+          <div class="day"><span class="dn">Día 10</span><div><h4>Kanazawa</h4><p>El jardín Kenroku-en (de los tres más bellos de Japón), el castillo y el barrio de geishas de Higashi Chaya.</p></div></div>
+          <div class="day"><span class="dn">Día 11</span><div><h4>Shirakawa-go → Takayama</h4><p>La aldea de techos de paja y, en el valle, el casco antiguo de madera de Takayama. Sake y carne de Hida.</p></div></div>
+          <div class="day"><span class="dn">Día 12</span><div><h4>Matsumoto</h4><p>El "castillo cuervo" de madera negra, uno de los pocos originales del país, reflejado en su foso.</p></div></div>
+          <div class="day"><span class="dn">Día 13</span><div><h4>Nagano · monos de nieve</h4><p>Jigokudani: los macacos que se bañan en las termas. Templo Zenko-ji al atardecer.</p></div></div>
+          <div class="day"><span class="dn">Día 14</span><div><h4>Tren bala a Tokio</h4><p>De la montaña a la metrópolis en poco más de hora y media.</p></div></div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="card">
+            <h3>Costos · pareja</h3>
+            <table class="cost">
+              <tr><td>Alojamiento (5 noches, con ryokan)</td><td>US$520–820</td></tr>
+              <tr><td>Comida</td><td>US$230–360</td></tr>
+              <tr><td>Buses y entradas</td><td>US$180–300</td></tr>
+              <tr class="tot"><td>Subtotal</td><td>US$930–1.480</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recomendaciones</h3>
+            <ul class="tips">
+              <li><b>Una noche en ryokan</b> con cena kaiseki y onsen: una de las grandes experiencias de Japón.</li>
+              <li><b>Shirakawa-go</b> se llega en bus desde Takayama/Kanazawa; reserva el asiento.</li>
+              <li>Aquí el <b>sakura va más tarde</b> que en Kioto: buena segunda oportunidad si en Kansai ya pasó el peak.</li>
+              <li>Zona de montaña: lleva una capa de abrigo aunque sea primavera.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flight reveal" data-zone="alpes">
+      <div class="wrap">
+        <div class="line"><span class="from">Nagano</span><span class="dash"></span><span class="plane">🚄</span><span class="dash"></span><span class="to">Tokio</span></div>
+        <div class="det">Día 14 · shinkansen Hokuriku · ~1 h 40</div>
+      </div>
+    </div>
+
+    <!-- CH 3 · TOKIO & FUJI -->
+    <section id="tokio" class="chapter neon" data-zone="neon" data-leg="leg-e" data-city="m-tok">
+      <div class="wrap">
+        <div class="chhead reveal">
+          <div class="chnum">03</div>
+          <h2>Tokio &amp; el <em>Fuji</em></h2>
+          <div class="chsub">Días 15–20 · la metrópolis, Hakone, Nikko y Kamakura · ~6 noches</div>
+        </div>
+        <p class="lead reveal">El contraste perfecto: la ciudad más eléctrica del planeta y, a un paso, el monte Fuji reflejado en un lago, los templos dorados de Nikko y el gran Buda de Kamakura. De los neones de Shibuya al silencio de un onsen.</p>
+
+        <figure class="reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1c/Lake_Kawaguchiko_Sakura_Mount_Fuji_3.JPG/1280px-Lake_Kawaguchiko_Sakura_Mount_Fuji_3.JPG" alt="Monte Fuji con cerezos" onerror="this.style.display='none'">
+          <figcaption><b>Monte Fuji</b> · la montaña sagrada coronando los cerezos del lago Kawaguchi, cerca de Hakone.</figcaption>
+        </figure>
+
+        <div class="days reveal">
+          <div class="day"><span class="dn">Día 15</span><div><h4>Tokio · clásico</h4><p>Asakusa y el templo Senso-ji, los cerezos del parque Ueno y la electrónica de Akihabara.</p></div></div>
+          <div class="day"><span class="dn">Día 16</span><div><h4>Tokio · moderno</h4><p>El cruce de Shibuya, Harajuku, el santuario Meiji y los miradores de Shinjuku. Noche en izakaya.</p></div></div>
+          <div class="day"><span class="dn">Día 17</span><div><h4>Hakone · el Fuji</h4><p>Lago Ashi, teleférico sobre fumarolas y vistas al Fuji. Noche en ryokan con onsen.</p></div></div>
+          <div class="day"><span class="dn">Día 18</span><div><h4>Nikko</h4><p>Los santuarios dorados de Toshogu entre cedros gigantes, en la montaña al norte de Tokio.</p></div></div>
+          <div class="day"><span class="dn">Día 19</span><div><h4>Kamakura</h4><p>El gran Buda de bronce, templos junto al mar y la playa donde Tokio respira.</p></div></div>
+          <div class="day"><span class="dn">Día 20</span><div><h4>Tren bala al norte</h4><p>Última mañana en Tokio y shinkansen Tohoku rumbo a Sendai.</p></div></div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="card">
+            <h3>Costos · pareja</h3>
+            <table class="cost">
+              <tr><td>Alojamiento (6 noches)</td><td>US$640–1.020</td></tr>
+              <tr><td>Comida</td><td>US$300–460</td></tr>
+              <tr><td>Hakone/Nikko + entradas</td><td>US$250–420</td></tr>
+              <tr class="tot"><td>Subtotal</td><td>US$1.190–1.900</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recomendaciones</h3>
+            <ul class="tips">
+              <li><b>Base fija en Tokio</b> y haz Hakone/Nikko/Kamakura como excursiones (o 1 noche en Hakone).</li>
+              <li><b>El Fuji es tímido:</b> mejor visible temprano y con cielo despejado. Ten un día de margen.</li>
+              <li><b>teamLab</b> y los miradores gratis (Edificio del Gobierno Metropolitano) valen la pena.</li>
+              <li>Reserva mesa en restoranes populares; muchos son diminutos.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flight reveal" data-zone="neon">
+      <div class="wrap">
+        <div class="line"><span class="from">Tokio</span><span class="dash"></span><span class="plane">🚄</span><span class="dash"></span><span class="to">Tohoku · el norte</span></div>
+        <div class="det">Día 20 · shinkansen Tohoku · siguiendo el frente del sakura hacia el norte</div>
+      </div>
+    </div>
+
+    <!-- CH 4 · EL NORTE -->
+    <section id="norte" class="chapter norte" data-zone="norte" data-leg="leg-n" data-city="m-sap">
+      <div class="wrap">
+        <div class="chhead reveal">
+          <div class="chnum">04</div>
+          <h2>El <em>norte</em></h2>
+          <div class="chsub">Días 20–25 · Tohoku y Hokkaido, el sakura tardío · ~5 noches</div>
+        </div>
+        <p class="lead reveal">El gran final, donde la primavera recién llega: la bahía de islas de Matsushima, el castillo de Hirosaki bajo una nube rosa de cerezos a fines de abril, y Hokkaido —Hakodate y Sapporo— como cierre, con la flor abriéndose justo a tu llegada.</p>
+
+        <figure class="reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Hirosaki_Castle_and_Cherry_Blossoms.jpg/1280px-Hirosaki_Castle_and_Cherry_Blossoms.jpg" alt="Castillo de Hirosaki con cerezos" onerror="this.style.display='none'">
+          <figcaption><b>Hirosaki</b> · uno de los mejores lugares de Japón para el sakura, con su foso cubierto de pétalos a fines de abril.</figcaption>
+        </figure>
+
+        <div class="days reveal">
+          <div class="day"><span class="dn">Día 20</span><div><h4>Sendai · Matsushima</h4><p>La capital de Tohoku y su bahía de islotes de pino, una de las "tres vistas" de Japón.</p></div></div>
+          <div class="day"><span class="dn">Día 21</span><div><h4>Hirosaki</h4><p>El parque del castillo, cuando 2.500 cerezos estallan en rosa: el peak del sakura del norte.</p></div></div>
+          <div class="day"><span class="dn">Día 22</span><div><h4>Aomori → Hakodate</h4><p>Por el túnel submarino del estrecho a Hokkaido. Vista nocturna del monte Hakodate y mercado de mariscos.</p></div></div>
+          <div class="day"><span class="dn">Día 23</span><div><h4>Hakodate → Sapporo</h4><p>El fuerte estrellado de Goryokaku (rodeado de cerezos) y tren a la capital de Hokkaido.</p></div></div>
+          <div class="day"><span class="dn">Día 24</span><div><h4>Sapporo</h4><p>Parque Maruyama y Odori, ramen de miso, cerveza local y los últimos cerezos del viaje.</p></div></div>
+          <div class="day"><span class="dn">Día 25</span><div><h4>Sapporo → Santiago</h4><p>Vuelo de regreso desde Nueva Chitose (CTS). Fin de la ruta del sakura.</p></div></div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="card">
+            <h3>Costos · pareja</h3>
+            <table class="cost">
+              <tr><td>Alojamiento (5 noches)</td><td>US$520–820</td></tr>
+              <tr><td>Comida</td><td>US$240–380</td></tr>
+              <tr><td>Trenes regionales + entradas</td><td>US$200–340</td></tr>
+              <tr class="tot"><td>Subtotal</td><td>US$960–1.540</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recomendaciones</h3>
+            <ul class="tips">
+              <li><b>Aquí el sakura es el más tardío:</b> por eso Hokkaido va al final. Si florece antes, reordena días.</li>
+              <li><b>Hirosaki</b> a fines de abril es de los espectáculos de cerezos más famosos del país.</li>
+              <li><b>Comer en el norte:</b> mariscos de Hokkaido, ramen de miso de Sapporo, cordero al estilo Genghis Khan.</li>
+              <li>El JR Pass cubre el shinkansen hasta Hakodate y los trenes de Hokkaido.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOTAL -->
+    <section id="total3" class="total" data-zone="norte" data-leg="leg-ret" data-city="m-osa">
+      <div class="wrap reveal">
+        <div class="eyebrow">El número</div>
+        <h2>Presupuesto <em>total</em></h2>
+        <div class="grand">
+          <table class="cost">
+            <tr><td>Vuelos · Santiago↔Japón (open-jaw, pareja)</td><td>US$3.200–4.800</td></tr>
+            <tr><td>Japan Rail Pass / transporte</td><td>US$1.400–1.700</td></tr>
+            <tr><td>Kansai &amp; oeste · 8 noches</td><td>US$1.350–2.100</td></tr>
+            <tr><td>Alpes Japoneses · 5 noches</td><td>US$930–1.480</td></tr>
+            <tr><td>Tokio &amp; Fuji · 6 noches</td><td>US$1.190–1.900</td></tr>
+            <tr><td>El norte · 5 noches</td><td>US$960–1.540</td></tr>
+            <tr class="tot"><td>Total estimado · pareja</td><td>≈ US$9.000–13.500</td></tr>
+          </table>
+        </div>
+        <p class="fxnote">Es la opción más cara de las tres: pesan el vuelo transpacífico y el yen. Se puede recortar bastante con hoteles de negocios, comida de conbini/ramen y pases regionales en vez del JR Pass nacional. Estimaciones a precios 2026 — el cambio puede variar.</p>
+      </div>
+    </section>
+
+    <!-- REC -->
+    <section id="rec3" class="rec" data-zone="norte" data-leg="leg-ret" data-city="m-osa">
+      <div class="wrap reveal">
+        <h2>Antes de partir</h2>
+        <div class="recgrid">
+          <div class="card"><h3>Documentos</h3><ul class="tips">
+            <li><b>Pasaporte chileno:</b> Japón da <b>entrada sin visa</b> hasta 90 días por turismo.</li>
+            <li>Vigencia del pasaporte cubriendo todo el viaje; billete de salida.</li>
+            <li>Revisa requisitos de escala (p. ej. <b>ESTA</b> si conectas por EE.UU.).</li>
+          </ul></div>
+          <div class="card"><h3>Transporte</h3><ul class="tips">
+            <li><b>Japan Rail Pass</b> (21 días) o combinación de pases regionales: calcula según la ruta.</li>
+            <li><b>IC card</b> (Suica/ICOCA) para metro, buses y conbini.</li>
+            <li>Reserva asientos del shinkansen en temporada de sakura: van llenos.</li>
+          </ul></div>
+          <div class="card"><h3>Dinero y conexión</h3><ul class="tips">
+            <li>Lleva <b>efectivo</b>: muchos sitios pequeños no aceptan tarjeta.</li>
+            <li><b>SIM/eSIM</b> o pocket WiFi: la navegación de trenes lo agradece.</li>
+            <li>Conbini (7-Eleven, Lawson) para cajeros que aceptan tarjetas extranjeras.</li>
+          </ul></div>
+          <div class="card"><h3>Sakura · timing</h3><ul class="tips">
+            <li><b>Sal a inicios de abril</b> y avanza al norte: maximizas la probabilidad de flor.</li>
+            <li>Sigue los <b>pronósticos de floración</b> (sakura-zensen) las semanas previas.</li>
+            <li>Si el frente se adelanta/atrasa, reordena: la ruta es flexible en sentido N–S.</li>
+          </ul></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CLOSE -->
+    <section id="cierre3" class="cierre" data-zone="norte" data-leg="leg-ret" data-city="m-osa">
+      <div class="wrap reveal">
+        <p class="q">Veinticinco días siguiendo una sola flor —<br>de Kioto a Hokkaido, <span>bajo los cerezos.</span></p>
+        <div class="sig">Día 25 · Sapporo (CTS) → Santiago</div>
+      </div>
+    </section>
+
+    <footer><b>Opción 3 · Japón</b> · La ruta del sakura · Kioto · Alpes · Tokio · Hokkaido · 25 días · abril 2027 · v1 — ajustable a gusto</footer>
 
   </main>
 </div>
