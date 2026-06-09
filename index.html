@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Informes y presentaciones</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0c1014; --ink2:#121a22; --paper:#f7f2e9; --muted:#aab7c2;
+    --line:rgba(240,232,216,.16); --accent:#8bcfe6; --accent-glow:#7ce8c6;
+    --serif:"Fraunces",Georgia,serif; --ui:"Inter",system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth;background:#0c1014}
+  body{
+    background:#0c1014;color:#f4efe6;font-family:var(--ui);font-size:16px;line-height:1.6;
+    -webkit-font-smoothing:antialiased;min-height:100vh;
+    background-image:radial-gradient(110% 55% at 88% -8%, rgba(22,39,47,.55), transparent 62%);
+  }
+  .wrap{max-width:860px;margin:0 auto;padding:0 26px}
+  header{padding:100px 0 50px}
+  .eyebrow{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--muted)}
+  h1{font-family:var(--serif);font-weight:500;font-size:clamp(40px,9vw,76px);letter-spacing:-.02em;line-height:1.02;margin:18px 0 10px}
+  h1 em{font-style:italic;color:var(--accent-glow)}
+  .sub{font-family:var(--serif);font-size:clamp(17px,3vw,21px);font-style:italic;color:var(--paper);opacity:.9;max-width:50ch}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;padding:10px 0 90px}
+  a.card{
+    display:block;text-decoration:none;color:inherit;background:var(--ink2);
+    border:1px solid var(--line);border-radius:16px;padding:24px 24px 22px;
+    transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
+  }
+  a.card:hover{transform:translateY(-4px);border-color:var(--accent);box-shadow:0 14px 44px rgba(0,0,0,.5)}
+  a.card .tag{font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);font-weight:600}
+  a.card h2{font-family:var(--serif);font-weight:500;font-size:26px;letter-spacing:-.01em;margin:12px 0 8px;line-height:1.1}
+  a.card p{color:#d4cec2;font-size:14.5px}
+  a.card .go{margin-top:16px;font-size:12px;letter-spacing:.06em;color:var(--muted)}
+  a.card:hover .go{color:var(--paper)}
+  footer{border-top:1px solid var(--line);padding:24px 0;font-size:11px;letter-spacing:.08em;color:var(--muted);text-align:center}
+  footer b{color:var(--paper)}
+</style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="eyebrow">Informes &amp; presentaciones</div>
+      <h1>Mi <em>biblioteca</em></h1>
+      <p class="sub">Colección de propuestas, informes y presentaciones publicadas.</p>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div class="grid">
+      <a class="card" href="./luna-de-miel/">
+        <div class="tag">Propuesta de viaje · abril 2027</div>
+        <h2>Luna de miel</h2>
+        <p>Islandia · Tenerife · Puglia. 25 días del hielo al volcán al Mediterráneo, con ruta, días y presupuesto.</p>
+        <div class="go">Abrir presentación →</div>
+      </a>
+    </div>
+  </main>
+
+  <footer><b>jrpindave</b> · publicado con GitHub Pages</footer>
+</body>
+</html>

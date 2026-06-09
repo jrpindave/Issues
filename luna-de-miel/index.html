@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="dark">
+<title>Luna de miel · Islandia · Tenerife · Puglia · abril 2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Spectral:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme:dark;
+    --ink:#0c1014; --ink2:#121a22;
+    --paper:#f7f2e9; --muted:#aab7c2; --line:rgba(240,232,216,.16);
+    --ice:#8bcfe6; --ice-glow:#7ce8c6; --ice-deep:#16272f;
+    --fire:#eeb066; --fire-glow:#ef7548; --fire-deep:#321a12;
+    --med:#82bce0; --med-glow:#b7cd74; --med-deep:#192a32;
+    --accent:var(--ice); --accent-glow:var(--ice-glow); --accent-deep:var(--ice-deep);
+    --serif:"Fraunces",Georgia,"Times New Roman",serif;
+    --body:"Spectral",Georgia,serif;
+    --ui:"Inter",system-ui,-apple-system,sans-serif;
+    --rail:64px; --mapw:200px;
+  }
+  body[data-zone="fire"]{--accent:var(--fire);--accent-glow:var(--fire-glow);--accent-deep:var(--fire-deep);}
+  body[data-zone="med"]{--accent:var(--med);--accent-glow:var(--med-glow);--accent-deep:var(--med-deep);}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth; background-color:#0c1014;}
+  body{
+    background-color:#0c1014; color:#f4efe6; font-family:var(--body);
+    font-size:17px; line-height:1.62; -webkit-font-smoothing:antialiased;
+    transition:background-color .8s ease;
+    background-image:radial-gradient(110% 55% at 88% -8%, color-mix(in srgb,var(--accent-deep) 42%, transparent), transparent 62%);
+    overflow-x:hidden;
+  }
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+  /* ---------- TIMELINE RAIL (downward-arrow slider) ---------- */
+  #rail{position:fixed; left:0; top:0; height:100vh; width:var(--rail); z-index:40;
+    display:flex; align-items:stretch; justify-content:center;
+    background:linear-gradient(90deg, rgba(8,11,14,.9), rgba(8,11,14,.0));
+    pointer-events:none;}
+  #track{position:relative; width:2px; margin:30px 0; background:var(--line); border-radius:2px; pointer-events:none;}
+  #fill{position:absolute; left:0; top:0; width:100%; height:0;
+    background:linear-gradient(var(--accent-glow),var(--accent)); border-radius:2px;
+    box-shadow:0 0 12px color-mix(in srgb,var(--accent) 60%, transparent); transition:background .8s ease;}
+  .tick{position:absolute; left:50%; transform:translate(-50%,-50%); width:11px; height:11px;
+    border-radius:50%; background-color:var(--ink2); border:1.5px solid var(--muted);
+    cursor:pointer; pointer-events:auto; padding:0; transition:.3s; z-index:2;}
+  .tick:hover,.tick:focus-visible{border-color:var(--accent); transform:translate(-50%,-50%) scale(1.35); outline:none}
+  .tick.on{background:var(--accent); border-color:var(--accent); box-shadow:0 0 10px var(--accent)}
+  .tick .lbl{position:absolute; left:18px; top:50%; transform:translateY(-50%);
+    font-family:var(--ui); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--muted); white-space:nowrap; opacity:0; transition:.3s; pointer-events:none}
+  .tick:hover .lbl,.tick.on .lbl{opacity:1; color:var(--paper)}
+  #arrow{position:absolute; left:50%; top:0; transform:translate(-50%,-2px); z-index:3;
+    cursor:grab; pointer-events:auto; touch-action:none; filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
+  #arrow svg{display:block}
+  #arrow .head{fill:var(--accent); transition:fill .8s ease}
+  #arrow:active{cursor:grabbing}
+  #railhint{position:absolute; bottom:6px; left:50%; transform:translateX(-50%) rotate(-90deg);
+    transform-origin:center; font-family:var(--ui); font-size:9px; letter-spacing:.3em;
+    color:var(--muted); text-transform:uppercase; white-space:nowrap; pointer-events:none}
+
+  /* ---------- ROUTE MAP (fixed top-right) ---------- */
+  #map{position:fixed; top:14px; right:14px; width:var(--mapw); z-index:45;
+    background:rgba(12,17,22,.66); backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px);
+    border:1px solid var(--line); border-radius:14px; padding:12px 12px 9px;
+    box-shadow:0 10px 40px rgba(0,0,0,.45);}
+  #map .mhead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px}
+  #map .mtitle{font-family:var(--ui); font-size:9.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted)}
+  #map .mleg{font-family:var(--ui); font-size:10px; letter-spacing:.04em; color:var(--accent); font-weight:600; transition:color .8s ease}
+  #map svg{display:block; width:100%; height:auto}
+  .land{fill:rgba(240,232,216,.045); stroke:rgba(240,232,216,.12); stroke-width:.6}
+  .grid{stroke:rgba(240,232,216,.06); stroke-width:.5; fill:none}
+  .leg{fill:none; stroke:rgba(240,232,216,.22); stroke-width:1.4; stroke-linecap:round; stroke-dasharray:3 4}
+  .leg.on{stroke:var(--accent); stroke-width:2.1; stroke-dasharray:none;
+    filter:drop-shadow(0 0 4px var(--accent)); animation:flow 1.1s linear infinite}
+  @keyframes flow{to{stroke-dashoffset:-14}}
+  .leg.on{stroke-dasharray:5 5}
+  .city{fill:var(--muted); transition:.5s}
+  .city.on{fill:var(--accent); r:4.2; filter:drop-shadow(0 0 6px var(--accent))}
+  .clabel{font-family:var(--ui); font-size:7.4px; letter-spacing:.06em; fill:var(--paper); opacity:.78}
+  .ring{fill:none; stroke:var(--accent); stroke-width:1; opacity:0}
+  .city.on + .ring{opacity:.9; animation:pulse 1.8s ease-out infinite}
+  @keyframes pulse{0%{r:5;opacity:.8}100%{r:13;opacity:0}}
+
+  /* ---------- LAYOUT ---------- */
+  main{padding-left:var(--rail); background-color:#0c1014;}
+  .wrap{max-width:780px; margin:0 auto; padding:0 26px}
+  section{position:relative; scroll-margin-top:20px}
+
+  .eyebrow{font-family:var(--ui); font-size:11px; letter-spacing:.32em; text-transform:uppercase; color:var(--muted)}
+  h1,h2,h3,h4{font-family:var(--serif); font-weight:500; line-height:1.05}
+
+  /* HERO */
+  #hero{min-height:100vh; display:flex; flex-direction:column; justify-content:center;
+    padding:90px 0 60px; position:relative; overflow:hidden}
+  #hero .bg{position:absolute; inset:0; background-size:cover; background-position:center;
+    background-image:linear-gradient(180deg,rgba(12,16,20,.55),rgba(12,16,20,.82) 70%,var(--ink)),
+      linear-gradient(135deg,#23404e,#0e1b22);}
+  #hero .bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;opacity:.42}
+  #hero .wrap{position:relative}
+  #hero .kick{font-family:var(--ui); font-size:12px; letter-spacing:.4em; text-transform:uppercase;
+    color:var(--ice); margin-bottom:22px}
+  #hero h1{font-size:clamp(46px,11vw,104px); letter-spacing:-.02em; font-weight:400}
+  #hero h1 em{font-style:italic; color:var(--ice-glow)}
+  #hero .route{font-family:var(--serif); font-size:clamp(20px,4.5vw,32px); font-style:italic; color:var(--paper); margin-top:14px; opacity:.92}
+  #hero .meta{display:flex; flex-wrap:wrap; gap:14px 30px; margin-top:34px; font-family:var(--ui); font-size:13px; letter-spacing:.06em; color:var(--muted)}
+  #hero .meta b{color:var(--paper); font-weight:600}
+  #scrollcue{margin-top:48px; font-family:var(--ui); font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:10px}
+  #scrollcue .dn{display:inline-block; animation:bob 1.8s ease-in-out infinite}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
+
+  /* OVERVIEW */
+  #ruta{padding:70px 0 30px}
+  #ruta h2{font-size:clamp(28px,6vw,44px); margin:14px 0 18px; max-width:14ch}
+  #ruta p{color:#e9e3d7; max-width:62ch; margin-bottom:16px}
+  .chain{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:26px 0; font-family:var(--ui); font-size:13px}
+  .chain .node{background-color:var(--ink2); border:1px solid var(--line); border-radius:999px; padding:7px 14px; letter-spacing:.04em}
+  .chain .node b{color:var(--ice)}
+  .chain .arr{color:var(--muted)}
+  .note{border-left:2px solid var(--accent); background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 9%,transparent),transparent);
+    padding:14px 18px; border-radius:0 10px 10px 0; margin:24px 0; font-size:15px; color:#ebe5d9}
+  .note b{color:var(--accent)}
+
+  /* CHAPTERS */
+  .chapter{padding:64px 0 24px}
+  .chapter.ice{--c:var(--ice);--cg:var(--ice-glow)}
+  .chapter.fire{--c:var(--fire);--cg:var(--fire-glow)}
+  .chapter.med{--c:var(--med);--cg:var(--med-glow)}
+  .chhead{position:relative; margin-bottom:8px}
+  .chnum{font-family:var(--serif); font-size:clamp(64px,18vw,150px); line-height:.8; font-weight:400;
+    color:transparent; -webkit-text-stroke:1px color-mix(in srgb,var(--c) 55%,transparent);
+    opacity:.55; letter-spacing:-.04em}
+  .chapter h2{font-size:clamp(34px,8vw,62px); letter-spacing:-.02em; margin-top:-.25em}
+  .chapter h2 em{font-style:italic; color:var(--cg)}
+  .chsub{font-family:var(--ui); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--c); margin-top:10px}
+  .lead{color:#f0eadf; max-width:60ch; margin:18px 0 6px; font-size:18px}
+
+  figure{position:relative; margin:26px 0; border-radius:16px; overflow:hidden;
+    background:linear-gradient(135deg,var(--accent-deep),var(--ink)); aspect-ratio:16/9}
+  figure.tall{aspect-ratio:4/3}
+  figure img{width:100%; height:100%; object-fit:cover; display:block}
+  figcaption{position:absolute; left:0; bottom:0; right:0; padding:30px 18px 14px;
+    background:linear-gradient(transparent,rgba(8,11,14,.78));
+    font-family:var(--ui); font-size:12px; letter-spacing:.06em; color:#f1ebe0}
+  figcaption b{color:var(--cg)}
+
+  .days{margin:30px 0 8px; border-top:1px solid var(--line)}
+  .day{display:grid; grid-template-columns:80px 1fr; gap:18px; padding:16px 0; border-bottom:1px solid var(--line); align-items:start}
+  .day .dn{font-family:var(--ui); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--c); padding-top:4px; font-weight:600}
+  .day h4{font-size:21px; margin-bottom:3px}
+  .day p{color:#ddd7cb; font-size:15.5px}
+
+  .panel{display:grid; grid-template-columns:1fr 1fr; gap:18px; margin:30px 0}
+  .card{background-color:var(--ink2); border:1px solid var(--line); border-radius:14px; padding:18px 20px}
+  .card h3{font-size:15px; font-family:var(--ui); font-weight:600; letter-spacing:.06em; color:var(--c); text-transform:uppercase; margin-bottom:12px; font-style:normal}
+  table.cost{width:100%; border-collapse:collapse; font-family:var(--ui); font-size:13.5px}
+  table.cost td{padding:7px 0; border-bottom:1px solid var(--line); color:#dcd6ca}
+  table.cost td:last-child{text-align:right; font-variant-numeric:tabular-nums; color:var(--paper); white-space:nowrap}
+  table.cost tr.tot td{border-bottom:none; padding-top:12px; font-weight:600; color:var(--cg); font-size:15px}
+  table.cost tr.tot td:first-child{color:var(--paper)}
+  ul.tips{list-style:none}
+  ul.tips li{position:relative; padding-left:20px; margin-bottom:11px; font-size:14.5px; color:#dcd6ca}
+  ul.tips li::before{content:""; position:absolute; left:0; top:9px; width:7px; height:7px; border-radius:50%; background:var(--c); box-shadow:0 0 8px var(--c)}
+  ul.tips b{color:var(--paper)}
+
+  /* TRANSITION (flight) */
+  .flight{padding:44px 0; text-align:center}
+  .flight .line{display:flex; align-items:center; gap:14px; justify-content:center; font-family:var(--ui); font-size:13px; letter-spacing:.14em; color:var(--muted)}
+  .flight .plane{font-size:20px; color:var(--paper)}
+  .flight .from,.flight .to{color:var(--paper); font-weight:600}
+  .flight .det{font-family:var(--ui); font-size:11.5px; letter-spacing:.1em; color:var(--muted); margin-top:8px}
+  .flight .dash{flex:0 0 60px; height:1px; background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 9px)}
+
+  /* TOTAL + REC */
+  #total{padding:70px 0 30px}
+  #total h2{font-size:clamp(30px,7vw,52px); margin-bottom:8px}
+  #total h2 em{font-style:italic; color:var(--accent-glow)}
+  .grand{margin:24px 0; background-color:var(--ink2); border:1px solid var(--line); border-radius:16px; padding:6px 24px 14px}
+  .grand table.cost td{font-size:15px; padding:13px 0}
+  .grand table.cost td:first-child{color:#ece6da}
+  .grand .tot td{font-size:22px !important; font-family:var(--serif); letter-spacing:-.01em}
+  .fxnote{font-family:var(--ui); font-size:11.5px; color:var(--muted); margin-top:10px; letter-spacing:.02em}
+
+  #rec{padding:30px 0 20px}
+  #rec h2{font-size:clamp(26px,6vw,40px); margin-bottom:22px}
+  .recgrid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
+
+  /* CLOSE */
+  #cierre{padding:80px 0 120px; text-align:center}
+  #cierre .q{font-family:var(--serif); font-style:italic; font-size:clamp(26px,6vw,42px); line-height:1.2; max-width:18ch; margin:0 auto; color:var(--paper)}
+  #cierre .q span{color:var(--med-glow)}
+  #cierre .sig{font-family:var(--ui); font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); margin-top:34px}
+
+  footer{border-top:1px solid var(--line); padding:26px 0; font-family:var(--ui); font-size:11px; letter-spacing:.08em; color:var(--muted); text-align:center}
+  footer b{color:var(--paper)}
+
+  .reveal{opacity:0; transform:translateY(22px); transition:opacity .7s ease, transform .7s ease}
+  .reveal.in{opacity:1; transform:none}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.leg.on{animation:none}.city.on+.ring{animation:none;opacity:0}#scrollcue .dn{animation:none}}
+
+  @media(max-width:640px){
+    :root{--rail:42px; --mapw:118px}
+    body{font-size:16px}
+    #map{top:10px; right:10px; padding:8px 8px 6px; border-radius:11px}
+    #map .mtitle{display:none}
+    .clabel{font-size:8.5px}
+    .wrap{padding:0 18px}
+    #hero{padding-top:120px}
+    .day{grid-template-columns:62px 1fr; gap:12px}
+    .panel,.recgrid{grid-template-columns:1fr}
+    .tick .lbl{display:none}
+    #railhint{display:none}
+  }
+</style>
+</head>
+<body data-zone="ice">
+
+<!-- ===== TIMELINE RAIL ===== -->
+<nav id="rail" aria-label="Línea de tiempo del viaje">
+  <div id="track">
+    <div id="fill"></div>
+    <button class="tick" data-go="hero" style="top:1%"><span class="lbl">Inicio</span></button>
+    <button class="tick" data-go="islandia" style="top:24%"><span class="lbl">Islandia</span></button>
+    <button class="tick" data-go="tenerife" style="top:55%"><span class="lbl">Tenerife</span></button>
+    <button class="tick" data-go="puglia" style="top:78%"><span class="lbl">Puglia</span></button>
+    <button class="tick" data-go="cierre" style="top:99%"><span class="lbl">Regreso</span></button>
+    <div id="arrow" role="slider" tabindex="0" aria-label="Avanzar por el viaje" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <svg width="22" height="26" viewBox="0 0 22 26"><path class="head" d="M11 25 L1 11 H7 V1 H15 V11 H21 Z"/></svg>
+    </div>
+    <div id="railhint">el viaje avanza ↓</div>
+  </div>
+</nav>
+
+<!-- ===== ROUTE MAP ===== -->
+<aside id="map" aria-label="Mapa de rutas">
+  <div class="mhead"><span class="mtitle">Carta de ruta</span><span class="mleg" id="mleg">Salida</span></div>
+  <svg viewBox="0 0 200 268" role="img" aria-label="Ruta Santiago–Islandia–Tenerife–Puglia">
+    <path class="grid" d="M0 60 H200 M0 130 H200 M0 200 H200 M60 0 V268 M130 0 V268"/>
+    <!-- stylised landmasses -->
+    <path class="land" d="M104 30 q14 -8 24 2 q10 8 2 16 q-12 10 -26 4 q-12 -6 0 -22 z"/>
+    <path class="land" d="M44 138 q22 -10 34 2 q8 12 -6 22 q-20 10 -34 -2 q-10 -12 6 -22 z"/>
+    <circle class="land" cx="62" cy="170" r="3.4"/><circle class="land" cx="54" cy="176" r="2.4"/>
+    <path class="land" d="M158 104 q16 -6 22 8 q4 14 -6 26 q-8 12 -16 -2 q-8 -16 0 -32 z"/>
+    <!-- legs -->
+    <path id="leg-ida"    class="leg" d="M34 244 Q6 150 119 44"/>
+    <path id="leg-1"      class="leg" d="M119 44 Q72 96 62 168"/>
+    <path id="leg-2"      class="leg" d="M62 168 Q120 200 174 128"/>
+    <path id="leg-vuelta" class="leg" d="M174 128 Q116 252 34 244"/>
+    <!-- cities -->
+    <circle id="m-ice" class="city" cx="119" cy="44" r="3.4"/><circle class="ring" cx="119" cy="44" r="5"/>
+    <text class="clabel" x="125" y="42">KEF · Islandia</text>
+    <circle id="m-ten" class="city" cx="62" cy="168" r="3.4"/><circle class="ring" cx="62" cy="168" r="5"/>
+    <text class="clabel" x="10" y="184">TFS · Tenerife</text>
+    <circle id="m-pug" class="city" cx="174" cy="128" r="3.4"/><circle class="ring" cx="174" cy="128" r="5"/>
+    <text class="clabel" x="120" y="120">BRI · Puglia</text>
+    <circle id="m-scl" class="city" cx="34" cy="244" r="3.4"/><circle class="ring" cx="34" cy="244" r="5"/>
+    <text class="clabel" x="10" y="258">SCL · Santiago</text>
+  </svg>
+</aside>
+
+<main>
+
+  <!-- ===== HERO ===== -->
+  <section id="hero" data-zone="ice" data-leg="leg-ida" data-city="m-ice">
+    <div class="bg"><img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Sk%C3%B3gafoss_July_2014.JPG/1280px-Sk%C3%B3gafoss_July_2014.JPG" alt="Cascada de Skógafoss, Islandia" onerror="this.style.display='none'"></div>
+    <div class="wrap">
+      <div class="kick">Propuesta de viaje · 25 días</div>
+      <h1>Luna de<br><em>miel</em></h1>
+      <div class="route">Islandia · Tenerife · Puglia</div>
+      <div class="meta">
+        <span><b>Cuándo</b> · abril 2027</span>
+        <span><b>Duración</b> · 25 días</span>
+        <span><b>Estilo</b> · low cost, alto en paisaje</span>
+        <span><b>Total estimado</b> · ≈ €5.900–7.900 la pareja</span>
+      </div>
+      <div id="scrollcue"><span class="dn">▼</span> baja para recorrer el viaje</div>
+    </div>
+  </section>
+
+  <!-- ===== OVERVIEW ===== -->
+  <section id="ruta" data-zone="ice" data-leg="leg-ida" data-city="m-ice">
+    <div class="wrap reveal">
+      <div class="eyebrow">La ruta inteligente</div>
+      <h2>Tres mundos, sin devolverse sobre los pasos</h2>
+      <p>El truco no es comprar tres viajes sueltos, sino un solo billete multidestino que aprovecha los vuelos directos que ya existen: Canarias es el destino de sol favorito de los islandeses, y desde Tenerife hay vuelo directo a Puglia. Italia entra al final, justo antes del regreso a casa, con un degradado climático perfecto: del hielo al volcán al Mediterráneo.</p>
+      <div class="chain">
+        <span class="node"><b>Santiago</b></span><span class="arr">→</span>
+        <span class="node">Madrid</span><span class="arr">→</span>
+        <span class="node"><b>Keflavík</b> · Islandia</span><span class="arr">→</span>
+        <span class="node"><b>Tenerife</b> <i>directo</i></span><span class="arr">→</span>
+        <span class="node"><b>Bari</b> · Puglia <i>directo</i></span><span class="arr">→</span>
+        <span class="node">Roma/Madrid</span><span class="arr">→</span>
+        <span class="node"><b>Santiago</b></span>
+      </div>
+      <div class="note"><b>Verificar antes de comprar:</b> el directo Tenerife→Bari (Neos) suele ser chárter de temporada y a veces vuela solo un día por semana. Confirmar que opere en abril 2027 y qué día, porque eso fija las fechas. Plan B: una escala barata vía Barcelona o Madrid.</div>
+    </div>
+  </section>
+
+  <!-- ===== CHAPTER 1: ISLANDIA ===== -->
+  <section id="islandia" class="chapter ice" data-zone="ice" data-leg="leg-ida" data-city="m-ice">
+    <div class="wrap">
+      <div class="chhead reveal">
+        <div class="chnum">01</div>
+        <h2>Islandia <em>glacial</em></h2>
+        <div class="chsub">Días 1–11 · vuelta completa a la isla (Ring Road) · ~10 noches</div>
+      </div>
+      <p class="lead reveal">Llegáis del otro lado del planeta a la tierra del fuego y el hielo. Campervan, cascadas que rugen, glaciares que se desprenden en lagunas turquesa y —si las noches despejan en la primera quincena— auroras sobre el techo del coche.</p>
+
+      <figure class="reveal">
+        <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Sk%C3%B3gafoss_July_2014.JPG/1280px-Sk%C3%B3gafoss_July_2014.JPG" alt="Cascada de Skógafoss" onerror="this.style.display='none'">
+        <figcaption><b>Skógafoss</b> · una de las cascadas de la costa sur, 60 m de caída y arcoíris casi garantizado.</figcaption>
+      </figure>
+
+      <div class="days reveal">
+        <div class="day"><span class="dn">Día 1</span><div><h4>Despegue</h4><p>Vuelo nocturno Santiago → Madrid.</p></div></div>
+        <div class="day"><span class="dn">Día 2</span><div><h4>Llegada · Keflavík</h4><p>Madrid → Islandia. Recogéis la campervan, compra en Bónus y alcohol en el duty-free del aeropuerto. Noche cerca de Reikiavik.</p></div></div>
+        <div class="day"><span class="dn">Día 3</span><div><h4>Reikiavik + Reykjanes</h4><p>La capital más al norte del mundo y la península geotermal: el Puente entre Continentes y campos de lava.</p></div></div>
+        <div class="day"><span class="dn">Día 4</span><div><h4>Círculo Dorado</h4><p>Þingvellir, el géiser Strokkur y Gullfoss. Cierre con las termas naturales gratuitas de Reykjadalur.</p></div></div>
+        <div class="day"><span class="dn">Día 5</span><div><h4>Costa sur</h4><p>Seljalandsfoss (se camina por detrás), Skógafoss, el glaciar Sólheimajökull y la playa negra de Reynisfjara en Vík.</p></div></div>
+        <div class="day"><span class="dn">Día 6</span><div><h4>Glaciares</h4><p>Skaftafell y la laguna glaciar Jökulsárlón con su Diamond Beach: icebergs varados sobre arena negra.</p></div></div>
+        <div class="day"><span class="dn">Día 7</span><div><h4>Fiordos del este</h4><p>Carretera escénica entre fiordos y pueblitos pesqueros. Langostino en Höfn.</p></div></div>
+        <div class="day"><span class="dn">Día 8</span><div><h4>Mývatn</h4><p>Dettifoss (la cascada más potente de Europa), los fumarolas de Námaskarð y los baños de Mývatn (la alternativa barata a la Blue Lagoon).</p></div></div>
+        <div class="day"><span class="dn">Día 9</span><div><h4>Norte</h4><p>Goðafoss, la "cascada de los dioses", y Akureyri, la capital del norte.</p></div></div>
+        <div class="day"><span class="dn">Día 10</span><div><h4>Hacia el oeste</h4><p>Regreso bordeando la costa hacia la península de Snæfellsnes: la montaña Kirkjufell.</p></div></div>
+        <div class="day"><span class="dn">Día 11</span><div><h4>Snæfellsnes → Reikiavik</h4><p>Última jornada de la isla y devolución de la campervan.</p></div></div>
+      </div>
+
+      <div class="panel reveal">
+        <div class="card">
+          <h3>Costos · pareja</h3>
+          <table class="cost">
+            <tr><td>Campervan (10 días)</td><td>€800–1.100</td></tr>
+            <tr><td>Combustible</td><td>€300–400</td></tr>
+            <tr><td>Comida (cocinar)</td><td>€350–450</td></tr>
+            <tr><td>Campings</td><td>€250–350</td></tr>
+            <tr><td>Termas y entradas</td><td>€120–180</td></tr>
+            <tr class="tot"><td>Subtotal</td><td>€1.800–2.450</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Recomendaciones</h3>
+          <ul class="tips">
+            <li><b>Campervan, no hotel:</b> transporte y cama en uno, y cocináis. Es el mayor ahorro de toda Islandia.</li>
+            <li><b>Agua del grifo</b> gratis y excelente; el alcohol es carísimo, comprad en el duty-free al aterrizar.</li>
+            <li><b>Auroras:</b> apuntad a la primera quincena de abril; revisad <b>vedur.is</b> y el cielo despejado.</li>
+            <li><b>Viento y grava:</b> contratad el seguro extra de la campervan y mirad <b>road.is</b> a diario.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- flight ICE -> TEN -->
+  <div class="flight reveal" data-zone="ice">
+    <div class="wrap">
+      <div class="line"><span class="from">Keflavík</span><span class="dash"></span><span class="plane">✈</span><span class="dash"></span><span class="to">Tenerife</span></div>
+      <div class="det">Día 12 · directo · ~6 h · Icelandair / PLAY / Neos</div>
+    </div>
+  </div>
+
+  <!-- ===== CHAPTER 2: TENERIFE ===== -->
+  <section id="tenerife" class="chapter fire" data-zone="fire" data-leg="leg-1" data-city="m-ten">
+    <div class="wrap">
+      <div class="chhead reveal">
+        <div class="chnum">02</div>
+        <h2>Tenerife <em>volcánica</em></h2>
+        <div class="chsub">Días 12–18 · sol y descanso · ~6 noches</div>
+      </div>
+      <p class="lead reveal">Del frío ártico al eterno clima de primavera. Base en el sur, el volcán más alto de España coronando la isla, bosques de niebla milenarios y guachinches donde se come riquísimo por nada.</p>
+
+      <figure class="reveal">
+        <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Clouds_Teide_Tenerife_A.jpg/1280px-Clouds_Teide_Tenerife_A.jpg" alt="El Teide sobre un mar de nubes, Tenerife" onerror="this.style.display='none'">
+        <figcaption><b>El Teide</b> · 3.715 m sobre un mar de nubes. Senderos gratis; la cumbre necesita un permiso gratuito.</figcaption>
+      </figure>
+
+      <div class="days reveal">
+        <div class="day"><span class="dn">Día 12</span><div><h4>Llegada al sur</h4><p>Base en Los Cristianos / Costa Adeje. Apartamento con cocina y primera puesta de sol atlántica.</p></div></div>
+        <div class="day"><span class="dn">Día 13</span><div><h4>Parque Nacional del Teide</h4><p>Paisaje lunar de lava. Teleférico opcional; cumbre con permiso gratuito reservado con antelación.</p></div></div>
+        <div class="day"><span class="dn">Día 14</span><div><h4>Macizo de Anaga</h4><p>Bosque de laurisilva (selva de niebla prehistórica) y la playa de Las Teresitas, de arena dorada.</p></div></div>
+        <div class="day"><span class="dn">Día 15</span><div><h4>Masca y Los Gigantes</h4><p>El caserío escondido entre barrancos y los acantilados de 600 m cayendo al mar. Atardecer.</p></div></div>
+        <div class="day"><span class="dn">Día 16</span><div><h4>Norte verde</h4><p>Puerto de la Cruz, las piscinas naturales de lava de Garachico y La Orotava colonial.</p></div></div>
+        <div class="day"><span class="dn">Día 17</span><div><h4>Mar y relax</h4><p>Día de playa y guachinche. Opcional: avistamiento de cetáceos (hay ballenas piloto todo el año).</p></div></div>
+        <div class="day"><span class="dn">Día 18</span><div><h4>Mañana libre · vuelo a Bari</h4><p>Últimas horas en la isla y vuelo de la tarde Tenerife → Puglia.</p></div></div>
+      </div>
+
+      <div class="panel reveal">
+        <div class="card">
+          <h3>Costos · pareja</h3>
+          <table class="cost">
+            <tr><td>Apartamento (6 noches)</td><td>€280–420</td></tr>
+            <tr><td>Coche pequeño / guaguas</td><td>€100–140</td></tr>
+            <tr><td>Comida</td><td>€220–300</td></tr>
+            <tr><td>Actividades</td><td>€80–140</td></tr>
+            <tr class="tot"><td>Subtotal</td><td>€700–1.000</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Recomendaciones</h3>
+          <ul class="tips">
+            <li><b>Apartamento con cocina</b> + guaguas TITSA (baratísimas) o un coche pequeño manual.</li>
+            <li><b>Guachinches:</b> comida canaria casera, vino del país y precios de risa. Lejos de las zonas turísticas.</li>
+            <li><b>Permiso del Teide</b> gratuito pero limitado: reservar con semanas de antelación si queréis la cumbre.</li>
+            <li>El sur es seco y soleado; el norte, verde y nuboso. Ver los dos.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- flight TEN -> PUG -->
+  <div class="flight reveal" data-zone="fire">
+    <div class="wrap">
+      <div class="line"><span class="from">Tenerife</span><span class="dash"></span><span class="plane">✈</span><span class="dash"></span><span class="to">Bari</span></div>
+      <div class="det">Día 18 · directo Neos · ~4 h 35 (chárter de temporada — confirmar día)</div>
+    </div>
+  </div>
+
+  <!-- ===== CHAPTER 3: PUGLIA ===== -->
+  <section id="puglia" class="chapter med" data-zone="med" data-leg="leg-2" data-city="m-pug">
+    <div class="wrap">
+      <div class="chhead reveal">
+        <div class="chnum">03</div>
+        <h2>Puglia <em>mediterránea</em></h2>
+        <div class="chsub">Días 19–24 · el tacón de Italia · ~6 noches</div>
+      </div>
+      <p class="lead reveal">El cierre dulce: abril de temporada baja, olivares en flor, pueblos blancos sobre el Adriático y la cuna de la burrata. Barato, sin aglomeraciones y comiendo como reyes.</p>
+
+      <figure class="reveal">
+        <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Alberobello_con_il_drone.jpg/1280px-Alberobello_con_il_drone.jpg" alt="Trulli de Alberobello desde el aire" onerror="this.style.display='none'">
+        <figcaption><b>Alberobello</b> · los <i>trulli</i>: casitas de piedra con techo cónico, Patrimonio Mundial.</figcaption>
+      </figure>
+
+      <div class="days reveal">
+        <div class="day"><span class="dn">Día 19</span><div><h4>Bari</h4><p>Casco viejo, orecchiette hechas a mano en la calle de Bari Vecchia. Recogéis el coche de alquiler.</p></div></div>
+        <div class="day"><span class="dn">Día 20</span><div><h4>Valle d'Itria</h4><p>Alberobello y sus trulli, más Locorotondo y Cisternino, dos de los pueblos más bonitos de Italia.</p></div></div>
+        <div class="day"><span class="dn">Día 21</span><div><h4>Ostuni</h4><p>"La ciudad blanca" sobre la colina. Tarde en una masseria con cata de aceite de oliva y vino.</p></div></div>
+        <div class="day"><span class="dn">Día 22</span><div><h4>Polignano a Mare</h4><p>Casco marinero sobre el acantilado y la cala de Lama Monachile; sigue a Monopoli.</p></div></div>
+        <div class="day"><span class="dn">Día 23</span><div><h4>Matera</h4><p>Excursión a los Sassi: barrios excavados en la roca, de los lugares habitados más antiguos del mundo.</p></div></div>
+        <div class="day"><span class="dn">Día 24</span><div><h4>Lecce y el Salento</h4><p>El barroco dorado del sur. Última noche pugliese.</p></div></div>
+      </div>
+
+      <figure class="tall reveal">
+        <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Alba_a_Polignano_a_Mare%2C_Puglia.jpg/1280px-Alba_a_Polignano_a_Mare%2C_Puglia.jpg" alt="Amanecer en Polignano a Mare" onerror="this.style.display='none'">
+        <figcaption><b>Polignano a Mare</b> · el casco antiguo asomado al Adriático al amanecer.</figcaption>
+      </figure>
+
+      <div class="panel reveal">
+        <div class="card">
+          <h3>Costos · pareja</h3>
+          <table class="cost">
+            <tr><td>Alojamiento (6 noches)</td><td>€300–480</td></tr>
+            <tr><td>Coche de alquiler</td><td>€110–160</td></tr>
+            <tr><td>Comida</td><td>€200–300</td></tr>
+            <tr><td>Actividades y entradas</td><td>€90–140</td></tr>
+            <tr class="tot"><td>Subtotal</td><td>€700–1.080</td></tr>
+          </table>
+        </div>
+        <div class="card">
+          <h3>Recomendaciones</h3>
+          <ul class="tips">
+            <li><b>Coche imprescindible:</b> el transporte público es flojo; un utilitario manual es lo más barato.</li>
+            <li><b>Abril = temporada baja:</b> precios mínimos y pueblos vacíos, pero el mar aún está frío para bañarse.</li>
+            <li><b>Comer:</b> orecchiette, burrata de Andria, focaccia barese y vino Primitivo. Dormir en un trullo una noche.</li>
+            <li><b>Matera</b> es Basilicata, no Puglia, pero está a una hora: no os la perdáis.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== TOTAL ===== -->
+  <section id="total" data-zone="med" data-leg="leg-vuelta" data-city="m-scl">
+    <div class="wrap reveal">
+      <div class="eyebrow">El número</div>
+      <h2>Presupuesto <em>total</em></h2>
+      <div class="grand">
+        <table class="cost">
+          <tr><td>Vuelos · transatlántico + KEF–TFS + TFS–BRI</td><td>€2.600–3.400</td></tr>
+          <tr><td>Islandia · 10 días</td><td>€1.800–2.450</td></tr>
+          <tr><td>Tenerife · 6 días</td><td>€700–1.000</td></tr>
+          <tr><td>Puglia · 6 días</td><td>€700–1.080</td></tr>
+          <tr class="tot"><td>Total estimado · pareja</td><td>≈ €5.900–7.900</td></tr>
+        </table>
+      </div>
+      <p class="fxnote">Estimaciones basadas en precios de 2026 para un viaje en abril 2027 — pueden variar. Reservar los vuelos con 6–10 meses de antelación. Conversión a pesos según el cambio del día.</p>
+    </div>
+  </section>
+
+  <!-- ===== RECOMMENDATIONS ===== -->
+  <section id="rec" data-zone="med" data-leg="leg-vuelta" data-city="m-scl">
+    <div class="wrap reveal">
+      <h2>Antes de partir</h2>
+      <div class="recgrid">
+        <div class="card"><h3>Documentos</h3><ul class="tips">
+          <li>Pasaporte chileno con <b>vigencia mínima de 6 meses</b> tras el regreso.</li>
+          <li>Islandia, España e Italia son <b>espacio Schengen</b>: una sola entrada cubre los tres.</li>
+          <li>Revisar <b>ETIAS</b>: la autorización electrónica europea podría exigirse a chilenos en 2027. Verificar y tramitar online antes de viajar.</li>
+        </ul></div>
+        <div class="card"><h3>Equipaje de dos climas</h3><ul class="tips">
+          <li>Capas térmicas, impermeable y gorro para Islandia.</li>
+          <li>Ropa de verano, traje de baño y protector solar para Tenerife y Puglia.</li>
+          <li>Una maleta facturada + carry-on por persona; calzado de trekking ligero.</li>
+        </ul></div>
+        <div class="card"><h3>Dinero y salud</h3><ul class="tips">
+          <li>Tarjeta sin comisión de cambio; en Islandia casi todo es con tarjeta.</li>
+          <li>Algo de efectivo para guachinches, mercados y peajes italianos.</li>
+          <li><b>Seguro de viaje con cobertura médica</b> — no es opcional para una luna de miel transatlántica.</li>
+        </ul></div>
+        <div class="card"><h3>Mejor fecha de abril</h3><ul class="tips">
+          <li><b>Primera quincena:</b> aún hay opción de auroras y precios algo menores; más frío.</li>
+          <li><b>Segunda quincena:</b> más horas de luz y clima más amable; sin auroras.</li>
+          <li>Fijar primero el día del vuelo Tenerife→Bari y construir el resto alrededor.</li>
+        </ul></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CLOSE ===== -->
+  <section id="cierre" data-zone="med" data-leg="leg-vuelta" data-city="m-scl">
+    <div class="wrap reveal">
+      <p class="q">Del hielo al volcán al Mediterráneo —<br>y de vuelta a casa, <span>casados.</span></p>
+      <div class="sig">Día 25 · Bari → Roma/Madrid → Santiago</div>
+    </div>
+  </section>
+
+  <footer><b>Propuesta de luna de miel</b> · Islandia · Tenerife · Puglia · 25 días · abril 2027 · v1 — ajustable a gusto</footer>
+
+</main>
+
+<script>
+(function(){
+  var track=document.getElementById('track');
+  var arrow=document.getElementById('arrow');
+  var fill=document.getElementById('fill');
+  var arrowHead=arrow.querySelector('.head');
+  var body=document.body;
+  var mleg=document.getElementById('mleg');
+  var ticks=[].slice.call(document.querySelectorAll('.tick'));
+  var legNames={'leg-ida':'Rumbo a Islandia','leg-1':'Islandia → Tenerife','leg-2':'Tenerife → Puglia','leg-vuelta':'Regreso a casa'};
+
+  function maxScroll(){return Math.max(1, document.documentElement.scrollHeight - window.innerHeight);}
+
+  // move the descent arrow + fill with scroll progress
+  function updateProgress(){
+    var p=Math.min(1, Math.max(0, window.scrollY / maxScroll()));
+    var th=track.clientHeight;
+    var y=p*th;
+    arrow.style.top=y+'px';
+    fill.style.height=y+'px';
+    arrow.setAttribute('aria-valuenow', Math.round(p*100));
+  }
+
+  // active zone / map leg via section in view
+  var zoneSections=[].slice.call(document.querySelectorAll('[data-zone]'));
+  function setActive(sec){
+    var z=sec.getAttribute('data-zone'); if(z) body.setAttribute('data-zone',z);
+    var leg=sec.getAttribute('data-leg'); var city=sec.getAttribute('data-city');
+    document.querySelectorAll('.leg.on').forEach(function(e){e.classList.remove('on')});
+    document.querySelectorAll('.city.on').forEach(function(e){e.classList.remove('on')});
+    if(leg){var l=document.getElementById(leg); if(l)l.classList.add('on');}
+    if(city){var c=document.getElementById(city); if(c)c.classList.add('on');}
+    if(leg&&mleg){mleg.textContent=legNames[leg]||'';}
+  }
+  var io=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if(en.isIntersecting) setActive(en.target); });
+  },{rootMargin:'-45% 0px -45% 0px', threshold:0});
+  zoneSections.forEach(function(s){io.observe(s)});
+
+  // active tick
+  var goSecs=ticks.map(function(t){return document.getElementById(t.getAttribute('data-go'));});
+  function updateTicks(){
+    var sy=window.scrollY+window.innerHeight*0.4, best=0;
+    goSecs.forEach(function(s,i){ if(s && s.offsetTop<=sy) best=i; });
+    ticks.forEach(function(t,i){ t.classList.toggle('on', i===best); });
+  }
+  ticks.forEach(function(t){
+    t.addEventListener('click',function(){
+      var el=document.getElementById(t.getAttribute('data-go'));
+      if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+    });
+  });
+
+  // reveal on scroll
+  var rio=new IntersectionObserver(function(entries){
+    entries.forEach(function(en){ if(en.isIntersecting){en.target.classList.add('in'); rio.unobserve(en.target);} });
+  },{threshold:0.12});
+  document.querySelectorAll('.reveal').forEach(function(e){rio.observe(e)});
+
+  // drag the arrow to scrub the journey (slider behaviour)
+  var dragging=false;
+  function scrubFromClientY(cy){
+    var r=track.getBoundingClientRect();
+    var p=Math.min(1,Math.max(0,(cy-r.top)/r.height));
+    window.scrollTo(0, p*maxScroll());
+  }
+  arrow.addEventListener('pointerdown',function(e){dragging=true; arrow.setPointerCapture(e.pointerId); e.preventDefault();});
+  window.addEventListener('pointermove',function(e){ if(dragging) scrubFromClientY(e.clientY); });
+  window.addEventListener('pointerup',function(){dragging=false;});
+  arrow.addEventListener('keydown',function(e){
+    var step=window.innerHeight*0.85;
+    if(e.key==='ArrowDown'){window.scrollBy(0,step); e.preventDefault();}
+    if(e.key==='ArrowUp'){window.scrollBy(0,-step); e.preventDefault();}
+  });
+
+  function onScroll(){updateProgress(); updateTicks();}
+  window.addEventListener('scroll',onScroll,{passive:true});
+  window.addEventListener('resize',onScroll);
+  onScroll();
+})();
+</script>
+</body>
+</html>
