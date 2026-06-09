@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="color-scheme" content="dark">
-<title>Luna de miel · Islandia · Tenerife · Puglia · abril 2027</title>
+<title>Vacaciones 2027 · dos itinerarios</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Spectral:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,6 +16,10 @@
     --ice:#8bcfe6; --ice-glow:#7ce8c6; --ice-deep:#16272f;
     --fire:#eeb066; --fire-glow:#ef7548; --fire-deep:#321a12;
     --med:#82bce0; --med-glow:#b7cd74; --med-deep:#192a32;
+    /* Patagonia (opción 2) */
+    --bosque:#7fc8a9; --bosque-glow:#9ddb6f; --bosque-deep:#13241f;
+    --hielo:#86c5e0; --hielo-glow:#e6c878; --hielo-deep:#16242c;
+    --austral:#9aa6e0; --austral-glow:#7fe3d0; --austral-deep:#171a2b;
     --accent:var(--ice); --accent-glow:var(--ice-glow); --accent-deep:var(--ice-deep);
     --serif:"Fraunces",Georgia,"Times New Roman",serif;
     --body:"Spectral",Georgia,serif;
@@ -24,6 +28,9 @@
   }
   body[data-zone="fire"]{--accent:var(--fire);--accent-glow:var(--fire-glow);--accent-deep:var(--fire-deep);}
   body[data-zone="med"]{--accent:var(--med);--accent-glow:var(--med-glow);--accent-deep:var(--med-deep);}
+  body[data-zone="bosque"]{--accent:var(--bosque);--accent-glow:var(--bosque-glow);--accent-deep:var(--bosque-deep);}
+  body[data-zone="hielo"]{--accent:var(--hielo);--accent-glow:var(--hielo-glow);--accent-deep:var(--hielo-deep);}
+  body[data-zone="austral"]{--accent:var(--austral);--accent-glow:var(--austral-glow);--accent-deep:var(--austral-deep);}
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth; background-color:#0c1014;}
   body{
@@ -35,13 +42,15 @@
   }
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 
+  .option[hidden]{display:none}
+
   /* ---------- TIMELINE RAIL (downward-arrow slider) ---------- */
-  #rail{position:fixed; left:0; top:0; height:100vh; width:var(--rail); z-index:40;
+  .rail{position:fixed; left:0; top:0; height:100vh; width:var(--rail); z-index:40;
     display:flex; align-items:stretch; justify-content:center;
     background:linear-gradient(90deg, rgba(8,11,14,.9), rgba(8,11,14,.0));
     pointer-events:none;}
-  #track{position:relative; width:2px; margin:30px 0; background:var(--line); border-radius:2px; pointer-events:none;}
-  #fill{position:absolute; left:0; top:0; width:100%; height:0;
+  .track{position:relative; width:2px; margin:30px 0; background:var(--line); border-radius:2px; pointer-events:none;}
+  .fill{position:absolute; left:0; top:0; width:100%; height:0;
     background:linear-gradient(var(--accent-glow),var(--accent)); border-radius:2px;
     box-shadow:0 0 12px color-mix(in srgb,var(--accent) 60%, transparent); transition:background .8s ease;}
   .tick{position:absolute; left:50%; transform:translate(-50%,-50%); width:11px; height:11px;
@@ -53,31 +62,30 @@
     font-family:var(--ui); font-size:10px; letter-spacing:.14em; text-transform:uppercase;
     color:var(--muted); white-space:nowrap; opacity:0; transition:.3s; pointer-events:none}
   .tick:hover .lbl,.tick.on .lbl{opacity:1; color:var(--paper)}
-  #arrow{position:absolute; left:50%; top:0; transform:translate(-50%,-2px); z-index:3;
+  .arrow{position:absolute; left:50%; top:0; transform:translate(-50%,-2px); z-index:3;
     cursor:grab; pointer-events:auto; touch-action:none; filter:drop-shadow(0 2px 6px rgba(0,0,0,.6))}
-  #arrow svg{display:block}
-  #arrow .head{fill:var(--accent); transition:fill .8s ease}
-  #arrow:active{cursor:grabbing}
-  #railhint{position:absolute; bottom:6px; left:50%; transform:translateX(-50%) rotate(-90deg);
+  .arrow svg{display:block}
+  .arrow .head{fill:var(--accent); transition:fill .8s ease}
+  .arrow:active{cursor:grabbing}
+  .railhint{position:absolute; bottom:6px; left:50%; transform:translateX(-50%) rotate(-90deg);
     transform-origin:center; font-family:var(--ui); font-size:9px; letter-spacing:.3em;
     color:var(--muted); text-transform:uppercase; white-space:nowrap; pointer-events:none}
 
   /* ---------- ROUTE MAP (fixed top-right) ---------- */
-  #map{position:fixed; top:14px; right:14px; width:var(--mapw); z-index:45;
+  .map{position:fixed; top:14px; right:14px; width:var(--mapw); z-index:45;
     background:rgba(12,17,22,.66); backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px);
     border:1px solid var(--line); border-radius:14px; padding:12px 12px 9px;
     box-shadow:0 10px 40px rgba(0,0,0,.45);}
-  #map .mhead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px}
-  #map .mtitle{font-family:var(--ui); font-size:9.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted)}
-  #map .mleg{font-family:var(--ui); font-size:10px; letter-spacing:.04em; color:var(--accent); font-weight:600; transition:color .8s ease}
-  #map svg{display:block; width:100%; height:auto}
+  .map .mhead{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px}
+  .map .mtitle{font-family:var(--ui); font-size:9.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted)}
+  .map .mleg{font-family:var(--ui); font-size:10px; letter-spacing:.04em; color:var(--accent); font-weight:600; transition:color .8s ease}
+  .map svg{display:block; width:100%; height:auto}
   .land{fill:rgba(240,232,216,.045); stroke:rgba(240,232,216,.12); stroke-width:.6}
   .grid{stroke:rgba(240,232,216,.06); stroke-width:.5; fill:none}
   .leg{fill:none; stroke:rgba(240,232,216,.22); stroke-width:1.4; stroke-linecap:round; stroke-dasharray:3 4}
-  .leg.on{stroke:var(--accent); stroke-width:2.1; stroke-dasharray:none;
-    filter:drop-shadow(0 0 4px var(--accent)); animation:flow 1.1s linear infinite}
+  .leg.on{stroke:var(--accent); stroke-width:2.1;
+    filter:drop-shadow(0 0 4px var(--accent)); animation:flow 1.1s linear infinite; stroke-dasharray:5 5}
   @keyframes flow{to{stroke-dashoffset:-14}}
-  .leg.on{stroke-dasharray:5 5}
   .city{fill:var(--muted); transition:.5s}
   .city.on{fill:var(--accent); r:4.2; filter:drop-shadow(0 0 6px var(--accent))}
   .clabel{font-family:var(--ui); font-size:7.4px; letter-spacing:.06em; fill:var(--paper); opacity:.78}
@@ -85,8 +93,21 @@
   .city.on + .ring{opacity:.9; animation:pulse 1.8s ease-out infinite}
   @keyframes pulse{0%{r:5;opacity:.8}100%{r:13;opacity:0}}
 
+  /* ---------- TAB SWITCHER (fixed bottom) ---------- */
+  .tabs{position:fixed; left:50%; bottom:18px; transform:translateX(-50%); z-index:60;
+    display:flex; gap:4px; padding:5px;
+    background:rgba(12,17,22,.74); backdrop-filter:blur(11px); -webkit-backdrop-filter:blur(11px);
+    border:1px solid var(--line); border-radius:999px; box-shadow:0 12px 44px rgba(0,0,0,.55);}
+  .tab{font-family:var(--ui); font-size:12px; letter-spacing:.02em; color:var(--muted);
+    background:transparent; border:0; cursor:pointer; padding:9px 17px; border-radius:999px;
+    transition:color .25s ease, background .25s ease; white-space:nowrap; display:flex; gap:7px; align-items:center}
+  .tab .ti{font-size:13px}
+  .tab:hover{color:var(--paper)}
+  .tab.on{background:var(--accent); color:#0c1014; font-weight:600;
+    box-shadow:0 0 16px color-mix(in srgb,var(--accent) 55%,transparent);}
+
   /* ---------- LAYOUT ---------- */
-  main{padding-left:var(--rail); background-color:#0c1014;}
+  main{padding-left:var(--rail); padding-bottom:96px; background-color:#0c1014;}
   .wrap{max-width:780px; margin:0 auto; padding:0 26px}
   section{position:relative; scroll-margin-top:20px}
 
@@ -94,31 +115,33 @@
   h1,h2,h3,h4{font-family:var(--serif); font-weight:500; line-height:1.05}
 
   /* HERO */
-  #hero{min-height:100vh; display:flex; flex-direction:column; justify-content:center;
+  .hero{min-height:100vh; display:flex; flex-direction:column; justify-content:center;
     padding:90px 0 60px; position:relative; overflow:hidden}
-  #hero .bg{position:absolute; inset:0; background-size:cover; background-position:center;
+  .hero .bg{position:absolute; inset:0; background-size:cover; background-position:center;
     background-image:linear-gradient(180deg,rgba(12,16,20,.55),rgba(12,16,20,.82) 70%,var(--ink)),
       linear-gradient(135deg,#23404e,#0e1b22);}
-  #hero .bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;opacity:.42}
-  #hero .wrap{position:relative}
-  #hero .kick{font-family:var(--ui); font-size:12px; letter-spacing:.4em; text-transform:uppercase;
-    color:var(--ice); margin-bottom:22px}
-  #hero h1{font-size:clamp(46px,11vw,104px); letter-spacing:-.02em; font-weight:400}
-  #hero h1 em{font-style:italic; color:var(--ice-glow)}
-  #hero .route{font-family:var(--serif); font-size:clamp(20px,4.5vw,32px); font-style:italic; color:var(--paper); margin-top:14px; opacity:.92}
-  #hero .meta{display:flex; flex-wrap:wrap; gap:14px 30px; margin-top:34px; font-family:var(--ui); font-size:13px; letter-spacing:.06em; color:var(--muted)}
-  #hero .meta b{color:var(--paper); font-weight:600}
-  #scrollcue{margin-top:48px; font-family:var(--ui); font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:10px}
-  #scrollcue .dn{display:inline-block; animation:bob 1.8s ease-in-out infinite}
+  .hero.bg-austral .bg{background-image:linear-gradient(180deg,rgba(12,16,20,.55),rgba(12,16,20,.82) 70%,var(--ink)),
+      linear-gradient(135deg,#1f3b2f,#0e1b22);}
+  .hero .bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-1;opacity:.42}
+  .hero .wrap{position:relative}
+  .hero .kick{font-family:var(--ui); font-size:12px; letter-spacing:.4em; text-transform:uppercase;
+    color:var(--accent); margin-bottom:22px}
+  .hero h1{font-size:clamp(46px,11vw,104px); letter-spacing:-.02em; font-weight:400}
+  .hero h1 em{font-style:italic; color:var(--accent-glow)}
+  .hero .route{font-family:var(--serif); font-size:clamp(20px,4.5vw,32px); font-style:italic; color:var(--paper); margin-top:14px; opacity:.92}
+  .hero .meta{display:flex; flex-wrap:wrap; gap:14px 30px; margin-top:34px; font-family:var(--ui); font-size:13px; letter-spacing:.06em; color:var(--muted)}
+  .hero .meta b{color:var(--paper); font-weight:600}
+  .scrollcue{margin-top:48px; font-family:var(--ui); font-size:11px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); display:flex; align-items:center; gap:10px}
+  .scrollcue .dn{display:inline-block; animation:bob 1.8s ease-in-out infinite}
   @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(5px)}}
 
   /* OVERVIEW */
-  #ruta{padding:70px 0 30px}
-  #ruta h2{font-size:clamp(28px,6vw,44px); margin:14px 0 18px; max-width:14ch}
-  #ruta p{color:#e9e3d7; max-width:62ch; margin-bottom:16px}
+  .overview{padding:70px 0 30px}
+  .overview h2{font-size:clamp(28px,6vw,44px); margin:14px 0 18px; max-width:16ch}
+  .overview p{color:#e9e3d7; max-width:62ch; margin-bottom:16px}
   .chain{display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin:26px 0; font-family:var(--ui); font-size:13px}
   .chain .node{background-color:var(--ink2); border:1px solid var(--line); border-radius:999px; padding:7px 14px; letter-spacing:.04em}
-  .chain .node b{color:var(--ice)}
+  .chain .node b{color:var(--accent)}
   .chain .arr{color:var(--muted)}
   .note{border-left:2px solid var(--accent); background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 9%,transparent),transparent);
     padding:14px 18px; border-radius:0 10px 10px 0; margin:24px 0; font-size:15px; color:#ebe5d9}
@@ -129,6 +152,9 @@
   .chapter.ice{--c:var(--ice);--cg:var(--ice-glow)}
   .chapter.fire{--c:var(--fire);--cg:var(--fire-glow)}
   .chapter.med{--c:var(--med);--cg:var(--med-glow)}
+  .chapter.bosque{--c:var(--bosque);--cg:var(--bosque-glow)}
+  .chapter.hielo{--c:var(--hielo);--cg:var(--hielo-glow)}
+  .chapter.austral{--c:var(--austral);--cg:var(--austral-glow)}
   .chhead{position:relative; margin-bottom:8px}
   .chnum{font-family:var(--serif); font-size:clamp(64px,18vw,150px); line-height:.8; font-weight:400;
     color:transparent; -webkit-text-stroke:1px color-mix(in srgb,var(--c) 55%,transparent);
@@ -166,7 +192,7 @@
   ul.tips li::before{content:""; position:absolute; left:0; top:9px; width:7px; height:7px; border-radius:50%; background:var(--c); box-shadow:0 0 8px var(--c)}
   ul.tips b{color:var(--paper)}
 
-  /* TRANSITION (flight) */
+  /* TRANSITION (flight / drive) */
   .flight{padding:44px 0; text-align:center}
   .flight .line{display:flex; align-items:center; gap:14px; justify-content:center; font-family:var(--ui); font-size:13px; letter-spacing:.14em; color:var(--muted)}
   .flight .plane{font-size:20px; color:var(--paper)}
@@ -175,440 +201,791 @@
   .flight .dash{flex:0 0 60px; height:1px; background:repeating-linear-gradient(90deg,var(--muted) 0 4px,transparent 4px 9px)}
 
   /* TOTAL + REC */
-  #total{padding:70px 0 30px}
-  #total h2{font-size:clamp(30px,7vw,52px); margin-bottom:8px}
-  #total h2 em{font-style:italic; color:var(--accent-glow)}
+  .total{padding:70px 0 30px}
+  .total h2{font-size:clamp(30px,7vw,52px); margin-bottom:8px}
+  .total h2 em{font-style:italic; color:var(--accent-glow)}
   .grand{margin:24px 0; background-color:var(--ink2); border:1px solid var(--line); border-radius:16px; padding:6px 24px 14px}
   .grand table.cost td{font-size:15px; padding:13px 0}
   .grand table.cost td:first-child{color:#ece6da}
   .grand .tot td{font-size:22px !important; font-family:var(--serif); letter-spacing:-.01em}
   .fxnote{font-family:var(--ui); font-size:11.5px; color:var(--muted); margin-top:10px; letter-spacing:.02em}
 
-  #rec{padding:30px 0 20px}
-  #rec h2{font-size:clamp(26px,6vw,40px); margin-bottom:22px}
+  .rec{padding:30px 0 20px}
+  .rec h2{font-size:clamp(26px,6vw,40px); margin-bottom:22px}
   .recgrid{display:grid; grid-template-columns:1fr 1fr; gap:16px}
 
   /* CLOSE */
-  #cierre{padding:80px 0 120px; text-align:center}
-  #cierre .q{font-family:var(--serif); font-style:italic; font-size:clamp(26px,6vw,42px); line-height:1.2; max-width:18ch; margin:0 auto; color:var(--paper)}
-  #cierre .q span{color:var(--med-glow)}
-  #cierre .sig{font-family:var(--ui); font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); margin-top:34px}
+  .cierre{padding:80px 0 90px; text-align:center}
+  .cierre .q{font-family:var(--serif); font-style:italic; font-size:clamp(26px,6vw,42px); line-height:1.2; max-width:18ch; margin:0 auto; color:var(--paper)}
+  .cierre .q span{color:var(--accent-glow)}
+  .cierre .sig{font-family:var(--ui); font-size:12px; letter-spacing:.28em; text-transform:uppercase; color:var(--muted); margin-top:34px}
 
-  footer{border-top:1px solid var(--line); padding:26px 0; font-family:var(--ui); font-size:11px; letter-spacing:.08em; color:var(--muted); text-align:center}
+  footer{border-top:1px solid var(--line); padding:26px 0 40px; font-family:var(--ui); font-size:11px; letter-spacing:.08em; color:var(--muted); text-align:center}
   footer b{color:var(--paper)}
 
   .reveal{opacity:0; transform:translateY(22px); transition:opacity .7s ease, transform .7s ease}
   .reveal.in{opacity:1; transform:none}
-  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.leg.on{animation:none}.city.on+.ring{animation:none;opacity:0}#scrollcue .dn{animation:none}}
+  @media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none}.leg.on{animation:none}.city.on+.ring{animation:none;opacity:0}.scrollcue .dn{animation:none}}
 
   @media(max-width:640px){
     :root{--rail:42px; --mapw:118px}
     body{font-size:16px}
-    #map{top:10px; right:10px; padding:8px 8px 6px; border-radius:11px}
-    #map .mtitle{display:none}
+    .map{top:10px; right:10px; padding:8px 8px 6px; border-radius:11px}
+    .map .mtitle{display:none}
     .clabel{font-size:8.5px}
     .wrap{padding:0 18px}
-    #hero{padding-top:120px}
+    .hero{padding-top:120px}
     .day{grid-template-columns:62px 1fr; gap:12px}
     .panel,.recgrid{grid-template-columns:1fr}
     .tick .lbl{display:none}
-    #railhint{display:none}
+    .railhint{display:none}
+    .tab{font-size:11px; padding:8px 12px}
+    .tabs{bottom:12px}
   }
 </style>
 </head>
 <body data-zone="ice">
 
-<!-- ===== TIMELINE RAIL ===== -->
-<nav id="rail" aria-label="Línea de tiempo del viaje">
-  <div id="track">
-    <div id="fill"></div>
-    <button class="tick" data-go="hero" style="top:1%"><span class="lbl">Inicio</span></button>
-    <button class="tick" data-go="islandia" style="top:24%"><span class="lbl">Islandia</span></button>
-    <button class="tick" data-go="tenerife" style="top:55%"><span class="lbl">Tenerife</span></button>
-    <button class="tick" data-go="puglia" style="top:78%"><span class="lbl">Puglia</span></button>
-    <button class="tick" data-go="cierre" style="top:99%"><span class="lbl">Regreso</span></button>
-    <div id="arrow" role="slider" tabindex="0" aria-label="Avanzar por el viaje" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-      <svg width="22" height="26" viewBox="0 0 22 26"><path class="head" d="M11 25 L1 11 H7 V1 H15 V11 H21 Z"/></svg>
-    </div>
-    <div id="railhint">el viaje avanza ↓</div>
-  </div>
+<!-- ===== TAB SWITCHER ===== -->
+<nav class="tabs" aria-label="Opciones de vacaciones">
+  <button class="tab on" data-opt="1"><span class="ti">❄</span> Opción 1 · Hielo &amp; Mediterráneo</button>
+  <button class="tab" data-opt="2"><span class="ti">🚙</span> Opción 2 · Carretera Austral</button>
 </nav>
 
-<!-- ===== ROUTE MAP ===== -->
-<aside id="map" aria-label="Mapa de rutas">
-  <div class="mhead"><span class="mtitle">Carta de ruta</span><span class="mleg" id="mleg">Salida</span></div>
-  <svg viewBox="0 0 200 268" role="img" aria-label="Ruta Santiago–Islandia–Tenerife–Puglia">
-    <path class="grid" d="M0 60 H200 M0 130 H200 M0 200 H200 M60 0 V268 M130 0 V268"/>
-    <!-- stylised landmasses -->
-    <path class="land" d="M104 30 q14 -8 24 2 q10 8 2 16 q-12 10 -26 4 q-12 -6 0 -22 z"/>
-    <path class="land" d="M44 138 q22 -10 34 2 q8 12 -6 22 q-20 10 -34 -2 q-10 -12 6 -22 z"/>
-    <circle class="land" cx="62" cy="170" r="3.4"/><circle class="land" cx="54" cy="176" r="2.4"/>
-    <path class="land" d="M158 104 q16 -6 22 8 q4 14 -6 26 q-8 12 -16 -2 q-8 -16 0 -32 z"/>
-    <!-- legs -->
-    <path id="leg-ida"    class="leg" d="M34 244 Q6 150 119 44"/>
-    <path id="leg-1"      class="leg" d="M119 44 Q72 96 62 168"/>
-    <path id="leg-2"      class="leg" d="M62 168 Q120 200 174 128"/>
-    <path id="leg-vuelta" class="leg" d="M174 128 Q116 252 34 244"/>
-    <!-- cities -->
-    <circle id="m-ice" class="city" cx="119" cy="44" r="3.4"/><circle class="ring" cx="119" cy="44" r="5"/>
-    <text class="clabel" x="125" y="42">KEF · Islandia</text>
-    <circle id="m-ten" class="city" cx="62" cy="168" r="3.4"/><circle class="ring" cx="62" cy="168" r="5"/>
-    <text class="clabel" x="10" y="184">TFS · Tenerife</text>
-    <circle id="m-pug" class="city" cx="174" cy="128" r="3.4"/><circle class="ring" cx="174" cy="128" r="5"/>
-    <text class="clabel" x="120" y="120">BRI · Puglia</text>
-    <circle id="m-scl" class="city" cx="34" cy="244" r="3.4"/><circle class="ring" cx="34" cy="244" r="5"/>
-    <text class="clabel" x="10" y="258">SCL · Santiago</text>
-  </svg>
-</aside>
 
-<main>
+<!-- ============================================================= -->
+<!-- ===== OPCIÓN 1 · ISLANDIA · TENERIFE · PUGLIA ============== -->
+<!-- ============================================================= -->
+<div class="option active" data-opt="1"
+     data-legnames='{"leg-ida":"Rumbo a Islandia","leg-1":"Islandia → Tenerife","leg-2":"Tenerife → Puglia","leg-vuelta":"Regreso a casa"}'>
 
-  <!-- ===== HERO ===== -->
-  <section id="hero" data-zone="ice" data-leg="leg-ida" data-city="m-ice">
-    <div class="bg"><img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Sk%C3%B3gafoss_July_2014.JPG/1280px-Sk%C3%B3gafoss_July_2014.JPG" alt="Cascada de Skógafoss, Islandia" onerror="this.style.display='none'"></div>
-    <div class="wrap">
-      <div class="kick">Propuesta de viaje · 25 días</div>
-      <h1>Luna de<br><em>miel</em></h1>
-      <div class="route">Islandia · Tenerife · Puglia</div>
-      <div class="meta">
-        <span><b>Cuándo</b> · abril 2027</span>
-        <span><b>Duración</b> · 25 días</span>
-        <span><b>Estilo</b> · low cost, alto en paisaje</span>
-        <span><b>Total estimado</b> · ≈ €5.900–7.900 la pareja</span>
+  <!-- TIMELINE RAIL -->
+  <nav class="rail" aria-label="Línea de tiempo del viaje">
+    <div class="track">
+      <div class="fill"></div>
+      <button class="tick" data-go="hero" style="top:1%"><span class="lbl">Inicio</span></button>
+      <button class="tick" data-go="islandia" style="top:24%"><span class="lbl">Islandia</span></button>
+      <button class="tick" data-go="tenerife" style="top:55%"><span class="lbl">Tenerife</span></button>
+      <button class="tick" data-go="puglia" style="top:78%"><span class="lbl">Puglia</span></button>
+      <button class="tick" data-go="cierre" style="top:99%"><span class="lbl">Regreso</span></button>
+      <div class="arrow" role="slider" tabindex="0" aria-label="Avanzar por el viaje" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <svg width="22" height="26" viewBox="0 0 22 26"><path class="head" d="M11 25 L1 11 H7 V1 H15 V11 H21 Z"/></svg>
       </div>
-      <div id="scrollcue"><span class="dn">▼</span> baja para recorrer el viaje</div>
+      <div class="railhint">el viaje avanza ↓</div>
     </div>
-  </section>
+  </nav>
 
-  <!-- ===== OVERVIEW ===== -->
-  <section id="ruta" data-zone="ice" data-leg="leg-ida" data-city="m-ice">
-    <div class="wrap reveal">
-      <div class="eyebrow">La ruta inteligente</div>
-      <h2>Tres mundos, sin devolverse sobre los pasos</h2>
-      <p>El truco no es comprar tres viajes sueltos, sino un solo billete multidestino que aprovecha los vuelos directos que ya existen: Canarias es el destino de sol favorito de los islandeses, y desde Tenerife hay vuelo directo a Puglia. Italia entra al final, justo antes del regreso a casa, con un degradado climático perfecto: del hielo al volcán al Mediterráneo.</p>
-      <div class="chain">
-        <span class="node"><b>Santiago</b></span><span class="arr">→</span>
-        <span class="node">Madrid</span><span class="arr">→</span>
-        <span class="node"><b>Keflavík</b> · Islandia</span><span class="arr">→</span>
-        <span class="node"><b>Tenerife</b> <i>directo</i></span><span class="arr">→</span>
-        <span class="node"><b>Bari</b> · Puglia <i>directo</i></span><span class="arr">→</span>
-        <span class="node">Roma/Madrid</span><span class="arr">→</span>
-        <span class="node"><b>Santiago</b></span>
+  <!-- ROUTE MAP -->
+  <aside class="map" aria-label="Mapa de rutas">
+    <div class="mhead"><span class="mtitle">Carta de ruta</span><span class="mleg">Salida</span></div>
+    <svg viewBox="0 0 200 268" role="img" aria-label="Ruta Santiago–Islandia–Tenerife–Puglia">
+      <path class="grid" d="M0 60 H200 M0 130 H200 M0 200 H200 M60 0 V268 M130 0 V268"/>
+      <path class="land" d="M104 30 q14 -8 24 2 q10 8 2 16 q-12 10 -26 4 q-12 -6 0 -22 z"/>
+      <path class="land" d="M44 138 q22 -10 34 2 q8 12 -6 22 q-20 10 -34 -2 q-10 -12 6 -22 z"/>
+      <circle class="land" cx="62" cy="170" r="3.4"/><circle class="land" cx="54" cy="176" r="2.4"/>
+      <path class="land" d="M158 104 q16 -6 22 8 q4 14 -6 26 q-8 12 -16 -2 q-8 -16 0 -32 z"/>
+      <path class="leg" data-leg="leg-ida"    d="M34 244 Q6 150 119 44"/>
+      <path class="leg" data-leg="leg-1"      d="M119 44 Q72 96 62 168"/>
+      <path class="leg" data-leg="leg-2"      d="M62 168 Q120 200 174 128"/>
+      <path class="leg" data-leg="leg-vuelta" d="M174 128 Q116 252 34 244"/>
+      <circle class="city" data-city="m-ice" cx="119" cy="44" r="3.4"/><circle class="ring" cx="119" cy="44" r="5"/>
+      <text class="clabel" x="125" y="42">KEF · Islandia</text>
+      <circle class="city" data-city="m-ten" cx="62" cy="168" r="3.4"/><circle class="ring" cx="62" cy="168" r="5"/>
+      <text class="clabel" x="10" y="184">TFS · Tenerife</text>
+      <circle class="city" data-city="m-pug" cx="174" cy="128" r="3.4"/><circle class="ring" cx="174" cy="128" r="5"/>
+      <text class="clabel" x="120" y="120">BRI · Puglia</text>
+      <circle class="city" data-city="m-scl" cx="34" cy="244" r="3.4"/><circle class="ring" cx="34" cy="244" r="5"/>
+      <text class="clabel" x="10" y="258">SCL · Santiago</text>
+    </svg>
+  </aside>
+
+  <main>
+
+    <section id="hero" class="hero" data-zone="ice" data-leg="leg-ida" data-city="m-ice">
+      <div class="bg"><img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Sk%C3%B3gafoss_July_2014.JPG/1280px-Sk%C3%B3gafoss_July_2014.JPG" alt="Cascada de Skógafoss, Islandia" onerror="this.style.display='none'"></div>
+      <div class="wrap">
+        <div class="kick">Propuesta de viaje · 25 días</div>
+        <h1>Luna de<br><em>miel</em></h1>
+        <div class="route">Islandia · Tenerife · Puglia</div>
+        <div class="meta">
+          <span><b>Cuándo</b> · abril 2027</span>
+          <span><b>Duración</b> · 25 días</span>
+          <span><b>Estilo</b> · low cost, alto en paisaje</span>
+          <span><b>Total estimado</b> · ≈ €5.900–7.900 la pareja</span>
+        </div>
+        <div class="scrollcue"><span class="dn">▼</span> baja para recorrer el viaje</div>
       </div>
-      <div class="note"><b>Verificar antes de comprar:</b> el directo Tenerife→Bari (Neos) suele ser chárter de temporada y a veces vuela solo un día por semana. Confirmar que opere en abril 2027 y qué día, porque eso fija las fechas. Plan B: una escala barata vía Barcelona o Madrid.</div>
+    </section>
+
+    <section id="ruta" class="overview" data-zone="ice" data-leg="leg-ida" data-city="m-ice">
+      <div class="wrap reveal">
+        <div class="eyebrow">La ruta inteligente</div>
+        <h2>Tres mundos, sin devolverse sobre los pasos</h2>
+        <p>El truco no es comprar tres viajes sueltos, sino un solo billete multidestino que aprovecha los vuelos directos que ya existen: Canarias es el destino de sol favorito de los islandeses, y desde Tenerife hay vuelo directo a Puglia. Italia entra al final, justo antes del regreso a casa, con un degradado climático perfecto: del hielo al volcán al Mediterráneo.</p>
+        <div class="chain">
+          <span class="node"><b>Santiago</b></span><span class="arr">→</span>
+          <span class="node">Madrid</span><span class="arr">→</span>
+          <span class="node"><b>Keflavík</b> · Islandia</span><span class="arr">→</span>
+          <span class="node"><b>Tenerife</b> <i>directo</i></span><span class="arr">→</span>
+          <span class="node"><b>Bari</b> · Puglia <i>directo</i></span><span class="arr">→</span>
+          <span class="node">Roma/Madrid</span><span class="arr">→</span>
+          <span class="node"><b>Santiago</b></span>
+        </div>
+        <div class="note"><b>Verificar antes de comprar:</b> el directo Tenerife→Bari (Neos) suele ser chárter de temporada y a veces vuela solo un día por semana. Confirmar que opere en abril 2027 y qué día, porque eso fija las fechas. Plan B: una escala barata vía Barcelona o Madrid.</div>
+      </div>
+    </section>
+
+    <section id="islandia" class="chapter ice" data-zone="ice" data-leg="leg-ida" data-city="m-ice">
+      <div class="wrap">
+        <div class="chhead reveal">
+          <div class="chnum">01</div>
+          <h2>Islandia <em>glacial</em></h2>
+          <div class="chsub">Días 1–11 · vuelta completa a la isla (Ring Road) · ~10 noches</div>
+        </div>
+        <p class="lead reveal">Llegáis del otro lado del planeta a la tierra del fuego y el hielo. Campervan, cascadas que rugen, glaciares que se desprenden en lagunas turquesa y —si las noches despejan en la primera quincena— auroras sobre el techo del coche.</p>
+
+        <figure class="reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Sk%C3%B3gafoss_July_2014.JPG/1280px-Sk%C3%B3gafoss_July_2014.JPG" alt="Cascada de Skógafoss" onerror="this.style.display='none'">
+          <figcaption><b>Skógafoss</b> · una de las cascadas de la costa sur, 60 m de caída y arcoíris casi garantizado.</figcaption>
+        </figure>
+
+        <div class="days reveal">
+          <div class="day"><span class="dn">Día 1</span><div><h4>Despegue</h4><p>Vuelo nocturno Santiago → Madrid.</p></div></div>
+          <div class="day"><span class="dn">Día 2</span><div><h4>Llegada · Keflavík</h4><p>Madrid → Islandia. Recogéis la campervan, compra en Bónus y alcohol en el duty-free del aeropuerto. Noche cerca de Reikiavik.</p></div></div>
+          <div class="day"><span class="dn">Día 3</span><div><h4>Reikiavik + Reykjanes</h4><p>La capital más al norte del mundo y la península geotermal: el Puente entre Continentes y campos de lava.</p></div></div>
+          <div class="day"><span class="dn">Día 4</span><div><h4>Círculo Dorado</h4><p>Þingvellir, el géiser Strokkur y Gullfoss. Cierre con las termas naturales gratuitas de Reykjadalur.</p></div></div>
+          <div class="day"><span class="dn">Día 5</span><div><h4>Costa sur</h4><p>Seljalandsfoss (se camina por detrás), Skógafoss, el glaciar Sólheimajökull y la playa negra de Reynisfjara en Vík.</p></div></div>
+          <div class="day"><span class="dn">Día 6</span><div><h4>Glaciares</h4><p>Skaftafell y la laguna glaciar Jökulsárlón con su Diamond Beach: icebergs varados sobre arena negra.</p></div></div>
+          <div class="day"><span class="dn">Día 7</span><div><h4>Fiordos del este</h4><p>Carretera escénica entre fiordos y pueblitos pesqueros. Langostino en Höfn.</p></div></div>
+          <div class="day"><span class="dn">Día 8</span><div><h4>Mývatn</h4><p>Dettifoss (la cascada más potente de Europa), los fumarolas de Námaskarð y los baños de Mývatn (la alternativa barata a la Blue Lagoon).</p></div></div>
+          <div class="day"><span class="dn">Día 9</span><div><h4>Norte</h4><p>Goðafoss, la "cascada de los dioses", y Akureyri, la capital del norte.</p></div></div>
+          <div class="day"><span class="dn">Día 10</span><div><h4>Hacia el oeste</h4><p>Regreso bordeando la costa hacia la península de Snæfellsnes: la montaña Kirkjufell.</p></div></div>
+          <div class="day"><span class="dn">Día 11</span><div><h4>Snæfellsnes → Reikiavik</h4><p>Última jornada de la isla y devolución de la campervan.</p></div></div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="card">
+            <h3>Costos · pareja</h3>
+            <table class="cost">
+              <tr><td>Campervan (10 días)</td><td>€800–1.100</td></tr>
+              <tr><td>Combustible</td><td>€300–400</td></tr>
+              <tr><td>Comida (cocinar)</td><td>€350–450</td></tr>
+              <tr><td>Campings</td><td>€250–350</td></tr>
+              <tr><td>Termas y entradas</td><td>€120–180</td></tr>
+              <tr class="tot"><td>Subtotal</td><td>€1.800–2.450</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recomendaciones</h3>
+            <ul class="tips">
+              <li><b>Campervan, no hotel:</b> transporte y cama en uno, y cocináis. Es el mayor ahorro de toda Islandia.</li>
+              <li><b>Agua del grifo</b> gratis y excelente; el alcohol es carísimo, comprad en el duty-free al aterrizar.</li>
+              <li><b>Auroras:</b> apuntad a la primera quincena de abril; revisad <b>vedur.is</b> y el cielo despejado.</li>
+              <li><b>Viento y grava:</b> contratad el seguro extra de la campervan y mirad <b>road.is</b> a diario.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flight reveal" data-zone="ice">
+      <div class="wrap">
+        <div class="line"><span class="from">Keflavík</span><span class="dash"></span><span class="plane">✈</span><span class="dash"></span><span class="to">Tenerife</span></div>
+        <div class="det">Día 12 · directo · ~6 h · Icelandair / PLAY / Neos</div>
+      </div>
     </div>
-  </section>
 
-  <!-- ===== CHAPTER 1: ISLANDIA ===== -->
-  <section id="islandia" class="chapter ice" data-zone="ice" data-leg="leg-ida" data-city="m-ice">
-    <div class="wrap">
-      <div class="chhead reveal">
-        <div class="chnum">01</div>
-        <h2>Islandia <em>glacial</em></h2>
-        <div class="chsub">Días 1–11 · vuelta completa a la isla (Ring Road) · ~10 noches</div>
+    <section id="tenerife" class="chapter fire" data-zone="fire" data-leg="leg-1" data-city="m-ten">
+      <div class="wrap">
+        <div class="chhead reveal">
+          <div class="chnum">02</div>
+          <h2>Tenerife <em>volcánica</em></h2>
+          <div class="chsub">Días 12–18 · sol y descanso · ~6 noches</div>
+        </div>
+        <p class="lead reveal">Del frío ártico al eterno clima de primavera. Base en el sur, el volcán más alto de España coronando la isla, bosques de niebla milenarios y guachinches donde se come riquísimo por nada.</p>
+
+        <figure class="reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Clouds_Teide_Tenerife_A.jpg/1280px-Clouds_Teide_Tenerife_A.jpg" alt="El Teide sobre un mar de nubes, Tenerife" onerror="this.style.display='none'">
+          <figcaption><b>El Teide</b> · 3.715 m sobre un mar de nubes. Senderos gratis; la cumbre necesita un permiso gratuito.</figcaption>
+        </figure>
+
+        <div class="days reveal">
+          <div class="day"><span class="dn">Día 12</span><div><h4>Llegada al sur</h4><p>Base en Los Cristianos / Costa Adeje. Apartamento con cocina y primera puesta de sol atlántica.</p></div></div>
+          <div class="day"><span class="dn">Día 13</span><div><h4>Parque Nacional del Teide</h4><p>Paisaje lunar de lava. Teleférico opcional; cumbre con permiso gratuito reservado con antelación.</p></div></div>
+          <div class="day"><span class="dn">Día 14</span><div><h4>Macizo de Anaga</h4><p>Bosque de laurisilva (selva de niebla prehistórica) y la playa de Las Teresitas, de arena dorada.</p></div></div>
+          <div class="day"><span class="dn">Día 15</span><div><h4>Masca y Los Gigantes</h4><p>El caserío escondido entre barrancos y los acantilados de 600 m cayendo al mar. Atardecer.</p></div></div>
+          <div class="day"><span class="dn">Día 16</span><div><h4>Norte verde</h4><p>Puerto de la Cruz, las piscinas naturales de lava de Garachico y La Orotava colonial.</p></div></div>
+          <div class="day"><span class="dn">Día 17</span><div><h4>Mar y relax</h4><p>Día de playa y guachinche. Opcional: avistamiento de cetáceos (hay ballenas piloto todo el año).</p></div></div>
+          <div class="day"><span class="dn">Día 18</span><div><h4>Mañana libre · vuelo a Bari</h4><p>Últimas horas en la isla y vuelo de la tarde Tenerife → Puglia.</p></div></div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="card">
+            <h3>Costos · pareja</h3>
+            <table class="cost">
+              <tr><td>Apartamento (6 noches)</td><td>€280–420</td></tr>
+              <tr><td>Coche pequeño / guaguas</td><td>€100–140</td></tr>
+              <tr><td>Comida</td><td>€220–300</td></tr>
+              <tr><td>Actividades</td><td>€80–140</td></tr>
+              <tr class="tot"><td>Subtotal</td><td>€700–1.000</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recomendaciones</h3>
+            <ul class="tips">
+              <li><b>Apartamento con cocina</b> + guaguas TITSA (baratísimas) o un coche pequeño manual.</li>
+              <li><b>Guachinches:</b> comida canaria casera, vino del país y precios de risa. Lejos de las zonas turísticas.</li>
+              <li><b>Permiso del Teide</b> gratuito pero limitado: reservar con semanas de antelación si queréis la cumbre.</li>
+              <li>El sur es seco y soleado; el norte, verde y nuboso. Ver los dos.</li>
+            </ul>
+          </div>
+        </div>
       </div>
-      <p class="lead reveal">Llegáis del otro lado del planeta a la tierra del fuego y el hielo. Campervan, cascadas que rugen, glaciares que se desprenden en lagunas turquesa y —si las noches despejan en la primera quincena— auroras sobre el techo del coche.</p>
+    </section>
 
-      <figure class="reveal">
-        <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Sk%C3%B3gafoss_July_2014.JPG/1280px-Sk%C3%B3gafoss_July_2014.JPG" alt="Cascada de Skógafoss" onerror="this.style.display='none'">
-        <figcaption><b>Skógafoss</b> · una de las cascadas de la costa sur, 60 m de caída y arcoíris casi garantizado.</figcaption>
-      </figure>
-
-      <div class="days reveal">
-        <div class="day"><span class="dn">Día 1</span><div><h4>Despegue</h4><p>Vuelo nocturno Santiago → Madrid.</p></div></div>
-        <div class="day"><span class="dn">Día 2</span><div><h4>Llegada · Keflavík</h4><p>Madrid → Islandia. Recogéis la campervan, compra en Bónus y alcohol en el duty-free del aeropuerto. Noche cerca de Reikiavik.</p></div></div>
-        <div class="day"><span class="dn">Día 3</span><div><h4>Reikiavik + Reykjanes</h4><p>La capital más al norte del mundo y la península geotermal: el Puente entre Continentes y campos de lava.</p></div></div>
-        <div class="day"><span class="dn">Día 4</span><div><h4>Círculo Dorado</h4><p>Þingvellir, el géiser Strokkur y Gullfoss. Cierre con las termas naturales gratuitas de Reykjadalur.</p></div></div>
-        <div class="day"><span class="dn">Día 5</span><div><h4>Costa sur</h4><p>Seljalandsfoss (se camina por detrás), Skógafoss, el glaciar Sólheimajökull y la playa negra de Reynisfjara en Vík.</p></div></div>
-        <div class="day"><span class="dn">Día 6</span><div><h4>Glaciares</h4><p>Skaftafell y la laguna glaciar Jökulsárlón con su Diamond Beach: icebergs varados sobre arena negra.</p></div></div>
-        <div class="day"><span class="dn">Día 7</span><div><h4>Fiordos del este</h4><p>Carretera escénica entre fiordos y pueblitos pesqueros. Langostino en Höfn.</p></div></div>
-        <div class="day"><span class="dn">Día 8</span><div><h4>Mývatn</h4><p>Dettifoss (la cascada más potente de Europa), los fumarolas de Námaskarð y los baños de Mývatn (la alternativa barata a la Blue Lagoon).</p></div></div>
-        <div class="day"><span class="dn">Día 9</span><div><h4>Norte</h4><p>Goðafoss, la "cascada de los dioses", y Akureyri, la capital del norte.</p></div></div>
-        <div class="day"><span class="dn">Día 10</span><div><h4>Hacia el oeste</h4><p>Regreso bordeando la costa hacia la península de Snæfellsnes: la montaña Kirkjufell.</p></div></div>
-        <div class="day"><span class="dn">Día 11</span><div><h4>Snæfellsnes → Reikiavik</h4><p>Última jornada de la isla y devolución de la campervan.</p></div></div>
+    <div class="flight reveal" data-zone="fire">
+      <div class="wrap">
+        <div class="line"><span class="from">Tenerife</span><span class="dash"></span><span class="plane">✈</span><span class="dash"></span><span class="to">Bari</span></div>
+        <div class="det">Día 18 · directo Neos · ~4 h 35 (chárter de temporada — confirmar día)</div>
       </div>
+    </div>
 
-      <div class="panel reveal">
-        <div class="card">
-          <h3>Costos · pareja</h3>
+    <section id="puglia" class="chapter med" data-zone="med" data-leg="leg-2" data-city="m-pug">
+      <div class="wrap">
+        <div class="chhead reveal">
+          <div class="chnum">03</div>
+          <h2>Puglia <em>mediterránea</em></h2>
+          <div class="chsub">Días 19–24 · el tacón de Italia · ~6 noches</div>
+        </div>
+        <p class="lead reveal">El cierre dulce: abril de temporada baja, olivares en flor, pueblos blancos sobre el Adriático y la cuna de la burrata. Barato, sin aglomeraciones y comiendo como reyes.</p>
+
+        <figure class="reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Alberobello_con_il_drone.jpg/1280px-Alberobello_con_il_drone.jpg" alt="Trulli de Alberobello desde el aire" onerror="this.style.display='none'">
+          <figcaption><b>Alberobello</b> · los <i>trulli</i>: casitas de piedra con techo cónico, Patrimonio Mundial.</figcaption>
+        </figure>
+
+        <div class="days reveal">
+          <div class="day"><span class="dn">Día 19</span><div><h4>Bari</h4><p>Casco viejo, orecchiette hechas a mano en la calle de Bari Vecchia. Recogéis el coche de alquiler.</p></div></div>
+          <div class="day"><span class="dn">Día 20</span><div><h4>Valle d'Itria</h4><p>Alberobello y sus trulli, más Locorotondo y Cisternino, dos de los pueblos más bonitos de Italia.</p></div></div>
+          <div class="day"><span class="dn">Día 21</span><div><h4>Ostuni</h4><p>"La ciudad blanca" sobre la colina. Tarde en una masseria con cata de aceite de oliva y vino.</p></div></div>
+          <div class="day"><span class="dn">Día 22</span><div><h4>Polignano a Mare</h4><p>Casco marinero sobre el acantilado y la cala de Lama Monachile; sigue a Monopoli.</p></div></div>
+          <div class="day"><span class="dn">Día 23</span><div><h4>Matera</h4><p>Excursión a los Sassi: barrios excavados en la roca, de los lugares habitados más antiguos del mundo.</p></div></div>
+          <div class="day"><span class="dn">Día 24</span><div><h4>Lecce y el Salento</h4><p>El barroco dorado del sur. Última noche pugliese.</p></div></div>
+        </div>
+
+        <figure class="tall reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Alba_a_Polignano_a_Mare%2C_Puglia.jpg/1280px-Alba_a_Polignano_a_Mare%2C_Puglia.jpg" alt="Amanecer en Polignano a Mare" onerror="this.style.display='none'">
+          <figcaption><b>Polignano a Mare</b> · el casco antiguo asomado al Adriático al amanecer.</figcaption>
+        </figure>
+
+        <div class="panel reveal">
+          <div class="card">
+            <h3>Costos · pareja</h3>
+            <table class="cost">
+              <tr><td>Alojamiento (6 noches)</td><td>€300–480</td></tr>
+              <tr><td>Coche de alquiler</td><td>€110–160</td></tr>
+              <tr><td>Comida</td><td>€200–300</td></tr>
+              <tr><td>Actividades y entradas</td><td>€90–140</td></tr>
+              <tr class="tot"><td>Subtotal</td><td>€700–1.080</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recomendaciones</h3>
+            <ul class="tips">
+              <li><b>Coche imprescindible:</b> el transporte público es flojo; un utilitario manual es lo más barato.</li>
+              <li><b>Abril = temporada baja:</b> precios mínimos y pueblos vacíos, pero el mar aún está frío para bañarse.</li>
+              <li><b>Comer:</b> orecchiette, burrata de Andria, focaccia barese y vino Primitivo. Dormir en un trullo una noche.</li>
+              <li><b>Matera</b> es Basilicata, no Puglia, pero está a una hora: no os la perdáis.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="total" class="total" data-zone="med" data-leg="leg-vuelta" data-city="m-scl">
+      <div class="wrap reveal">
+        <div class="eyebrow">El número</div>
+        <h2>Presupuesto <em>total</em></h2>
+        <div class="grand">
           <table class="cost">
-            <tr><td>Campervan (10 días)</td><td>€800–1.100</td></tr>
-            <tr><td>Combustible</td><td>€300–400</td></tr>
-            <tr><td>Comida (cocinar)</td><td>€350–450</td></tr>
-            <tr><td>Campings</td><td>€250–350</td></tr>
-            <tr><td>Termas y entradas</td><td>€120–180</td></tr>
-            <tr class="tot"><td>Subtotal</td><td>€1.800–2.450</td></tr>
+            <tr><td>Vuelos · transatlántico + KEF–TFS + TFS–BRI</td><td>€2.600–3.400</td></tr>
+            <tr><td>Islandia · 10 días</td><td>€1.800–2.450</td></tr>
+            <tr><td>Tenerife · 6 días</td><td>€700–1.000</td></tr>
+            <tr><td>Puglia · 6 días</td><td>€700–1.080</td></tr>
+            <tr class="tot"><td>Total estimado · pareja</td><td>≈ €5.900–7.900</td></tr>
           </table>
         </div>
-        <div class="card">
-          <h3>Recomendaciones</h3>
-          <ul class="tips">
-            <li><b>Campervan, no hotel:</b> transporte y cama en uno, y cocináis. Es el mayor ahorro de toda Islandia.</li>
-            <li><b>Agua del grifo</b> gratis y excelente; el alcohol es carísimo, comprad en el duty-free al aterrizar.</li>
-            <li><b>Auroras:</b> apuntad a la primera quincena de abril; revisad <b>vedur.is</b> y el cielo despejado.</li>
-            <li><b>Viento y grava:</b> contratad el seguro extra de la campervan y mirad <b>road.is</b> a diario.</li>
-          </ul>
+        <p class="fxnote">Estimaciones basadas en precios de 2026 para un viaje en abril 2027 — pueden variar. Reservar los vuelos con 6–10 meses de antelación. Conversión a pesos según el cambio del día.</p>
+      </div>
+    </section>
+
+    <section id="rec" class="rec" data-zone="med" data-leg="leg-vuelta" data-city="m-scl">
+      <div class="wrap reveal">
+        <h2>Antes de partir</h2>
+        <div class="recgrid">
+          <div class="card"><h3>Documentos</h3><ul class="tips">
+            <li>Pasaporte chileno con <b>vigencia mínima de 6 meses</b> tras el regreso.</li>
+            <li>Islandia, España e Italia son <b>espacio Schengen</b>: una sola entrada cubre los tres.</li>
+            <li>Revisar <b>ETIAS</b>: la autorización electrónica europea podría exigirse a chilenos en 2027. Verificar y tramitar online antes de viajar.</li>
+          </ul></div>
+          <div class="card"><h3>Equipaje de dos climas</h3><ul class="tips">
+            <li>Capas térmicas, impermeable y gorro para Islandia.</li>
+            <li>Ropa de verano, traje de baño y protector solar para Tenerife y Puglia.</li>
+            <li>Una maleta facturada + carry-on por persona; calzado de trekking ligero.</li>
+          </ul></div>
+          <div class="card"><h3>Dinero y salud</h3><ul class="tips">
+            <li>Tarjeta sin comisión de cambio; en Islandia casi todo es con tarjeta.</li>
+            <li>Algo de efectivo para guachinches, mercados y peajes italianos.</li>
+            <li><b>Seguro de viaje con cobertura médica</b> — no es opcional para una luna de miel transatlántica.</li>
+          </ul></div>
+          <div class="card"><h3>Mejor fecha de abril</h3><ul class="tips">
+            <li><b>Primera quincena:</b> aún hay opción de auroras y precios algo menores; más frío.</li>
+            <li><b>Segunda quincena:</b> más horas de luz y clima más amable; sin auroras.</li>
+            <li>Fijar primero el día del vuelo Tenerife→Bari y construir el resto alrededor.</li>
+          </ul></div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- flight ICE -> TEN -->
-  <div class="flight reveal" data-zone="ice">
-    <div class="wrap">
-      <div class="line"><span class="from">Keflavík</span><span class="dash"></span><span class="plane">✈</span><span class="dash"></span><span class="to">Tenerife</span></div>
-      <div class="det">Día 12 · directo · ~6 h · Icelandair / PLAY / Neos</div>
-    </div>
-  </div>
-
-  <!-- ===== CHAPTER 2: TENERIFE ===== -->
-  <section id="tenerife" class="chapter fire" data-zone="fire" data-leg="leg-1" data-city="m-ten">
-    <div class="wrap">
-      <div class="chhead reveal">
-        <div class="chnum">02</div>
-        <h2>Tenerife <em>volcánica</em></h2>
-        <div class="chsub">Días 12–18 · sol y descanso · ~6 noches</div>
+    <section id="cierre" class="cierre" data-zone="med" data-leg="leg-vuelta" data-city="m-scl">
+      <div class="wrap reveal">
+        <p class="q">Del hielo al volcán al Mediterráneo —<br>y de vuelta a casa, <span>casados.</span></p>
+        <div class="sig">Día 25 · Bari → Roma/Madrid → Santiago</div>
       </div>
-      <p class="lead reveal">Del frío ártico al eterno clima de primavera. Base en el sur, el volcán más alto de España coronando la isla, bosques de niebla milenarios y guachinches donde se come riquísimo por nada.</p>
+    </section>
 
-      <figure class="reveal">
-        <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/1b/Clouds_Teide_Tenerife_A.jpg/1280px-Clouds_Teide_Tenerife_A.jpg" alt="El Teide sobre un mar de nubes, Tenerife" onerror="this.style.display='none'">
-        <figcaption><b>El Teide</b> · 3.715 m sobre un mar de nubes. Senderos gratis; la cumbre necesita un permiso gratuito.</figcaption>
-      </figure>
+    <footer><b>Opción 1 · Luna de miel</b> · Islandia · Tenerife · Puglia · 25 días · abril 2027 · v1 — ajustable a gusto</footer>
 
-      <div class="days reveal">
-        <div class="day"><span class="dn">Día 12</span><div><h4>Llegada al sur</h4><p>Base en Los Cristianos / Costa Adeje. Apartamento con cocina y primera puesta de sol atlántica.</p></div></div>
-        <div class="day"><span class="dn">Día 13</span><div><h4>Parque Nacional del Teide</h4><p>Paisaje lunar de lava. Teleférico opcional; cumbre con permiso gratuito reservado con antelación.</p></div></div>
-        <div class="day"><span class="dn">Día 14</span><div><h4>Macizo de Anaga</h4><p>Bosque de laurisilva (selva de niebla prehistórica) y la playa de Las Teresitas, de arena dorada.</p></div></div>
-        <div class="day"><span class="dn">Día 15</span><div><h4>Masca y Los Gigantes</h4><p>El caserío escondido entre barrancos y los acantilados de 600 m cayendo al mar. Atardecer.</p></div></div>
-        <div class="day"><span class="dn">Día 16</span><div><h4>Norte verde</h4><p>Puerto de la Cruz, las piscinas naturales de lava de Garachico y La Orotava colonial.</p></div></div>
-        <div class="day"><span class="dn">Día 17</span><div><h4>Mar y relax</h4><p>Día de playa y guachinche. Opcional: avistamiento de cetáceos (hay ballenas piloto todo el año).</p></div></div>
-        <div class="day"><span class="dn">Día 18</span><div><h4>Mañana libre · vuelo a Bari</h4><p>Últimas horas en la isla y vuelo de la tarde Tenerife → Puglia.</p></div></div>
+  </main>
+</div>
+
+
+<!-- ============================================================= -->
+<!-- ===== OPCIÓN 2 · CARRETERA AUSTRAL · PATAGONIA ============= -->
+<!-- ============================================================= -->
+<div class="option" data-opt="2" hidden
+     data-legnames='{"leg-a":"Rumbo al sur · Carretera Austral","leg-b":"Estepa &amp; hielo patagónico","leg-c":"Hacia el fin del mundo","leg-ret":"El largo regreso a casa"}'>
+
+  <!-- TIMELINE RAIL -->
+  <nav class="rail" aria-label="Línea de tiempo del viaje">
+    <div class="track">
+      <div class="fill"></div>
+      <button class="tick" data-go="hero2" style="top:1%"><span class="lbl">Inicio</span></button>
+      <button class="tick" data-go="austral" style="top:22%"><span class="lbl">Carretera Austral</span></button>
+      <button class="tick" data-go="hielo" style="top:48%"><span class="lbl">Hielo patagónico</span></button>
+      <button class="tick" data-go="ushuaia" style="top:72%"><span class="lbl">Fin del mundo</span></button>
+      <button class="tick" data-go="cierre2" style="top:99%"><span class="lbl">Regreso</span></button>
+      <div class="arrow" role="slider" tabindex="0" aria-label="Avanzar por el viaje" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <svg width="22" height="26" viewBox="0 0 22 26"><path class="head" d="M11 25 L1 11 H7 V1 H15 V11 H21 Z"/></svg>
       </div>
+      <div class="railhint">el viaje avanza ↓</div>
+    </div>
+  </nav>
 
-      <div class="panel reveal">
-        <div class="card">
-          <h3>Costos · pareja</h3>
+  <!-- ROUTE MAP (Patagonia, vertical) -->
+  <aside class="map" aria-label="Mapa de la Patagonia">
+    <div class="mhead"><span class="mtitle">Carta de ruta</span><span class="mleg">Salida</span></div>
+    <svg viewBox="0 0 200 300" role="img" aria-label="Ruta Santiago–Carretera Austral–Ushuaia">
+      <path class="grid" d="M0 75 H200 M0 150 H200 M0 225 H200 M70 0 V300 M120 0 V300"/>
+      <path class="land" d="M86 12 q30 6 22 60 q-6 40 4 78 q8 48 -6 86 q-8 30 -26 50 q-14 -34 -10 -78 q4 -52 -2 -96 q-6 -56 24 -100 z"/>
+      <circle class="land" cx="64" cy="250" r="3"/><circle class="land" cx="70" cy="266" r="2.4"/><circle class="land" cx="58" cy="276" r="3.6"/>
+      <path class="leg" data-leg="leg-a"   d="M96 26 Q70 70 92 120"/>
+      <path class="leg" data-leg="leg-b"   d="M92 120 Q120 150 86 196"/>
+      <path class="leg" data-leg="leg-c"   d="M86 196 Q60 240 74 280"/>
+      <path class="leg" data-leg="leg-ret" d="M74 280 Q150 170 96 26"/>
+      <circle class="city" data-city="m-scl" cx="96" cy="26" r="3.4"/><circle class="ring" cx="96" cy="26" r="5"/>
+      <text class="clabel" x="102" y="24">Santiago</text>
+      <circle class="city" data-city="m-coy" cx="92" cy="120" r="3.4"/><circle class="ring" cx="92" cy="120" r="5"/>
+      <text class="clabel" x="98" y="118">Coyhaique</text>
+      <circle class="city" data-city="m-cch" cx="118" cy="138" r="3.0"/><circle class="ring" cx="118" cy="138" r="5"/>
+      <text class="clabel" x="124" y="142">Chile Chico</text>
+      <circle class="city" data-city="m-cal" cx="100" cy="178" r="3.4"/><circle class="ring" cx="100" cy="178" r="5"/>
+      <text class="clabel" x="106" y="176">Calafate</text>
+      <circle class="city" data-city="m-tdp" cx="82" cy="198" r="3.0"/><circle class="ring" cx="82" cy="198" r="5"/>
+      <text class="clabel" x="8" y="202">Torres Paine</text>
+      <circle class="city" data-city="m-ush" cx="74" cy="282" r="3.4"/><circle class="ring" cx="74" cy="282" r="5"/>
+      <text class="clabel" x="80" y="286">Ushuaia</text>
+    </svg>
+  </aside>
+
+  <main>
+
+    <section id="hero2" class="hero bg-austral" data-zone="bosque" data-leg="leg-a" data-city="m-scl">
+      <div class="bg"><img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Carretera_Austral_-_Cerro_Castillo.jpg/1280px-Carretera_Austral_-_Cerro_Castillo.jpg" alt="Carretera Austral, Cerro Castillo" onerror="this.style.display='none'"></div>
+      <div class="wrap">
+        <div class="kick">Vacaciones · alternativa 2 · 25 días</div>
+        <h1>Carretera<br><em>Austral</em></h1>
+        <div class="route">Patagonia · Torres del Paine · Ushuaia</div>
+        <div class="meta">
+          <span><b>Cuándo</b> · abril 2027</span>
+          <span><b>Duración</b> · 25 días</span>
+          <span><b>Auto</b> · RAV4 2018 (AWD propio)</span>
+          <span><b>Total estimado</b> · ≈ CLP $3,8–5,5 M la pareja</span>
+        </div>
+        <div class="scrollcue"><span class="dn">▼</span> baja para recorrer la ruta</div>
+      </div>
+    </section>
+
+    <section id="ruta2" class="overview" data-zone="bosque" data-leg="leg-a" data-city="m-scl">
+      <div class="wrap reveal">
+        <div class="eyebrow">El gran viaje por tierra</div>
+        <h2>De Santiago al fin del mundo, en tu propio auto</h2>
+        <p>El viaje que siempre quisiste hacer: bajar por la <b>Carretera Austral</b> entre bosques, ventisqueros colgantes y lagos imposibles de tan turquesa; desviarte a <b>Chile Chico</b> bordeando el lago General Carrera; cruzar a Argentina por la <b>Ruta 40</b> hasta el Fitz Roy y el glaciar Perito Moreno; volver a Chile por <b>Torres del Paine</b>; y empujar hasta <b>Ushuaia</b>, el fin del mundo. El RAV4 AWD es el vehículo ideal para el ripio austral. Abril regala los bosques de lenga en rojo y dorado, sin las multitudes del verano.</p>
+        <div class="chain">
+          <span class="node"><b>Santiago</b></span><span class="arr">→</span>
+          <span class="node">Puerto Montt</span><span class="arr">→</span>
+          <span class="node"><b>Coyhaique</b> · Ruta 7</span><span class="arr">→</span>
+          <span class="node"><b>Chile Chico</b></span><span class="arr">→</span>
+          <span class="node">Ruta 40 · <b>El Chaltén</b></span><span class="arr">→</span>
+          <span class="node"><b>El Calafate</b></span><span class="arr">→</span>
+          <span class="node"><b>Torres del Paine</b></span><span class="arr">→</span>
+          <span class="node">Punta Arenas</span><span class="arr">→</span>
+          <span class="node"><b>Ushuaia</b></span><span class="arr">→</span>
+          <span class="node">regreso · <b>Santiago</b></span>
+        </div>
+        <div class="note"><b>Verificar antes de salir:</b> en abril (otoño) los <b>ferries de la Carretera Austral funcionan con frecuencia reducida</b>. El cruce Hornopirén–Caleta Gonzalo (Parque Pumalín, operador <b>Somarco</b>) opera todo el año pero con ~1 zarpe diario — reservar en barcazas.cl. Alternativa: ferry <b>Puerto Montt–Chaitén (Naviera Austral, ~3–4 zarpes/semana)</b>. Confirmar también el cruce del Estrecho de Magallanes (Primera Angostura) a Tierra del Fuego. <b>Esta es la versión intensa de 25 días</b>: el regreso desde Ushuaia son ~3.300 km — ver la nota del cierre.</div>
+      </div>
+    </section>
+
+    <!-- CH 1 · CARRETERA AUSTRAL -->
+    <section id="austral" class="chapter bosque" data-zone="bosque" data-leg="leg-a" data-city="m-coy">
+      <div class="wrap">
+        <div class="chhead reveal">
+          <div class="chnum">01</div>
+          <h2>La Carretera <em>Austral</em></h2>
+          <div class="chsub">Días 1–9 · Ruta 7 + desvío a Chile Chico · ~8 noches</div>
+        </div>
+        <p class="lead reveal">Mil kilómetros de la carretera más bella de Chile: fiordos, selva valdiviana, el ventisquero colgante del Queulat, las Capillas de Mármol flotando sobre agua turquesa y el lago General Carrera, el más grande del país, hasta el rincón soleado de Chile Chico.</p>
+
+        <figure class="reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/4/45/Capillas_de_M%C3%A1rmol%2C_Chile.jpg/1280px-Capillas_de_M%C3%A1rmol%2C_Chile.jpg" alt="Capillas de Mármol, lago General Carrera" onerror="this.style.display='none'">
+          <figcaption><b>Capillas de Mármol</b> · cavernas de mármol pulido por el agua turquesa del lago General Carrera, en Puerto Río Tranquilo.</figcaption>
+        </figure>
+
+        <div class="days reveal">
+          <div class="day"><span class="dn">Día 1</span><div><h4>Santiago → Temuco</h4><p>Bajada por la Ruta 5 sur (~680 km). Primera noche en la Araucanía.</p></div></div>
+          <div class="day"><span class="dn">Día 2</span><div><h4>Temuco → Puerto Montt → Hornopirén</h4><p>Puerta de la Ruta 7. Reservar con tiempo el ferry de conexión Somarco (o el ferry Puerto Montt–Chaitén).</p></div></div>
+          <div class="day"><span class="dn">Día 3</span><div><h4>Ferry → Chaitén · Parque Pumalín</h4><p>Volcán Chaitén y bosques de alerces milenarios en el parque donado por Tompkins.</p></div></div>
+          <div class="day"><span class="dn">Día 4</span><div><h4>Desvío a Futaleufú → Puyuhuapi</h4><p>El río turquesa de aguas bravas y, de noche, las termas de Puyuhuapi sobre el fiordo.</p></div></div>
+          <div class="day"><span class="dn">Día 5</span><div><h4>P.N. Queulat → Coyhaique</h4><p>El Ventisquero Colgante, glaciar suspendido que cae en cascada. Noche en la capital de Aysén (reabastecer).</p></div></div>
+          <div class="day"><span class="dn">Día 6</span><div><h4>Cerro Castillo → Río Tranquilo</h4><p>El macizo dentado del Cerro Castillo y la bajada hacia el lago General Carrera (~215 km).</p></div></div>
+          <div class="day"><span class="dn">Día 7</span><div><h4>Capillas de Mármol + Exploradores</h4><p>Navegación a las cavernas de mármol y desvío al glaciar Exploradores (campo de hielo Norte).</p></div></div>
+          <div class="day"><span class="dn">Día 8</span><div><h4>Bordeando el lago → Chile Chico</h4><p>La carretera escénica por la orilla sur (Puerto Guadal): uno de los tramos más espectaculares de Chile.</p></div></div>
+          <div class="day"><span class="dn">Día 9</span><div><h4>Chile Chico</h4><p>Microclima soleado, viñas y la Reserva Jeinimeni. Tarde: cruce de frontera a Los Antiguos (Argentina).</p></div></div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="card">
+            <h3>Costos · pareja</h3>
+            <table class="cost">
+              <tr><td>Combustible (tramo sur)</td><td>$420–520 mil</td></tr>
+              <tr><td>Ferries Carretera Austral</td><td>$90–160 mil</td></tr>
+              <tr><td>Alojamiento / camping (8 n)</td><td>$420–620 mil</td></tr>
+              <tr><td>Comida</td><td>$220–320 mil</td></tr>
+              <tr><td>Navegaciones y entradas</td><td>$120–200 mil</td></tr>
+              <tr class="tot"><td>Subtotal (CLP)</td><td>$1,3–1,8 M</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recomendaciones · ripio</h3>
+            <ul class="tips">
+              <li><b>Neumáticos y rueda de repuesto</b> en buen estado: gran parte de la Ruta 7 es grava. El RAV4 AWD va perfecto.</li>
+              <li><b>Combustible:</b> carga lleno en cada pueblo; los tramos entre bencineras son largos. Lleva un bidón.</li>
+              <li><b>Ferries con reserva</b> (Somarco / Naviera Austral): en otoño hay menos frecuencias.</li>
+              <li><b>Parabrisas:</b> baja la velocidad al cruzarte con otros autos en ripio para evitar piedrazos.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flight reveal" data-zone="bosque">
+      <div class="wrap">
+        <div class="line"><span class="from">Chile Chico</span><span class="dash"></span><span class="plane">🚙</span><span class="dash"></span><span class="to">Los Antiguos · AR</span></div>
+        <div class="det">Día 9 · cruce de frontera + Ruta 40 al sur · llevar permiso del vehículo y seguro Mercosur</div>
+      </div>
+    </div>
+
+    <!-- CH 2 · ESTEPA & HIELO -->
+    <section id="hielo" class="chapter hielo" data-zone="hielo" data-leg="leg-b" data-city="m-cal">
+      <div class="wrap">
+        <div class="chhead reveal">
+          <div class="chnum">02</div>
+          <h2>Estepa &amp; <em>hielo</em></h2>
+          <div class="chsub">Días 10–16 · Ruta 40, Fitz Roy, Perito Moreno y Torres del Paine · ~7 noches</div>
+        </div>
+        <p class="lead reveal">La estepa infinita de la Ruta 40 te lleva a la catedral de la Patagonia: el Fitz Roy sobre El Chaltén, el glaciar Perito Moreno desprendiéndose en truenos de hielo, y de vuelta en Chile, los cuernos del Paine. Otoño dorado, cielos enormes.</p>
+
+        <figure class="reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Monte_Fitz_Roy.jpg/1280px-Monte_Fitz_Roy.jpg" alt="Monte Fitz Roy, El Chaltén" onerror="this.style.display='none'">
+          <figcaption><b>Fitz Roy</b> · la silueta más icónica de la Patagonia, sobre El Chaltén, capital argentina del trekking.</figcaption>
+        </figure>
+
+        <div class="days reveal">
+          <div class="day"><span class="dn">Día 10</span><div><h4>Ruta 40 · Cueva de las Manos</h4><p>Tramo solitario de estepa. Las pinturas rupestres de ~9.000 años sobre el cañón del río Pinturas. Noche en Bajo Caracoles o Gobernador Gregores.</p></div></div>
+          <div class="day"><span class="dn">Día 11</span><div><h4>→ El Chaltén</h4><p>Llegada al pueblo a los pies del Fitz Roy. Tarde de caminata corta (Mirador de los Cóndores).</p></div></div>
+          <div class="day"><span class="dn">Día 12</span><div><h4>Trekking Laguna de los Tres</h4><p>La gran caminata al pie del Fitz Roy (~20 km), con los bosques de lenga en rojo otoñal.</p></div></div>
+          <div class="day"><span class="dn">Día 13</span><div><h4>El Chaltén → El Calafate</h4><p>Bordeando el lago Argentino (~215 km). Tarde libre en Calafate.</p></div></div>
+          <div class="day"><span class="dn">Día 14</span><div><h4>Glaciar Perito Moreno</h4><p>Las pasarelas frente al frente de hielo de 5 km en el P.N. Los Glaciares. Témpanos que se desploman.</p></div></div>
+          <div class="day"><span class="dn">Día 15</span><div><h4>Calafate → Torres del Paine</h4><p>Cruce de frontera Cancha Carrera → Cerro Castillo → Puerto Natales → entrada al parque. Vuelta a Chile.</p></div></div>
+          <div class="day"><span class="dn">Día 16</span><div><h4>Torres del Paine</h4><p>Circuito en auto: Salto Grande, Lago Pehoé, miradores del macizo y glaciar Grey. Guanacos por todas partes.</p></div></div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="card">
+            <h3>Costos · pareja</h3>
+            <table class="cost">
+              <tr><td>Combustible (Ruta 40 + Paine)</td><td>$380–480 mil</td></tr>
+              <tr><td>Alojamiento (7 n)</td><td>$520–820 mil</td></tr>
+              <tr><td>Comida</td><td>$230–340 mil</td></tr>
+              <tr><td>Parques (Glaciares + Paine)</td><td>$120–220 mil</td></tr>
+              <tr class="tot"><td>Subtotal (CLP)</td><td>$1,3–1,9 M</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recomendaciones</h3>
+            <ul class="tips">
+              <li><b>Combustible en la Ruta 40:</b> el tramo de Bajo Caracoles tiene huecos enormes sin bencina y una sola bomba que a veces se queda seca. Carga siempre que puedas + bidón.</li>
+              <li><b>Documentos del auto:</b> para entrar y salir de Argentina necesitas el padrón/permiso del vehículo y <b>seguro Mercosur</b> (el SOAP chileno no cubre Argentina). Contrátalo antes.</li>
+              <li><b>Torres del Paine:</b> en auto se ven los miradores principales; el trekking a la base de las Torres es de día completo (madruga).</li>
+              <li><b>Abril:</b> días más cortos (~10–11 h de luz) y primeras nieves en los pasos. Sal temprano cada mañana.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="flight reveal" data-zone="hielo">
+      <div class="wrap">
+        <div class="line"><span class="from">Punta Arenas</span><span class="dash"></span><span class="plane">⛴</span><span class="dash"></span><span class="to">Tierra del Fuego</span></div>
+        <div class="det">Día 17 · ferry Primera Angostura (~20 min, frecuente) + Ruta 3 hacia Ushuaia · dos cruces de frontera más</div>
+      </div>
+    </div>
+
+    <!-- CH 3 · FIN DEL MUNDO -->
+    <section id="ushuaia" class="chapter austral" data-zone="austral" data-leg="leg-c" data-city="m-ush">
+      <div class="wrap">
+        <div class="chhead reveal">
+          <div class="chnum">03</div>
+          <h2>El fin del <em>mundo</em></h2>
+          <div class="chsub">Días 17–21 · Tierra del Fuego y Ushuaia · ~4 noches</div>
+        </div>
+        <p class="lead reveal">El último empujón hacia el sur: cruzar el Estrecho de Magallanes en ferry, atravesar la isla grande de Tierra del Fuego y llegar a Ushuaia, la ciudad más austral del planeta, entre el canal Beagle y montañas nevadas.</p>
+
+        <figure class="reveal">
+          <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2e/Ushuaia_panorama.jpg/1280px-Ushuaia_panorama.jpg" alt="Ushuaia y el canal Beagle" onerror="this.style.display='none'">
+          <figcaption><b>Ushuaia</b> · la ciudad del fin del mundo, abrazada por el canal Beagle y los montes Martial.</figcaption>
+        </figure>
+
+        <div class="days reveal">
+          <div class="day"><span class="dn">Día 17</span><div><h4>Punta Arenas → Río Grande</h4><p>Ferry por el Estrecho de Magallanes y entrada a Tierra del Fuego. Doble cruce de frontera Chile–Argentina (San Sebastián).</p></div></div>
+          <div class="day"><span class="dn">Día 18</span><div><h4>Río Grande → Ushuaia</h4><p>El tramo final por la cordillera fueguina hasta el "Fin del Mundo". Tarde para recorrer la ciudad.</p></div></div>
+          <div class="day"><span class="dn">Día 19</span><div><h4>P.N. Tierra del Fuego</h4><p>Bosques, castoreras y la bahía Lapataia, donde termina la Ruta 3. Opcional: Tren del Fin del Mundo.</p></div></div>
+          <div class="day"><span class="dn">Día 20</span><div><h4>Navegación por el canal Beagle</h4><p>Lobos marinos, cormoranes y el faro Les Éclaireurs (el "faro del fin del mundo"). Tarde: inicio del regreso.</p></div></div>
+          <div class="day"><span class="dn">Día 21</span><div><h4>Ushuaia → Río Gallegos</h4><p>Salida de la isla y vuelta al continente por la Ruta 3. Comienza el largo camino a casa.</p></div></div>
+        </div>
+
+        <div class="panel reveal">
+          <div class="card">
+            <h3>Costos · pareja</h3>
+            <table class="cost">
+              <tr><td>Combustible</td><td>$240–320 mil</td></tr>
+              <tr><td>Ferry Estrecho + alojamiento (4 n)</td><td>$320–520 mil</td></tr>
+              <tr><td>Comida</td><td>$160–240 mil</td></tr>
+              <tr><td>Parque + navegación Beagle</td><td>$120–180 mil</td></tr>
+              <tr class="tot"><td>Subtotal (CLP)</td><td>$0,8–1,2 M</td></tr>
+            </table>
+          </div>
+          <div class="card">
+            <h3>Recomendaciones</h3>
+            <ul class="tips">
+              <li><b>Cruces de frontera:</b> para llegar a Ushuaia se entra y sale de Argentina varias veces. Ten siempre a mano los papeles del auto y el seguro.</li>
+              <li><b>Frío de verdad:</b> a fines de abril Ushuaia ya está helada. Ropa de invierno, aunque vengas de manejar todo el día.</li>
+              <li><b>Ferry Primera Angostura:</b> el cruce corto (~20 min, muy frecuente) es más rápido que Punta Arenas–Porvenir.</li>
+              <li><b>Sin fruta, verdura ni carne fresca</b> en los cruces (control SAG / aduana, multas).</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOTAL -->
+    <section id="total2" class="total" data-zone="austral" data-leg="leg-ret" data-city="m-scl">
+      <div class="wrap reveal">
+        <div class="eyebrow">El número</div>
+        <h2>Presupuesto <em>total</em></h2>
+        <div class="grand">
           <table class="cost">
-            <tr><td>Apartamento (6 noches)</td><td>€280–420</td></tr>
-            <tr><td>Coche pequeño / guaguas</td><td>€100–140</td></tr>
-            <tr><td>Comida</td><td>€220–300</td></tr>
-            <tr><td>Actividades</td><td>€80–140</td></tr>
-            <tr class="tot"><td>Subtotal</td><td>€700–1.000</td></tr>
+            <tr><td>Carretera Austral · días 1–9</td><td>$1,3–1,8 M</td></tr>
+            <tr><td>Estepa &amp; hielo · días 10–16</td><td>$1,3–1,9 M</td></tr>
+            <tr><td>Fin del mundo · días 17–21</td><td>$0,8–1,2 M</td></tr>
+            <tr><td>Regreso · días 22–25</td><td>$0,5–0,7 M</td></tr>
+            <tr class="tot"><td>Total estimado · pareja (CLP)</td><td>≈ $3,8–5,5 M</td></tr>
           </table>
         </div>
-        <div class="card">
-          <h3>Recomendaciones</h3>
-          <ul class="tips">
-            <li><b>Apartamento con cocina</b> + guaguas TITSA (baratísimas) o un coche pequeño manual.</li>
-            <li><b>Guachinches:</b> comida canaria casera, vino del país y precios de risa. Lejos de las zonas turísticas.</li>
-            <li><b>Permiso del Teide</b> gratuito pero limitado: reservar con semanas de antelación si queréis la cumbre.</li>
-            <li>El sur es seco y soleado; el norte, verde y nuboso. Ver los dos.</li>
-          </ul>
+        <p class="fxnote">≈ USD 3.900–5.500 · Sin vuelos: el gran ahorro frente a la Opción 1 es viajar en tu propio auto. El mayor costo es el combustible (~8.000–9.000 km en total). Estimaciones a precios 2026 — el cambio CLP/ARS/USD puede variar bastante.</p>
+      </div>
+    </section>
+
+    <!-- REC -->
+    <section id="rec2" class="rec" data-zone="austral" data-leg="leg-ret" data-city="m-scl">
+      <div class="wrap reveal">
+        <h2>Antes de partir</h2>
+        <div class="recgrid">
+          <div class="card"><h3>El auto (RAV4 2018)</h3><ul class="tips">
+            <li><b>Revisión completa</b> antes de salir: neumáticos, frenos, batería, refrigerante. Rueda de repuesto + gata + kit.</li>
+            <li><b>AWD ideal para el ripio</b> de la Ruta 7; considera protector de cárter y mallas para faros/parabrisas.</li>
+            <li>Bidón de combustible, cadenas por si nieva, y soga/pala por las dudas.</li>
+          </ul></div>
+          <div class="card"><h3>Documentos · cruces</h3><ul class="tips">
+            <li><b>Cédula/pasaporte</b> al día; revisión técnica y <b>SOAP</b> vigentes.</li>
+            <li><b>Seguro Mercosur</b> (cobertura en Argentina) — obligatorio para cruzar.</li>
+            <li>Si el auto no está a tu nombre, <b>autorización notarial</b> para sacarlo del país.</li>
+            <li><b>Nada de fruta, verdura ni carne fresca</b> en los pasos fronterizos.</li>
+          </ul></div>
+          <div class="card"><h3>Clima de otoño</h3><ul class="tips">
+            <li><b>Abril:</b> bosques de lenga en rojo y dorado, menos gente, pero días cortos y fríos.</li>
+            <li>Ropa por capas, impermeable y viento patagónico (más calmo que en verano).</li>
+            <li>Sal temprano: anochece pronto y manejas tramos largos.</li>
+          </ul></div>
+          <div class="card"><h3>Ritmo y plan B</h3><ul class="tips">
+            <li><b>Es un viaje intenso:</b> muchos km diarios, sobre todo en el regreso.</li>
+            <li><b>Para más calma:</b> sumar 3–5 días, o dejar Ushuaia para otra vez y cerrar en Torres del Paine.</li>
+            <li>Descarga mapas offline (maps.me); hay tramos sin señal. Reserva alojamiento: en otoño cierran servicios.</li>
+          </ul></div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- flight TEN -> PUG -->
-  <div class="flight reveal" data-zone="fire">
-    <div class="wrap">
-      <div class="line"><span class="from">Tenerife</span><span class="dash"></span><span class="plane">✈</span><span class="dash"></span><span class="to">Bari</span></div>
-      <div class="det">Día 18 · directo Neos · ~4 h 35 (chárter de temporada — confirmar día)</div>
-    </div>
-  </div>
-
-  <!-- ===== CHAPTER 3: PUGLIA ===== -->
-  <section id="puglia" class="chapter med" data-zone="med" data-leg="leg-2" data-city="m-pug">
-    <div class="wrap">
-      <div class="chhead reveal">
-        <div class="chnum">03</div>
-        <h2>Puglia <em>mediterránea</em></h2>
-        <div class="chsub">Días 19–24 · el tacón de Italia · ~6 noches</div>
-      </div>
-      <p class="lead reveal">El cierre dulce: abril de temporada baja, olivares en flor, pueblos blancos sobre el Adriático y la cuna de la burrata. Barato, sin aglomeraciones y comiendo como reyes.</p>
-
-      <figure class="reveal">
-        <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Alberobello_con_il_drone.jpg/1280px-Alberobello_con_il_drone.jpg" alt="Trulli de Alberobello desde el aire" onerror="this.style.display='none'">
-        <figcaption><b>Alberobello</b> · los <i>trulli</i>: casitas de piedra con techo cónico, Patrimonio Mundial.</figcaption>
-      </figure>
-
-      <div class="days reveal">
-        <div class="day"><span class="dn">Día 19</span><div><h4>Bari</h4><p>Casco viejo, orecchiette hechas a mano en la calle de Bari Vecchia. Recogéis el coche de alquiler.</p></div></div>
-        <div class="day"><span class="dn">Día 20</span><div><h4>Valle d'Itria</h4><p>Alberobello y sus trulli, más Locorotondo y Cisternino, dos de los pueblos más bonitos de Italia.</p></div></div>
-        <div class="day"><span class="dn">Día 21</span><div><h4>Ostuni</h4><p>"La ciudad blanca" sobre la colina. Tarde en una masseria con cata de aceite de oliva y vino.</p></div></div>
-        <div class="day"><span class="dn">Día 22</span><div><h4>Polignano a Mare</h4><p>Casco marinero sobre el acantilado y la cala de Lama Monachile; sigue a Monopoli.</p></div></div>
-        <div class="day"><span class="dn">Día 23</span><div><h4>Matera</h4><p>Excursión a los Sassi: barrios excavados en la roca, de los lugares habitados más antiguos del mundo.</p></div></div>
-        <div class="day"><span class="dn">Día 24</span><div><h4>Lecce y el Salento</h4><p>El barroco dorado del sur. Última noche pugliese.</p></div></div>
-      </div>
-
-      <figure class="tall reveal">
-        <img referrerpolicy="no-referrer" loading="lazy" src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/0f/Alba_a_Polignano_a_Mare%2C_Puglia.jpg/1280px-Alba_a_Polignano_a_Mare%2C_Puglia.jpg" alt="Amanecer en Polignano a Mare" onerror="this.style.display='none'">
-        <figcaption><b>Polignano a Mare</b> · el casco antiguo asomado al Adriático al amanecer.</figcaption>
-      </figure>
-
-      <div class="panel reveal">
-        <div class="card">
-          <h3>Costos · pareja</h3>
-          <table class="cost">
-            <tr><td>Alojamiento (6 noches)</td><td>€300–480</td></tr>
-            <tr><td>Coche de alquiler</td><td>€110–160</td></tr>
-            <tr><td>Comida</td><td>€200–300</td></tr>
-            <tr><td>Actividades y entradas</td><td>€90–140</td></tr>
-            <tr class="tot"><td>Subtotal</td><td>€700–1.080</td></tr>
-          </table>
-        </div>
-        <div class="card">
-          <h3>Recomendaciones</h3>
-          <ul class="tips">
-            <li><b>Coche imprescindible:</b> el transporte público es flojo; un utilitario manual es lo más barato.</li>
-            <li><b>Abril = temporada baja:</b> precios mínimos y pueblos vacíos, pero el mar aún está frío para bañarse.</li>
-            <li><b>Comer:</b> orecchiette, burrata de Andria, focaccia barese y vino Primitivo. Dormir en un trullo una noche.</li>
-            <li><b>Matera</b> es Basilicata, no Puglia, pero está a una hora: no os la perdáis.</li>
-          </ul>
+    <!-- CLOSE -->
+    <section id="cierre2" class="cierre" data-zone="austral" data-leg="leg-ret" data-city="m-scl">
+      <div class="wrap reveal">
+        <p class="q">Del bosque austral al fin del mundo —<br>y de vuelta a casa, <span>por la ruta soñada.</span></p>
+        <div class="sig">Días 22–25 · Río Gallegos → Comodoro → cordillera → Santiago</div>
+        <div class="note" style="text-align:left;margin-top:30px">
+          <b>La realidad del regreso:</b> desde Ushuaia a Santiago hay ~3.300 km. En esta versión de 25 días son <b>4–5 jornadas largas de carretera</b> (Ruta 3 atlántica → Ruta 40 / cruce a Chile → Ruta 5 norte), ~700–850 km por día. Si prefieres un regreso tranquilo, lo honesto es <b>estirar el viaje a ~30 días</b> o cerrar el recorrido en Torres del Paine y dejar Ushuaia para una próxima.
         </div>
       </div>
-    </div>
-  </section>
+    </section>
 
-  <!-- ===== TOTAL ===== -->
-  <section id="total" data-zone="med" data-leg="leg-vuelta" data-city="m-scl">
-    <div class="wrap reveal">
-      <div class="eyebrow">El número</div>
-      <h2>Presupuesto <em>total</em></h2>
-      <div class="grand">
-        <table class="cost">
-          <tr><td>Vuelos · transatlántico + KEF–TFS + TFS–BRI</td><td>€2.600–3.400</td></tr>
-          <tr><td>Islandia · 10 días</td><td>€1.800–2.450</td></tr>
-          <tr><td>Tenerife · 6 días</td><td>€700–1.000</td></tr>
-          <tr><td>Puglia · 6 días</td><td>€700–1.080</td></tr>
-          <tr class="tot"><td>Total estimado · pareja</td><td>≈ €5.900–7.900</td></tr>
-        </table>
-      </div>
-      <p class="fxnote">Estimaciones basadas en precios de 2026 para un viaje en abril 2027 — pueden variar. Reservar los vuelos con 6–10 meses de antelación. Conversión a pesos según el cambio del día.</p>
-    </div>
-  </section>
+    <footer><b>Opción 2 · Carretera Austral</b> · Patagonia · Torres del Paine · Ushuaia · 25 días · abril 2027 · RAV4 propio · v1 — ajustable a gusto</footer>
 
-  <!-- ===== RECOMMENDATIONS ===== -->
-  <section id="rec" data-zone="med" data-leg="leg-vuelta" data-city="m-scl">
-    <div class="wrap reveal">
-      <h2>Antes de partir</h2>
-      <div class="recgrid">
-        <div class="card"><h3>Documentos</h3><ul class="tips">
-          <li>Pasaporte chileno con <b>vigencia mínima de 6 meses</b> tras el regreso.</li>
-          <li>Islandia, España e Italia son <b>espacio Schengen</b>: una sola entrada cubre los tres.</li>
-          <li>Revisar <b>ETIAS</b>: la autorización electrónica europea podría exigirse a chilenos en 2027. Verificar y tramitar online antes de viajar.</li>
-        </ul></div>
-        <div class="card"><h3>Equipaje de dos climas</h3><ul class="tips">
-          <li>Capas térmicas, impermeable y gorro para Islandia.</li>
-          <li>Ropa de verano, traje de baño y protector solar para Tenerife y Puglia.</li>
-          <li>Una maleta facturada + carry-on por persona; calzado de trekking ligero.</li>
-        </ul></div>
-        <div class="card"><h3>Dinero y salud</h3><ul class="tips">
-          <li>Tarjeta sin comisión de cambio; en Islandia casi todo es con tarjeta.</li>
-          <li>Algo de efectivo para guachinches, mercados y peajes italianos.</li>
-          <li><b>Seguro de viaje con cobertura médica</b> — no es opcional para una luna de miel transatlántica.</li>
-        </ul></div>
-        <div class="card"><h3>Mejor fecha de abril</h3><ul class="tips">
-          <li><b>Primera quincena:</b> aún hay opción de auroras y precios algo menores; más frío.</li>
-          <li><b>Segunda quincena:</b> más horas de luz y clima más amable; sin auroras.</li>
-          <li>Fijar primero el día del vuelo Tenerife→Bari y construir el resto alrededor.</li>
-        </ul></div>
-      </div>
-    </div>
-  </section>
+  </main>
+</div>
 
-  <!-- ===== CLOSE ===== -->
-  <section id="cierre" data-zone="med" data-leg="leg-vuelta" data-city="m-scl">
-    <div class="wrap reveal">
-      <p class="q">Del hielo al volcán al Mediterráneo —<br>y de vuelta a casa, <span>casados.</span></p>
-      <div class="sig">Día 25 · Bari → Roma/Madrid → Santiago</div>
-    </div>
-  </section>
-
-  <footer><b>Propuesta de luna de miel</b> · Islandia · Tenerife · Puglia · 25 días · abril 2027 · v1 — ajustable a gusto</footer>
-
-</main>
 
 <script>
 (function(){
-  var track=document.getElementById('track');
-  var arrow=document.getElementById('arrow');
-  var fill=document.getElementById('fill');
-  var arrowHead=arrow.querySelector('.head');
   var body=document.body;
-  var mleg=document.getElementById('mleg');
-  var ticks=[].slice.call(document.querySelectorAll('.tick'));
-  var legNames={'leg-ida':'Rumbo a Islandia','leg-1':'Islandia → Tenerife','leg-2':'Tenerife → Puglia','leg-vuelta':'Regreso a casa'};
 
-  function maxScroll(){return Math.max(1, document.documentElement.scrollHeight - window.innerHeight);}
+  function initOption(root){
+    var track=root.querySelector('.track');
+    var arrow=root.querySelector('.arrow');
+    var fill=root.querySelector('.fill');
+    var mleg=root.querySelector('.mleg');
+    var ticks=[].slice.call(root.querySelectorAll('.tick'));
+    var legNames={};
+    try{ legNames=JSON.parse(root.getAttribute('data-legnames')||'{}'); }catch(e){}
 
-  // move the descent arrow + fill with scroll progress
-  function updateProgress(){
-    var p=Math.min(1, Math.max(0, window.scrollY / maxScroll()));
-    var th=track.clientHeight;
-    var y=p*th;
-    arrow.style.top=y+'px';
-    fill.style.height=y+'px';
-    arrow.setAttribute('aria-valuenow', Math.round(p*100));
-  }
+    function maxScroll(){return Math.max(1, document.documentElement.scrollHeight - window.innerHeight);}
+    function isActive(){return root.classList.contains('active');}
 
-  // active zone / map leg via section in view
-  var zoneSections=[].slice.call(document.querySelectorAll('[data-zone]'));
-  function setActive(sec){
-    var z=sec.getAttribute('data-zone'); if(z) body.setAttribute('data-zone',z);
-    var leg=sec.getAttribute('data-leg'); var city=sec.getAttribute('data-city');
-    document.querySelectorAll('.leg.on').forEach(function(e){e.classList.remove('on')});
-    document.querySelectorAll('.city.on').forEach(function(e){e.classList.remove('on')});
-    if(leg){var l=document.getElementById(leg); if(l)l.classList.add('on');}
-    if(city){var c=document.getElementById(city); if(c)c.classList.add('on');}
-    if(leg&&mleg){mleg.textContent=legNames[leg]||'';}
-  }
-  var io=new IntersectionObserver(function(entries){
-    entries.forEach(function(en){ if(en.isIntersecting) setActive(en.target); });
-  },{rootMargin:'-45% 0px -45% 0px', threshold:0});
-  zoneSections.forEach(function(s){io.observe(s)});
+    function updateProgress(){
+      var p=Math.min(1, Math.max(0, window.scrollY / maxScroll()));
+      var th=track.clientHeight;
+      var y=p*th;
+      arrow.style.top=y+'px';
+      fill.style.height=y+'px';
+      arrow.setAttribute('aria-valuenow', Math.round(p*100));
+    }
 
-  // active tick
-  var goSecs=ticks.map(function(t){return document.getElementById(t.getAttribute('data-go'));});
-  function updateTicks(){
-    var sy=window.scrollY+window.innerHeight*0.4, best=0;
-    goSecs.forEach(function(s,i){ if(s && s.offsetTop<=sy) best=i; });
-    ticks.forEach(function(t,i){ t.classList.toggle('on', i===best); });
-  }
-  ticks.forEach(function(t){
-    t.addEventListener('click',function(){
-      var el=document.getElementById(t.getAttribute('data-go'));
-      if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+    var zoneSections=[].slice.call(root.querySelectorAll('[data-zone]'));
+    function setActive(sec){
+      var z=sec.getAttribute('data-zone'); if(z) body.setAttribute('data-zone',z);
+      var leg=sec.getAttribute('data-leg'); var city=sec.getAttribute('data-city');
+      root.querySelectorAll('.leg.on').forEach(function(e){e.classList.remove('on')});
+      root.querySelectorAll('.city.on').forEach(function(e){e.classList.remove('on')});
+      if(leg){var l=root.querySelector('.leg[data-leg="'+leg+'"]'); if(l)l.classList.add('on');}
+      if(city){var c=root.querySelector('.city[data-city="'+city+'"]'); if(c)c.classList.add('on');}
+      if(leg&&mleg){mleg.textContent=legNames[leg]||'';}
+    }
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){ if(en.isIntersecting && isActive()) setActive(en.target); });
+    },{rootMargin:'-45% 0px -45% 0px', threshold:0});
+    zoneSections.forEach(function(s){io.observe(s)});
+
+    function updateTicks(){
+      var sy=window.scrollY+window.innerHeight*0.4, best=0;
+      ticks.forEach(function(t,i){
+        var s=document.getElementById(t.getAttribute('data-go'));
+        if(s && s.offsetTop<=sy) best=i;
+      });
+      ticks.forEach(function(t,i){ t.classList.toggle('on', i===best); });
+    }
+    ticks.forEach(function(t){
+      t.addEventListener('click',function(){
+        var el=document.getElementById(t.getAttribute('data-go'));
+        if(el) el.scrollIntoView({behavior:'smooth',block:'start'});
+      });
     });
-  });
 
-  // reveal on scroll
+    var dragging=false;
+    function scrubFromClientY(cy){
+      var r=track.getBoundingClientRect();
+      var p=Math.min(1,Math.max(0,(cy-r.top)/r.height));
+      window.scrollTo(0, p*maxScroll());
+    }
+    arrow.addEventListener('pointerdown',function(e){dragging=true; arrow.setPointerCapture(e.pointerId); e.preventDefault();});
+    window.addEventListener('pointermove',function(e){ if(dragging && isActive()) scrubFromClientY(e.clientY); });
+    window.addEventListener('pointerup',function(){dragging=false;});
+    arrow.addEventListener('keydown',function(e){
+      var step=window.innerHeight*0.85;
+      if(e.key==='ArrowDown'){window.scrollBy(0,step); e.preventDefault();}
+      if(e.key==='ArrowUp'){window.scrollBy(0,-step); e.preventDefault();}
+    });
+
+    function onScroll(){ if(!isActive())return; updateProgress(); updateTicks(); }
+    window.addEventListener('scroll',onScroll,{passive:true});
+    window.addEventListener('resize',onScroll);
+
+    return {
+      refresh:function(){
+        root.querySelectorAll('.reveal').forEach(function(e){e.classList.add('in')});
+        if(zoneSections[0]) setActive(zoneSections[0]);
+        updateProgress(); updateTicks();
+      }
+    };
+  }
+
+  // reveal-on-scroll (shared)
   var rio=new IntersectionObserver(function(entries){
     entries.forEach(function(en){ if(en.isIntersecting){en.target.classList.add('in'); rio.unobserve(en.target);} });
   },{threshold:0.12});
   document.querySelectorAll('.reveal').forEach(function(e){rio.observe(e)});
 
-  // drag the arrow to scrub the journey (slider behaviour)
-  var dragging=false;
-  function scrubFromClientY(cy){
-    var r=track.getBoundingClientRect();
-    var p=Math.min(1,Math.max(0,(cy-r.top)/r.height));
-    window.scrollTo(0, p*maxScroll());
-  }
-  arrow.addEventListener('pointerdown',function(e){dragging=true; arrow.setPointerCapture(e.pointerId); e.preventDefault();});
-  window.addEventListener('pointermove',function(e){ if(dragging) scrubFromClientY(e.clientY); });
-  window.addEventListener('pointerup',function(){dragging=false;});
-  arrow.addEventListener('keydown',function(e){
-    var step=window.innerHeight*0.85;
-    if(e.key==='ArrowDown'){window.scrollBy(0,step); e.preventDefault();}
-    if(e.key==='ArrowUp'){window.scrollBy(0,-step); e.preventDefault();}
+  var controllers={};
+  document.querySelectorAll('.option').forEach(function(root){
+    controllers[root.getAttribute('data-opt')]=initOption(root);
   });
 
-  function onScroll(){updateProgress(); updateTicks();}
-  window.addEventListener('scroll',onScroll,{passive:true});
-  window.addEventListener('resize',onScroll);
-  onScroll();
+  // tab switching
+  var tabs=[].slice.call(document.querySelectorAll('.tab'));
+  function activate(opt){
+    document.querySelectorAll('.option').forEach(function(o){
+      var on=o.getAttribute('data-opt')===opt;
+      o.classList.toggle('active', on);
+      o.hidden=!on;
+    });
+    tabs.forEach(function(t){t.classList.toggle('on', t.getAttribute('data-opt')===opt)});
+    window.scrollTo(0,0);
+    if(controllers[opt]) controllers[opt].refresh();
+  }
+  tabs.forEach(function(t){
+    t.addEventListener('click',function(){activate(t.getAttribute('data-opt'))});
+  });
+
+  // initial sync
+  if(controllers['1']){ controllers['1'].refresh(); window.scrollTo(0,0); }
 })();
 </script>
 </body>
