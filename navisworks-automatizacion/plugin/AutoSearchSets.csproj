@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"
+          Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">x64</Platform>
+    <OutputType>Library</OutputType>
+    <RootNamespace>NavisAutoSearchSets</RootNamespace>
+    <AssemblyName>AutoSearchSets</AssemblyName>
+    <!-- Ajusta al framework de TU versión de Navisworks (2020-2024 = v4.7/4.8) -->
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+
+  <!-- Ruta de instalación de Navisworks. Cámbiala si usas otro año/edición. -->
+  <PropertyGroup>
+    <NavisPath>C:\Program Files\Autodesk\Navisworks Manage 2024</NavisPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x64' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x64' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\x64\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- DLLs del API: vienen con Navisworks. CopyLocal=False (NO copiar). -->
+    <Reference Include="Autodesk.Navisworks.Api">
+      <HintPath>$(NavisPath)\Autodesk.Navisworks.Api.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Autodesk.Navisworks.Controls">
+      <HintPath>$(NavisPath)\Autodesk.Navisworks.Controls.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="AutoSearchSetsPlugin.cs" />
+  </ItemGroup>
+
+  <!-- Tras compilar, copia el DLL a la carpeta de plugins (carpeta = AssemblyName) -->
+  <Target Name="DeployPlugin" AfterTargets="Build">
+    <MakeDir Directories="$(NavisPath)\Plugins\$(AssemblyName)" />
+    <Copy SourceFiles="$(TargetPath)"
+          DestinationFolder="$(NavisPath)\Plugins\$(AssemblyName)"
+          ContinueOnError="true" />
+  </Target>
+
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
