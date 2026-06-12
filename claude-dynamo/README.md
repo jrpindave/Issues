@@ -140,6 +140,27 @@ resp = json.loads(urllib.request.urlopen(req).read().decode("utf-8"))
 OUT = "".join(b["text"] for b in resp["content"] if b["type"] == "text")
 ```
 
+### Nodo listo para usar: [`dynamo_claude_node.py`](./dynamo_claude_node.py)
+
+En este repo tienes un nodo ya construido con el patrón **genera → valida → reintenta**.
+
+1. Define tu key en Windows (una sola vez) y reinicia Revit:
+   ```cmd
+   setx ANTHROPIC_API_KEY "sk-ant-api03-..."
+   ```
+2. En Dynamo, crea un nodo **Python Script** (motor **CPython3**, Revit 2025+) y pega
+   todo el contenido de `dynamo_claude_node.py`.
+3. Añade los puertos de entrada:
+   - `IN[0]` → el prompt en lenguaje natural (string).
+   - `IN[1]` → modelo (opcional; por defecto `claude-opus-4-8`).
+   - `IN[2]` → ejecutar (bool, opcional; **por defecto `False` = solo devuelve el código para que lo revises**).
+4. La salida `OUT` es el código generado (si `Ejecutar=False`) o el resultado de ejecutarlo (`True`).
+
+> Por seguridad el modo por defecto **no ejecuta** nada contra el modelo: te devuelve el
+> código para que lo revises antes de poner `IN[2] = True`. El nodo compila (`compile()`)
+> el código antes de aceptarlo y, si hay error de sintaxis, se lo realimenta a Claude
+> para que lo corrija (hasta 3 intentos).
+
 ### Buenas prácticas si construyes lo tuyo
 - **Modelo:** por defecto `claude-opus-4-8` (lo más capaz). Para alto volumen, `claude-sonnet-4-6`.
 - **`max_tokens`:** ~16000 en peticiones no-streaming; usa streaming para salidas largas.
