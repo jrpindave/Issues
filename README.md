@@ -9,6 +9,7 @@ Repositorio para publicar informes y presentaciones HTML mediante **GitHub Pages
 ```
 index.html              → página de inicio (índice de todo)
 luna-de-miel/           → Propuesta de luna de miel · Islandia · Tenerife · Puglia
+revision-easywood-la242/ → Informe de coordinación BIM · revisión correos Easywood · LA242
 ```
 
 GitHub Pages está configurado en modo **"Deploy from a branch"** sobre la rama
