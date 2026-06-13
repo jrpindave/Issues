@@ -25,22 +25,32 @@ function ControlsSetup() {
   } | null;
   useEffect(() => {
     if (controls) {
-      // Middle button is handled by our custom PanController (per-axis signs);
-      // left/right orbit, wheel zoom.
+      // Orbit on LEFT-drag only. The right button is intentionally inert because
+      // Opera hijacks it with mouse gestures, which left right-drag orbit "stuck".
+      // Middle button is handled by the custom PanController.
       controls.mouseButtons = {
         LEFT: THREE.MOUSE.ROTATE,
         MIDDLE: undefined,
-        RIGHT: THREE.MOUSE.ROTATE,
+        RIGHT: undefined,
       };
       controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
       controls.screenSpacePanning = true;
     }
-    // Hard-block the context menu on the canvas itself (capture phase) so a
-    // right-drag never leaves orbit "stuck".
+    // Neutralise the right button on the canvas: block the context menu and the
+    // right pointerdown so Opera's gestures don't fire over the viewport.
     const el = gl.domElement;
-    const prevent = (e: Event) => e.preventDefault();
-    el.addEventListener("contextmenu", prevent, { capture: true });
-    return () => el.removeEventListener("contextmenu", prevent, { capture: true } as EventListenerOptions);
+    const onContext = (e: Event) => e.preventDefault();
+    const onRightDown = (e: PointerEvent | MouseEvent) => {
+      if (e.button === 2) e.preventDefault();
+    };
+    el.addEventListener("contextmenu", onContext, { capture: true });
+    el.addEventListener("pointerdown", onRightDown, { capture: true });
+    el.addEventListener("mousedown", onRightDown, { capture: true });
+    return () => {
+      el.removeEventListener("contextmenu", onContext, { capture: true } as EventListenerOptions);
+      el.removeEventListener("pointerdown", onRightDown, { capture: true } as EventListenerOptions);
+      el.removeEventListener("mousedown", onRightDown, { capture: true } as EventListenerOptions);
+    };
   }, [controls, gl]);
   return null;
 }
@@ -48,7 +58,7 @@ function ControlsSetup() {
 /**
  * Custom middle-button pan with per-axis control:
  *   drag right → scene moves right (horizontal natural)
- *   drag up    → scene moves down  (vertical inverted)
+ *   drag up    → the frame lowers ("encuadre baja")
  * (OrbitControls only offers a single panSpeed, so we can't mix axes there.)
  */
 function PanController() {
@@ -86,8 +96,8 @@ function PanController() {
       right.set(m[0], m[1], m[2]);
       up.set(m[4], m[5], m[6]);
       offset.set(0, 0, 0);
-      offset.addScaledVector(right, -dx * worldPerPixel); // horizontal natural
-      offset.addScaledVector(up, -dy * worldPerPixel); // vertical inverted
+      offset.addScaledVector(right, -dx * worldPerPixel); // horizontal: right → scene right
+      offset.addScaledVector(up, dy * worldPerPixel); // vertical: drag up → encuadre baja
       camera.position.add(offset);
       if (controls) controls.target.add(offset);
     };

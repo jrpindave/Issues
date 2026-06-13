@@ -226,16 +226,20 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
     elevation: groundFloorY + (e - baseElev),
   }));
 
-  // Classify each mesh into a storey: prefer the IFC spatial containment so tall
-  // elements (e.g. overhead cabinets) stay on their own floor; fall back to the
-  // lowest point when an element has no containment relation.
-  const spacing = storeyElevs.length > 1 ? storeyElevs[1] - storeyElevs[0] : 2.6;
-  const splitY = groundFloorY + spacing / 2;
-  const lastLevel = Math.max(0, storeyElevs.length - 1);
+  // Classify each mesh into a storey: prefer the IFC spatial containment; else
+  // assign it to the highest floor at or below its base, so tall pieces (e.g. an
+  // overhead cabinet ~1.8 m up on the ground floor) stay on their own level
+  // instead of being pushed to the floor above by a midpoint split.
+  const lastLevel = Math.max(0, levels.length - 1);
   for (const { mesh, minY, expressID } of meshes) {
-    const byStorey = elementStorey.get(expressID);
-    const level = byStorey !== undefined ? Math.min(byStorey, lastLevel) : minY >= splitY ? 1 : 0;
-    mesh.userData.level = level;
+    let level = elementStorey.get(expressID);
+    if (level === undefined) {
+      level = 0;
+      for (let i = 0; i < levels.length; i++) {
+        if (minY >= levels[i].elevation - 0.3) level = i;
+      }
+    }
+    mesh.userData.level = Math.min(level, lastLevel);
     group.add(mesh);
   }
 
