@@ -169,16 +169,31 @@ function TouchController() {
       }
     };
     const onSelectStart = (e: Event) => e.preventDefault();
+    // iOS Safari ignores user-scalable=no: block its pinch (page zoom / tab
+    // overview) so only OrbitControls (pointer events) zooms the 3D.
+    const blockGesture = (e: Event) => e.preventDefault();
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 1) e.preventDefault();
+    };
     const opts = { capture: true } as AddEventListenerOptions;
+    const nonPassive = { passive: false } as AddEventListenerOptions;
     el.addEventListener("pointerdown", onDown, opts);
     el.addEventListener("pointerup", onUp, opts);
     el.addEventListener("pointercancel", onUp, opts);
     el.addEventListener("selectstart", onSelectStart);
+    el.addEventListener("gesturestart", blockGesture, nonPassive);
+    el.addEventListener("gesturechange", blockGesture, nonPassive);
+    el.addEventListener("gestureend", blockGesture, nonPassive);
+    el.addEventListener("touchmove", onTouchMove, nonPassive);
     return () => {
       el.removeEventListener("pointerdown", onDown, opts);
       el.removeEventListener("pointerup", onUp, opts);
       el.removeEventListener("pointercancel", onUp, opts);
       el.removeEventListener("selectstart", onSelectStart);
+      el.removeEventListener("gesturestart", blockGesture, nonPassive);
+      el.removeEventListener("gesturechange", blockGesture, nonPassive);
+      el.removeEventListener("gestureend", blockGesture, nonPassive);
+      el.removeEventListener("touchmove", onTouchMove, nonPassive);
     };
   }, [gl, toggleOrbitMode]);
   return null;

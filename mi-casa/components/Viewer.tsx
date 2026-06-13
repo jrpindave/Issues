@@ -7,7 +7,7 @@ import Toolbar from "./Toolbar";
 import { usePlanner } from "@/lib/store";
 
 // Bump on every deploy so you can confirm the new build actually loaded.
-const APP_VERSION = "v20 · viewport-lock";
+const APP_VERSION = "v21 · pinch-lock";
 
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {
