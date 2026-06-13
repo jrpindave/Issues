@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { IfcAPI, IFCBUILDINGSTOREY, IFCSPACE } from "web-ifc";
+import { IfcAPI, IFCBUILDINGSTOREY, IFCSPACE, IFCRELCONTAINEDINSPATIALSTRUCTURE } from "web-ifc";
 import type { LevelInfo } from "./types";
 
 export interface LoadedModel {
@@ -23,7 +23,7 @@ async function getApi(): Promise<IfcAPI> {
       // Load the WASM from a CDN (matches the standalone build). This sidesteps
       // any static-hosting quirks around serving .wasm and guarantees the file
       // is delivered with the right CORS + application/wasm content-type.
-      api.SetWasmPath("https://unpkg.com/web-ifc@0.0.69/", true);
+      api.SetWasmPath("https://unpkg.com/web-ifc@0.0.77/", true);
       await api.Init();
       return api;
     })();
@@ -40,6 +40,36 @@ function readStoreyElevations(api: IfcAPI, modelID: number): number[] {
   }
   elevs.sort((a, b) => a - b);
   return elevs.length ? elevs : [0];
+}
+
+/** Map every element's expressID to its storey index (by spatial containment). */
+function readElementStoreys(api: IfcAPI, modelID: number): Map<number, number> {
+  // storey expressID -> storey index (sorted by elevation, ground = 0)
+  const sids = api.GetLineIDsWithType(modelID, IFCBUILDINGSTOREY);
+  const storeys: { id: number; elev: number }[] = [];
+  for (let i = 0; i < sids.size(); i++) {
+    const id = sids.get(i);
+    const line = api.GetLine(modelID, id) as { Elevation?: { value?: number } };
+    storeys.push({ id, elev: line.Elevation?.value ?? 0 });
+  }
+  storeys.sort((a, b) => a.elev - b.elev);
+  const indexByStorey = new Map<number, number>();
+  storeys.forEach((s, idx) => indexByStorey.set(s.id, idx));
+
+  const elementStorey = new Map<number, number>();
+  const rels = api.GetLineIDsWithType(modelID, IFCRELCONTAINEDINSPATIALSTRUCTURE);
+  for (let i = 0; i < rels.size(); i++) {
+    const rel = api.GetLine(modelID, rels.get(i)) as {
+      RelatingStructure?: { value?: number };
+      RelatedElements?: { value?: number }[];
+    };
+    const storeyIdx = indexByStorey.get(rel.RelatingStructure?.value ?? -1);
+    if (storeyIdx === undefined) continue;
+    for (const el of rel.RelatedElements ?? []) {
+      if (el?.value !== undefined) elementStorey.set(el.value, storeyIdx);
+    }
+  }
+  return elementStorey;
 }
 
 export async function loadIfc(url: string): Promise<LoadedModel> {
@@ -63,8 +93,10 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
   const modelID = api.OpenModel(data, { COORDINATE_TO_ORIGIN: true });
   const storeyElevs = readStoreyElevations(api, modelID);
 
+  const elementStorey = readElementStoreys(api, modelID);
+
   const group = new THREE.Group();
-  const meshes: { mesh: THREE.Mesh; minY: number }[] = [];
+  const meshes: { mesh: THREE.Mesh; minY: number; expressID: number }[] = [];
   const bbox = new THREE.Box3();
   // Histogram of horizontal (floor-like) surface area, keyed by rounded Y.
   const floorHist = new Map<number, number>();
@@ -165,7 +197,7 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
       const mesh = new THREE.Mesh(bg, material);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      meshes.push({ mesh, minY: meshMinY });
+      meshes.push({ mesh, minY: meshMinY, expressID: flatMesh.expressID });
       bbox.expandByObject(mesh);
 
       geom.delete();
@@ -194,11 +226,16 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
     elevation: groundFloorY + (e - baseElev),
   }));
 
-  // Classify each mesh into a storey by its lowest point.
+  // Classify each mesh into a storey: prefer the IFC spatial containment so tall
+  // elements (e.g. overhead cabinets) stay on their own floor; fall back to the
+  // lowest point when an element has no containment relation.
   const spacing = storeyElevs.length > 1 ? storeyElevs[1] - storeyElevs[0] : 2.6;
   const splitY = groundFloorY + spacing / 2;
-  for (const { mesh, minY } of meshes) {
-    mesh.userData.level = minY >= splitY ? 1 : 0;
+  const lastLevel = Math.max(0, storeyElevs.length - 1);
+  for (const { mesh, minY, expressID } of meshes) {
+    const byStorey = elementStorey.get(expressID);
+    const level = byStorey !== undefined ? Math.min(byStorey, lastLevel) : minY >= splitY ? 1 : 0;
+    mesh.userData.level = level;
     group.add(mesh);
   }
 

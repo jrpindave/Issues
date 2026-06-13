@@ -1,7 +1,7 @@
 "use client";
 
 import { TransformControls, Edges } from "@react-three/drei";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { usePlanner } from "@/lib/store";
 import type { FurnitureItem, LevelInfo } from "@/lib/types";
@@ -26,14 +26,17 @@ function snapAxis(center: number, half: number, planes: number[], threshold: num
   return center + bestShift;
 }
 
-/** The box(es) for one item, drawn relative to the floor of its level. */
+/**
+ * The box(es) for one item. The parent group's origin sits at the item's vertical
+ * center (so the move gizmo hugs the block); meshes are offset around it.
+ */
 function PieceMeshes({ item, selected }: { item: FurnitureItem; selected: boolean }) {
   const emissive = selected ? "#3a3320" : "#000000";
   const edgeColor = selected ? "#ffd479" : item.fixture ? "#00000055" : "#00000033";
 
   return (
     <>
-      <mesh position={[0, item.height / 2, 0]} castShadow receiveShadow>
+      <mesh position={[0, 0, 0]} castShadow receiveShadow>
         <boxGeometry args={[item.width, item.height, item.depth]} />
         <meshStandardMaterial
           color={item.color}
@@ -49,7 +52,7 @@ function PieceMeshes({ item, selected }: { item: FurnitureItem; selected: boolea
 
       {item.upper && (
         <mesh
-          position={[0, item.upper.topY - item.upper.height / 2, 0]}
+          position={[0, item.upper.topY - item.upper.height / 2 - item.height / 2, 0]}
           castShadow
           receiveShadow
         >
@@ -84,6 +87,8 @@ export default function FurnitureLayer() {
   const snapEnabled = usePlanner((s) => s.snapEnabled);
 
   const selectedRef = useRef<THREE.Group>(null);
+  // drei forwards the controls instance through this ref.
+  const tcRef = useRef<React.ComponentRef<typeof TransformControls>>(null);
   const selected = items.find((it) => it.id === selectedId) ?? null;
   const selectedVisible = selected ? levelVisible[selected.level] ?? true : false;
 
@@ -103,6 +108,22 @@ export default function FurnitureLayer() {
     updateItem(selected.id, { x, z });
   };
 
+  // Persist the move when the drag ends. 'dragging-changed' is the reliable
+  // TransformControls event, so positions never reset on the next click.
+  useEffect(() => {
+    const tc = tcRef.current as unknown as {
+      addEventListener: (t: string, cb: (e: { value: boolean }) => void) => void;
+      removeEventListener: (t: string, cb: (e: { value: boolean }) => void) => void;
+    } | null;
+    if (!tc) return;
+    const onDrag = (e: { value: boolean }) => {
+      if (!e.value) commitSelected();
+    };
+    tc.addEventListener("dragging-changed", onDrag);
+    return () => tc.removeEventListener("dragging-changed", onDrag);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedId, snapEnabled, snapXPlanes, snapZPlanes]);
+
   return (
     <group>
       {items.map((item) => {
@@ -112,7 +133,7 @@ export default function FurnitureLayer() {
         return (
           <group
             key={item.id}
-            position={[item.x, elev, item.z]}
+            position={[item.x, elev + item.height / 2, item.z]}
             rotation={[0, item.rotationY, 0]}
             onClick={(e) => {
               e.stopPropagation();
@@ -125,15 +146,14 @@ export default function FurnitureLayer() {
       })}
 
       {selected && selectedVisible && (
-        <TransformControls
-          mode="translate"
-          showY={false}
-          translationSnap={0.05}
-          onMouseUp={commitSelected}
-        >
+        <TransformControls ref={tcRef} mode="translate" showY={false} translationSnap={0.05}>
           <group
             ref={selectedRef}
-            position={[selected.x, levelElevation(levels, selected.level), selected.z]}
+            position={[
+              selected.x,
+              levelElevation(levels, selected.level) + selected.height / 2,
+              selected.z,
+            ]}
             rotation={[0, selected.rotationY, 0]}
           >
             <PieceMeshes item={selected} selected />

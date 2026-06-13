@@ -1,13 +1,34 @@
 "use client";
 
-import { Canvas } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import { OrbitControls, Grid, ContactShadows } from "@react-three/drei";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import HouseModel, { type ModelInfo } from "./HouseModel";
 import FurnitureLayer from "./FurnitureLayer";
 import CameraController from "./CameraController";
 import { usePlanner } from "@/lib/store";
+
+/**
+ * Configures the default OrbitControls once it exists:
+ * wheel = zoom, right-drag = orbit, middle-drag = pan (inverted), left = select.
+ */
+function ControlsSetup() {
+  const controls = useThree((s) => s.controls) as unknown as {
+    mouseButtons: { LEFT?: number; MIDDLE?: number; RIGHT?: number };
+    touches: { ONE?: number; TWO?: number };
+    screenSpacePanning: boolean;
+    panSpeed: number;
+  } | null;
+  useEffect(() => {
+    if (!controls) return;
+    controls.mouseButtons = { LEFT: undefined, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE };
+    controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+    controls.screenSpacePanning = true;
+    controls.panSpeed = -1; // invert pan on both axes
+  }, [controls]);
+  return null;
+}
 
 export default function Scene3D() {
   const [info, setInfo] = useState<ModelInfo | null>(null);
@@ -27,6 +48,9 @@ export default function Scene3D() {
       onPointerMissed={(e) => {
         if ((e as MouseEvent).button === 0) select(null);
       }}
+      // Prevent the browser/Opera right-click menu so right-drag orbit doesn't
+      // get stuck and gestures don't interfere.
+      onContextMenu={(e) => e.preventDefault()}
       className="h-full w-full"
     >
       <color attach="background" args={["#0b0d10"]} />
@@ -82,13 +106,8 @@ export default function Scene3D() {
         minDistance={1}
         maxDistance={80}
         maxPolarAngle={Math.PI / 2 - 0.02}
-        // Navegación: rueda = zoom, click derecho = orbitar, botón central = paneo
-        // (invertido), click izquierdo = seleccionar.
-        screenSpacePanning
-        panSpeed={-1}
-        mouseButtons={{ LEFT: undefined, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE }}
-        touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
       />
+      <ControlsSetup />
 
       <CameraController info={info} controls={controls} />
     </Canvas>
