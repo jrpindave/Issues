@@ -33,9 +33,7 @@ function ControlsSetup() {
         MIDDLE: undefined,
         RIGHT: undefined,
       };
-      // One finger does nothing by default (so a tap selects and a drag doesn't
-      // orbit); TouchController arms one-finger orbit only on a double-tap-hold.
-      controls.touches = { ONE: undefined, TWO: THREE.TOUCH.DOLLY_PAN };
+      // Touch mapping is managed reactively by TouchController.
       controls.screenSpacePanning = true;
     }
     // Neutralise the right button on the canvas: block the context menu and the
@@ -122,47 +120,47 @@ function PanController() {
 }
 
 /**
- * Mobile gestures: 1 tap = select, double-tap then hold + drag = orbit,
- * two fingers = pan + pinch-zoom. One-finger drag (without a preceding tap)
- * does nothing, so it never orbits by accident.
+ * Mobile gestures: 1 tap = select, 1-finger drag = pan, two fingers = pan + zoom.
+ * Double-tap toggles "orbit mode" (a sticky mode) → 1-finger drag orbits.
  */
 function TouchController() {
   const gl = useThree((s) => s.gl);
   const controls = useThree((s) => s.controls) as unknown as {
     touches: { ONE?: number; TWO?: number };
   } | null;
+  const orbitMode = usePlanner((s) => s.orbitMode);
+  const toggleOrbitMode = usePlanner((s) => s.toggleOrbitMode);
+
+  // One-finger action follows the mode; two fingers always pan + pinch-zoom.
   useEffect(() => {
     if (!controls) return;
+    controls.touches = {
+      ONE: orbitMode ? THREE.TOUCH.ROTATE : THREE.TOUCH.PAN,
+      TWO: THREE.TOUCH.DOLLY_PAN,
+    };
+  }, [controls, orbitMode]);
+
+  // Double-tap toggles the mode; also block the browser's text selection.
+  useEffect(() => {
     const el = gl.domElement;
     const active = new Set<number>();
     let lastUp = 0;
-    let armed = false;
-    const reset = () => (controls.touches = { ONE: undefined, TWO: THREE.TOUCH.DOLLY_PAN });
     const onDown = (e: PointerEvent) => {
-      if (e.pointerType !== "touch") return;
-      const first = active.size === 0;
-      active.add(e.pointerId);
-      if (!first) return; // a second finger → two-finger gesture, leave ONE off
-      if (performance.now() - lastUp < 320) {
-        armed = true;
-        controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
-        e.preventDefault(); // stop the browser double-tap selection/zoom
-      } else {
-        reset();
-      }
+      if (e.pointerType === "touch") active.add(e.pointerId);
     };
-    const onSelectStart = (e: Event) => e.preventDefault();
     const onUp = (e: PointerEvent) => {
       if (e.pointerType !== "touch") return;
       active.delete(e.pointerId);
-      if (active.size === 0) {
-        lastUp = performance.now();
-        if (armed) {
-          armed = false;
-          reset();
-        }
+      if (active.size !== 0) return;
+      const now = performance.now();
+      if (now - lastUp < 280) {
+        toggleOrbitMode();
+        lastUp = 0;
+      } else {
+        lastUp = now;
       }
     };
+    const onSelectStart = (e: Event) => e.preventDefault();
     const opts = { capture: true } as AddEventListenerOptions;
     el.addEventListener("pointerdown", onDown, opts);
     el.addEventListener("pointerup", onUp, opts);
@@ -174,7 +172,7 @@ function TouchController() {
       el.removeEventListener("pointercancel", onUp, opts);
       el.removeEventListener("selectstart", onSelectStart);
     };
-  }, [controls, gl]);
+  }, [gl, toggleOrbitMode]);
   return null;
 }
 

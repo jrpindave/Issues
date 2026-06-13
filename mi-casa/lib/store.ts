@@ -62,6 +62,8 @@ interface PlannerState {
   paintMode: boolean;
   paintColor: string;
   wallColors: Record<number, string>;
+  /** Mobile: false = one finger pans, true = one finger orbits. */
+  orbitMode: boolean;
 
   setLevels: (levels: LevelInfo[]) => void;
   setDrop: (x: number, z: number) => void;
@@ -71,6 +73,8 @@ interface PlannerState {
   setPaintColor: (c: string) => void;
   paintWall: (id: number) => void;
   resetWalls: () => void;
+  toggleOrbitMode: () => void;
+  setOrbitMode: (v: boolean) => void;
   setModelStatus: (status: "loading" | "ready" | "error", error?: string | null) => void;
   importLayout: (items: FurnitureItem[]) => void;
   addTemplate: (t: FurnitureTemplate, level: number) => void;
@@ -105,6 +109,7 @@ export const usePlanner = create<PlannerState>()(
       paintMode: false,
       paintColor: "#cdb89a",
       wallColors: {},
+      orbitMode: false,
 
       setLevels: (levels) =>
         set({
@@ -121,6 +126,8 @@ export const usePlanner = create<PlannerState>()(
       paintWall: (id) =>
         set((s) => ({ wallColors: { ...s.wallColors, [id]: s.paintColor } })),
       resetWalls: () => set({ wallColors: {} }),
+      toggleOrbitMode: () => set((s) => ({ orbitMode: !s.orbitMode })),
+      setOrbitMode: (v) => set({ orbitMode: v }),
 
       setModelStatus: (status, error = null) => set({ modelStatus: status, modelError: error }),
 
