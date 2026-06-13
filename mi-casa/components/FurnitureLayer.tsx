@@ -91,6 +91,7 @@ export default function FurnitureLayer() {
   const snapXPlanes = usePlanner((s) => s.snapX);
   const snapZPlanes = usePlanner((s) => s.snapZ);
   const snapEnabled = usePlanner((s) => s.snapEnabled);
+  const gizmoMode = usePlanner((s) => s.gizmoMode);
 
   const selectedRef = useRef<THREE.Group>(null);
   // drei forwards the controls instance through this ref.
@@ -101,6 +102,17 @@ export default function FurnitureLayer() {
   const commitSelected = () => {
     const g = selectedRef.current;
     if (!g || !selected) return;
+    if (gizmoMode === "scale") {
+      // Bake the gizmo scale into the piece's dimensions, then reset scale.
+      const clamp = (v: number) => Math.max(0.05, Math.min(8, v));
+      updateItem(selected.id, {
+        width: clamp(selected.width * g.scale.x),
+        height: clamp(selected.height * g.scale.y),
+        depth: clamp(selected.depth * g.scale.z),
+      });
+      g.scale.set(1, 1, 1);
+      return;
+    }
     let x = g.position.x;
     let z = g.position.z;
     if (snapEnabled) {
@@ -131,7 +143,7 @@ export default function FurnitureLayer() {
     tc.addEventListener("dragging-changed", onDrag);
     return () => tc.removeEventListener("dragging-changed", onDrag);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId, snapEnabled, snapXPlanes, snapZPlanes]);
+  }, [selectedId, snapEnabled, snapXPlanes, snapZPlanes, gizmoMode]);
 
   return (
     <group>
@@ -173,7 +185,7 @@ export default function FurnitureLayer() {
           <TransformControls
             ref={tcRef}
             object={selectedRef as React.RefObject<THREE.Object3D>}
-            mode="translate"
+            mode={gizmoMode}
             translationSnap={0.05}
           />
         </group>

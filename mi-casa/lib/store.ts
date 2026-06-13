@@ -64,6 +64,8 @@ interface PlannerState {
   wallColors: Record<number, string>;
   /** Mobile: false = one finger pans, true = one finger orbits. */
   orbitMode: boolean;
+  /** Gizmo behaviour for the selected piece. */
+  gizmoMode: "translate" | "scale";
 
   setLevels: (levels: LevelInfo[]) => void;
   setDrop: (x: number, z: number) => void;
@@ -75,6 +77,7 @@ interface PlannerState {
   resetWalls: () => void;
   toggleOrbitMode: () => void;
   setOrbitMode: (v: boolean) => void;
+  setGizmoMode: (m: "translate" | "scale") => void;
   setModelStatus: (status: "loading" | "ready" | "error", error?: string | null) => void;
   importLayout: (items: FurnitureItem[]) => void;
   addTemplate: (t: FurnitureTemplate, level: number) => void;
@@ -110,6 +113,7 @@ export const usePlanner = create<PlannerState>()(
       paintColor: "#cdb89a",
       wallColors: {},
       orbitMode: false,
+      gizmoMode: "translate",
 
       setLevels: (levels) =>
         set({
@@ -128,6 +132,7 @@ export const usePlanner = create<PlannerState>()(
       resetWalls: () => set({ wallColors: {} }),
       toggleOrbitMode: () => set((s) => ({ orbitMode: !s.orbitMode })),
       setOrbitMode: (v) => set({ orbitMode: v }),
+      setGizmoMode: (m) => set({ gizmoMode: m }),
 
       setModelStatus: (status, error = null) => set({ modelStatus: status, modelError: error }),
 

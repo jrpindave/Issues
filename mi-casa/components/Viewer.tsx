@@ -7,7 +7,7 @@ import Toolbar from "./Toolbar";
 import { usePlanner } from "@/lib/store";
 
 // Bump on every deploy so you can confirm the new build actually loaded.
-const APP_VERSION = "v22 · viewcube";
+const APP_VERSION = "v23 · gizmo-resize";
 
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {
