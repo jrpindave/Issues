@@ -17,7 +17,10 @@ async function getApi(): Promise<IfcAPI> {
   if (!apiPromise) {
     apiPromise = (async () => {
       const api = new IfcAPI();
-      api.SetWasmPath("/wasm/");
+      // Load the WASM from a CDN (matches the standalone build). This sidesteps
+      // any static-hosting quirks around serving .wasm and guarantees the file
+      // is delivered with the right CORS + application/wasm content-type.
+      api.SetWasmPath("https://unpkg.com/web-ifc@0.0.69/", true);
       await api.Init();
       return api;
     })();
@@ -41,7 +44,7 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
   try {
     api = await getApi();
   } catch (e) {
-    throw new Error(`init web-ifc (WASM /wasm/): ${(e as Error).message ?? e}`);
+    throw new Error(`init web-ifc (WASM CDN): ${(e as Error).message ?? e}`);
   }
 
   let data: Uint8Array;
