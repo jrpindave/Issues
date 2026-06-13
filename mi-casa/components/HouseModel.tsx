@@ -5,6 +5,10 @@ import * as THREE from "three";
 import { loadIfc } from "@/lib/ifc";
 import { usePlanner } from "@/lib/store";
 
+// Public Supabase Storage object the .bat / Revit uploads overwrite.
+const SUPABASE_IFC_URL =
+  "https://wetwdokwnstjidoceoib.supabase.co/storage/v1/object/public/ifc/casa.ifc";
+
 export interface ModelInfo {
   bbox: THREE.Box3;
   center: THREE.Vector3;
@@ -23,33 +27,41 @@ export default function HouseModel({ onLoaded }: Props) {
   const setModelStatus = usePlanner((s) => s.setModelStatus);
   const levelVisible = usePlanner((s) => s.levelVisible);
 
-  // Load the IFC once. The source URL can be overridden (e.g. a Supabase Storage
-  // public URL) via localStorage["mi-casa-ifc-url"] without a redeploy.
+  // Load the IFC once. Default source is the Supabase Storage object (always the
+  // latest upload); falls back to the bundled file if it's missing/unreachable.
+  // Override via localStorage["mi-casa-ifc-url"].
   useEffect(() => {
     let alive = true;
     setModelStatus("loading");
-    let ifcUrl = "/Casa.ifc";
+    const bundled = "/Casa.ifc";
+    let primary = SUPABASE_IFC_URL;
     try {
-      ifcUrl = localStorage.getItem("mi-casa-ifc-url") || ifcUrl;
+      primary = localStorage.getItem("mi-casa-ifc-url") || primary;
     } catch {
       /* localStorage may be unavailable */
     }
-    loadIfc(ifcUrl)
-      .then(({ group, levels, bbox, center, snapX, snapZ }) => {
-        if (!alive) return;
-        const size = bbox.getSize(new THREE.Vector3());
-        setGroup(group);
-        setLevels(levels);
-        setDrop(center.x, center.z);
-        setSnapPlanes(snapX, snapZ);
-        setModelStatus("ready");
-        onLoaded({ bbox, center, size });
-      })
-      .catch((e: unknown) => {
-        const msg = e instanceof Error ? `${e.message}` : String(e);
-        console.error("Error cargando IFC:", e);
-        if (alive) setModelStatus("error", msg);
-      });
+    const apply = ({ group, levels, bbox, center, snapX, snapZ }: Awaited<ReturnType<typeof loadIfc>>) => {
+      if (!alive) return;
+      const size = bbox.getSize(new THREE.Vector3());
+      setGroup(group);
+      setLevels(levels);
+      setDrop(center.x, center.z);
+      setSnapPlanes(snapX, snapZ);
+      setModelStatus("ready");
+      onLoaded({ bbox, center, size });
+    };
+    loadIfc(primary)
+      .then(apply)
+      .catch(() =>
+        // Supabase empty/unreachable → use the IFC shipped with the build.
+        loadIfc(bundled)
+          .then(apply)
+          .catch((e: unknown) => {
+            const msg = e instanceof Error ? `${e.message}` : String(e);
+            console.error("Error cargando IFC:", e);
+            if (alive) setModelStatus("error", msg);
+          })
+      );
     return () => {
       alive = false;
     };

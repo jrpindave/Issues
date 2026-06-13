@@ -4,7 +4,7 @@ REM  Mi Casa - Subir IFC a Supabase Storage (sobrescribe la ultima version)
 REM  Uso:  subir-ifc.bat "C:\ruta\a\Casa.ifc"
 REM ------------------------------------------------------------
 REM  Rellena estos 3 valores (te los doy al crear el bucket):
-set PROJECT_REF=TU_PROJECT_REF
+set PROJECT_REF=wetwdokwnstjidoceoib
 set BUCKET=ifc
 set UPLOAD_KEY=TU_SERVICE_ROLE_O_KEY_DE_SUBIDA
 REM  Nombre fijo del objeto que lee la app:
