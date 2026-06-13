@@ -34,18 +34,19 @@ function seedFixtures(): FurnitureItem[] {
   // Kitchen + laundry clustered on level 0, near the origin (model is centered).
   // Coordinates live inside the footprint (X≈0..4.1, Z≈-7..0). Everything is
   // movable, so these are just sensible starting spots.
+  // Coordinates come from the named IFCSPACE rooms in Casa.ifc (same world axes
+  // the app renders in). Items sit against a wall inside their room.
   const seeds: Array<[string, number, number, number, number]> = [
     // [type, x, z, rotationY, level]
-    // Nivel 1 — cocina y lavandería (planta baja).
-    ["encimera", 0.7, -5.6, Math.PI / 2, 0],
-    ["lavaplatos", 0.7, -4.2, Math.PI / 2, 0],
-    ["lavadora", 0.7, -6.5, 0, 0],
-    ["mesa-trabajo", 3.4, -5.6, Math.PI / 2, 0],
-    ["despensa-aerea", 2.3, -6.6, 0, 0],
-    // Nivel 2 — clósets en los dormitorios.
-    ["closet", 0.6, -1.2, Math.PI / 2, 1],
-    ["closet", 3.5, -1.2, Math.PI / 2, 1],
-    ["closet", 3.5, -5.4, Math.PI / 2, 1],
+    // Cocina (Nivel 1) — encimera contra el muro X≈4.0, lavadora al frente.
+    ["lavaplatos", 3.72, 0.9, Math.PI / 2, 0],
+    ["mesa-trabajo", 3.72, -0.3, Math.PI / 2, 0],
+    ["despensa-aerea", 3.72, -1.5, Math.PI / 2, 0],
+    ["lavadora", 2.6, -1.6, Math.PI / 2, 0],
+    // Clósets, uno por dormitorio.
+    ["closet", 1.11, -1.88, 0, 0], // Dormitorio 3 (Nivel 1)
+    ["closet", 0.35, 2.96, Math.PI / 2, 1], // Dormitorio 1 (Nivel 2)
+    ["closet", 0.35, -0.54, Math.PI / 2, 1], // Dormitorio 2 (Nivel 2)
   ];
   return seeds.map(([type, x, z, rot, level]) => {
     const item = itemFromTemplate(byType(type), x, z, level);
@@ -159,7 +160,7 @@ export const usePlanner = create<PlannerState>()(
     {
       name: "mi-casa-planner",
       // Bump when the built-in fixture layout changes so it re-seeds on load.
-      version: 3,
+      version: 4,
       // Persist only the user's layout, not transient view/levels state.
       partialize: (s) => ({
         items: s.items,

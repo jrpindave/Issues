@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { IfcAPI, IFCBUILDINGSTOREY } from "web-ifc";
+import { IfcAPI, IFCBUILDINGSTOREY, IFCSPACE } from "web-ifc";
 import type { LevelInfo } from "./types";
 
 export interface LoadedModel {
@@ -73,7 +73,13 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
   const v = new THREE.Vector3();
   const n = new THREE.Vector3();
 
+  // IFCSPACE volumes carry room metadata but should not be drawn as solids.
+  const spaceIds = new Set<number>();
+  const sids = api.GetLineIDsWithType(modelID, IFCSPACE);
+  for (let i = 0; i < sids.size(); i++) spaceIds.add(sids.get(i));
+
   api.StreamAllMeshes(modelID, (flatMesh) => {
+    if (spaceIds.has(flatMesh.expressID)) return;
     const placed = flatMesh.geometries;
     for (let i = 0; i < placed.size(); i++) {
       const pg = placed.get(i);
