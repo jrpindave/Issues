@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm --prefix mi-casa install",
+  "buildCommand": "npm --prefix mi-casa run build",
+  "outputDirectory": "mi-casa/out"
+}

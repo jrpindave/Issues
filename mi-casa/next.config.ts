@@ -1,8 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // web-ifc ships a .wasm we serve from /public/wasm — nothing to bundle.
-  // Keep the build lean and static-exportable for Vercel.
+  // The app is fully client-side (the 3D runs in the browser), so we emit a
+  // static export. This lets Vercel serve it as a plain static site via a root
+  // vercel.json — no dashboard "Root Directory" change required.
+  output: "export",
+  images: { unoptimized: true },
   reactStrictMode: true,
 };
 
