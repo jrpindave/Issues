@@ -1,45 +1,36 @@
 # ============================================================
-#  Mi Casa - Subir una carpeta completa a Supabase Storage
-#  Elige una carpeta y sube todos sus archivos (overwrite).
-#  Si hay un .ifc, tambien se sube como "casa.ifc" (lo que lee la app).
-# ------------------------------------------------------------
-#  Rellena tu llave una sola vez (Supabase -> Settings -> API -> service_role):
+#  Mi Casa - Sube el IFC de una carpeta a Supabase (como casa.ifc).
+#  Pega tu service_role key (Supabase -> Settings -> API):
 $Key        = "TU_SERVICE_ROLE_KEY"
 $ProjectRef = "wetwdokwnstjidoceoib"
 $Bucket     = "ifc"
 # ============================================================
 
 if ($Key -eq "TU_SERVICE_ROLE_KEY") {
-  Write-Host "Falta pegar tu service_role key en subir-carpeta.ps1 (variable `$Key)." -ForegroundColor Yellow
-  exit 1
+  Write-Host "Falta pegar tu service_role key en este .ps1 (variable Key)." -ForegroundColor Yellow
+  return
 }
 
 Add-Type -AssemblyName System.Windows.Forms
 $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
-$dlg.Description = "Elige la carpeta con tus archivos (IFC, etc.)"
-if ($dlg.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { Write-Host "Cancelado."; exit }
+$dlg.Description = "Elige la carpeta que contiene el IFC"
+if ($dlg.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { Write-Host "Cancelado."; return }
 $folder = $dlg.SelectedPath
 
-$base = "https://$ProjectRef.supabase.co/storage/v1/object/$Bucket"
+# Solo archivos .ifc (el mas reciente si hay varios).
+$ifc = Get-ChildItem -File -LiteralPath $folder -Filter *.ifc |
+       Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if (-not $ifc) { Write-Host "No hay ningun .ifc en esa carpeta." -ForegroundColor Yellow; return }
+
+Write-Host ("Subiendo {0}  ->  {1}/casa.ifc ..." -f $ifc.Name, $Bucket)
+$uri = "https://$ProjectRef.supabase.co/storage/v1/object/$Bucket/casa.ifc"
 $headers = @{ "Authorization" = "Bearer $Key"; "x-upsert" = "true" }
-
-$files = Get-ChildItem -File -Path $folder
-if ($files.Count -eq 0) { Write-Host "La carpeta esta vacia."; exit }
-
-foreach ($f in $files) {
-  try {
-    Write-Host ("Subiendo {0} ..." -f $f.Name)
-    Invoke-RestMethod -Uri "$base/$($f.Name)" -Method Post -Headers $headers `
-      -ContentType "application/octet-stream" -InFile $f.FullName | Out-Null
-    if ($f.Extension -ieq ".ifc") {
-      Invoke-RestMethod -Uri "$base/casa.ifc" -Method Post -Headers $headers `
-        -ContentType "application/octet-stream" -InFile $f.FullName | Out-Null
-      Write-Host "   -> tambien como casa.ifc (la app leera este)" -ForegroundColor Green
-    }
-  } catch {
-    Write-Host ("   ERROR en {0}: {1}" -f $f.Name, $_.Exception.Message) -ForegroundColor Red
-  }
+try {
+  Invoke-RestMethod -Uri $uri -Method Post -Headers $headers `
+    -ContentType "application/octet-stream" -InFile $ifc.FullName | Out-Null
+  Write-Host "OK. Recarga la app (issues-eight.vercel.app)." -ForegroundColor Green
+} catch {
+  $msg = $_.ErrorDetails.Message; if (-not $msg) { $msg = $_.Exception.Message }
+  Write-Host ("ERROR: {0}" -f $msg) -ForegroundColor Red
+  Write-Host "Revisa: (1) el bucket 'ifc' existe y es PUBLICO; (2) pegaste la service_role key (no la anon)." -ForegroundColor Yellow
 }
-
-Write-Host ""
-Write-Host "Listo. Recarga la app (issues-eight.vercel.app)." -ForegroundColor Green
