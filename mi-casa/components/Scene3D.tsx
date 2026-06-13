@@ -146,10 +146,12 @@ function TouchController() {
       if (performance.now() - lastUp < 320) {
         armed = true;
         controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+        e.preventDefault(); // stop the browser double-tap selection/zoom
       } else {
         reset();
       }
     };
+    const onSelectStart = (e: Event) => e.preventDefault();
     const onUp = (e: PointerEvent) => {
       if (e.pointerType !== "touch") return;
       active.delete(e.pointerId);
@@ -165,10 +167,12 @@ function TouchController() {
     el.addEventListener("pointerdown", onDown, opts);
     el.addEventListener("pointerup", onUp, opts);
     el.addEventListener("pointercancel", onUp, opts);
+    el.addEventListener("selectstart", onSelectStart);
     return () => {
       el.removeEventListener("pointerdown", onDown, opts);
       el.removeEventListener("pointerup", onUp, opts);
       el.removeEventListener("pointercancel", onUp, opts);
+      el.removeEventListener("selectstart", onSelectStart);
     };
   }, [controls, gl]);
   return null;

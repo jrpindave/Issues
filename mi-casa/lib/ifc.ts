@@ -1,5 +1,12 @@
 import * as THREE from "three";
-import { IfcAPI, IFCBUILDINGSTOREY, IFCSPACE, IFCRELCONTAINEDINSPATIALSTRUCTURE } from "web-ifc";
+import {
+  IfcAPI,
+  IFCBUILDINGSTOREY,
+  IFCSPACE,
+  IFCRELCONTAINEDINSPATIALSTRUCTURE,
+  IFCWALL,
+  IFCWALLSTANDARDCASE,
+} from "web-ifc";
 import type { LevelInfo } from "./types";
 
 export interface LoadedModel {
@@ -120,6 +127,13 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
   const sids = api.GetLineIDsWithType(modelID, IFCSPACE);
   for (let i = 0; i < sids.size(); i++) spaceIds.add(sids.get(i));
 
+  // Walls — tagged so they can be repainted from the UI.
+  const wallIds = new Set<number>();
+  for (const T of [IFCWALL, IFCWALLSTANDARDCASE]) {
+    const ids = api.GetLineIDsWithType(modelID, T);
+    for (let i = 0; i < ids.size(); i++) wallIds.add(ids.get(i));
+  }
+
   api.StreamAllMeshes(modelID, (flatMesh) => {
     if (spaceIds.has(flatMesh.expressID)) return;
     const placed = flatMesh.geometries;
@@ -197,6 +211,11 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
       const mesh = new THREE.Mesh(bg, material);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
+      if (wallIds.has(flatMesh.expressID)) {
+        mesh.userData.isWall = true;
+        mesh.userData.wallId = flatMesh.expressID;
+        mesh.userData.baseColor = material.color.getHex();
+      }
       meshes.push({ mesh, minY: meshMinY, expressID: flatMesh.expressID });
       bbox.expandByObject(mesh);
 

@@ -13,6 +13,20 @@ body {
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior: none;
+  /* Avoid the browser selecting text / zooming on double-tap over the 3D. */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+/* Re-enable selection only where it's needed (form fields). */
+input,
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+canvas {
+  touch-action: none;
 }
 
 /* Thin, unobtrusive scrollbars for the side panel. */

@@ -40,6 +40,11 @@ export default function Toolbar() {
   const clearMovable = usePlanner((s) => s.clearMovable);
   const snapEnabled = usePlanner((s) => s.snapEnabled);
   const setSnapEnabled = usePlanner((s) => s.setSnapEnabled);
+  const paintMode = usePlanner((s) => s.paintMode);
+  const setPaintMode = usePlanner((s) => s.setPaintMode);
+  const paintColor = usePlanner((s) => s.paintColor);
+  const setPaintColor = usePlanner((s) => s.setPaintColor);
+  const resetWalls = usePlanner((s) => s.resetWalls);
   const items = usePlanner((s) => s.items);
   const importLayout = usePlanner((s) => s.importLayout);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -122,6 +127,27 @@ export default function Toolbar() {
           className="hidden"
           onChange={onImportFile}
         />
+      </div>
+
+      <div className="pointer-events-auto flex flex-wrap items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950/80 p-1.5 backdrop-blur">
+        <span className="px-1 text-[10px] uppercase tracking-wider text-zinc-500">Pintura</span>
+        <Chip
+          active={paintMode}
+          onClick={() => setPaintMode(!paintMode)}
+          title="Activa y toca un muro para pintarlo con el color elegido"
+        >
+          {paintMode ? "Pintando muros" : "Pintar muros"}
+        </Chip>
+        <input
+          type="color"
+          value={paintColor}
+          onChange={(e) => setPaintColor(e.target.value)}
+          title="Color de pintura"
+          className="h-6 w-8 cursor-pointer rounded border border-zinc-700 bg-transparent"
+        />
+        <Chip onClick={resetWalls} title="Quitar la pintura de todos los muros">
+          Restablecer
+        </Chip>
       </div>
     </div>
   );

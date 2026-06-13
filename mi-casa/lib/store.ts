@@ -58,11 +58,19 @@ interface PlannerState {
   snapX: number[];
   snapZ: number[];
   snapEnabled: boolean;
+  /** Wall painting: mode on/off, active color, and per-wall overrides. */
+  paintMode: boolean;
+  paintColor: string;
+  wallColors: Record<number, string>;
 
   setLevels: (levels: LevelInfo[]) => void;
   setDrop: (x: number, z: number) => void;
   setSnapPlanes: (x: number[], z: number[]) => void;
   setSnapEnabled: (v: boolean) => void;
+  setPaintMode: (v: boolean) => void;
+  setPaintColor: (c: string) => void;
+  paintWall: (id: number) => void;
+  resetWalls: () => void;
   setModelStatus: (status: "loading" | "ready" | "error", error?: string | null) => void;
   importLayout: (items: FurnitureItem[]) => void;
   addTemplate: (t: FurnitureTemplate, level: number) => void;
@@ -94,6 +102,9 @@ export const usePlanner = create<PlannerState>()(
       snapX: [],
       snapZ: [],
       snapEnabled: true,
+      paintMode: false,
+      paintColor: "#cdb89a",
+      wallColors: {},
 
       setLevels: (levels) =>
         set({
@@ -105,6 +116,11 @@ export const usePlanner = create<PlannerState>()(
 
       setSnapPlanes: (x, z) => set({ snapX: x, snapZ: z }),
       setSnapEnabled: (v) => set({ snapEnabled: v }),
+      setPaintMode: (v) => set({ paintMode: v }),
+      setPaintColor: (c) => set({ paintColor: c }),
+      paintWall: (id) =>
+        set((s) => ({ wallColors: { ...s.wallColors, [id]: s.paintColor } })),
+      resetWalls: () => set({ wallColors: {} }),
 
       setModelStatus: (status, error = null) => set({ modelStatus: status, modelError: error }),
 
@@ -166,6 +182,8 @@ export const usePlanner = create<PlannerState>()(
         items: s.items,
         showGrid: s.showGrid,
         snapEnabled: s.snapEnabled,
+        paintColor: s.paintColor,
+        wallColors: s.wallColors,
       }),
       // Fixed equipment now lives in the IFC, so drop any previously seeded
       // fixtures while keeping every movable piece the user placed.

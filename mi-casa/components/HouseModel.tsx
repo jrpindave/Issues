@@ -26,6 +26,9 @@ export default function HouseModel({ onLoaded }: Props) {
   const setSnapPlanes = usePlanner((s) => s.setSnapPlanes);
   const setModelStatus = usePlanner((s) => s.setModelStatus);
   const levelVisible = usePlanner((s) => s.levelVisible);
+  const paintMode = usePlanner((s) => s.paintMode);
+  const paintWall = usePlanner((s) => s.paintWall);
+  const wallColors = usePlanner((s) => s.wallColors);
 
   // Load the IFC once. Default source is the Supabase Storage object (always the
   // latest upload); falls back to the bundled file if it's missing/unreachable.
@@ -79,5 +82,26 @@ export default function HouseModel({ onLoaded }: Props) {
     });
   }, [group, levelVisible]);
 
-  return group ? <primitive object={group} /> : null;
+  // Apply saved wall paint colors (and restore base color where cleared).
+  useEffect(() => {
+    if (!group) return;
+    group.traverse((obj) => {
+      const mesh = obj as THREE.Mesh;
+      if (!mesh.userData?.isWall) return;
+      const mat = mesh.material as THREE.MeshStandardMaterial;
+      const override = wallColors[mesh.userData.wallId as number];
+      mat.color.set(override ?? (mesh.userData.baseColor as number));
+    });
+  }, [group, wallColors]);
+
+  return group ? (
+    <primitive
+      object={group}
+      onClick={(e: { object: THREE.Object3D; stopPropagation: () => void }) => {
+        if (!paintMode || !e.object.userData?.isWall) return;
+        e.stopPropagation();
+        paintWall(e.object.userData.wallId as number);
+      }}
+    />
+  ) : null;
 }
