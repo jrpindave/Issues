@@ -146,7 +146,10 @@ export default function FurnitureLayer() {
       })}
 
       {selected && selectedVisible && (
-        <TransformControls ref={tcRef} mode="translate" showY={false} translationSnap={0.05}>
+        // Attach the gizmo to the positioned group via `object` (a ref) so it
+        // hugs the block; nesting under <TransformControls> would anchor it at
+        // the world origin instead. Keyed so it re-attaches per selection.
+        <group key={selected.id}>
           <group
             ref={selectedRef}
             position={[
@@ -158,7 +161,14 @@ export default function FurnitureLayer() {
           >
             <PieceMeshes item={selected} selected />
           </group>
-        </TransformControls>
+          <TransformControls
+            ref={tcRef}
+            object={selectedRef as React.RefObject<THREE.Object3D>}
+            mode="translate"
+            showY={false}
+            translationSnap={0.05}
+          />
+        </group>
       )}
     </group>
   );

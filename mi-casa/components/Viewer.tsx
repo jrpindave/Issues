@@ -6,6 +6,9 @@ import RightPanel from "./RightPanel";
 import Toolbar from "./Toolbar";
 import { usePlanner } from "@/lib/store";
 
+// Bump on every deploy so you can confirm the new build actually loaded.
+const APP_VERSION = "v8 · gizmo-fix";
+
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {
   ssr: false,
@@ -27,6 +30,9 @@ export default function Viewer() {
         <div className="flex items-baseline gap-2">
           <h1 className="text-sm font-semibold tracking-wide text-zinc-100">Mi Casa</h1>
           <span className="text-xs text-zinc-500">Planificador 3D · 2 niveles</span>
+          <span className="rounded bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-300">
+            {APP_VERSION}
+          </span>
         </div>
         <button
           onClick={() => setPanelOpen((v) => !v)}
