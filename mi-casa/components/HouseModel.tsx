@@ -23,11 +23,18 @@ export default function HouseModel({ onLoaded }: Props) {
   const setModelStatus = usePlanner((s) => s.setModelStatus);
   const levelVisible = usePlanner((s) => s.levelVisible);
 
-  // Load the IFC once.
+  // Load the IFC once. The source URL can be overridden (e.g. a Supabase Storage
+  // public URL) via localStorage["mi-casa-ifc-url"] without a redeploy.
   useEffect(() => {
     let alive = true;
     setModelStatus("loading");
-    loadIfc("/Casa.ifc")
+    let ifcUrl = "/Casa.ifc";
+    try {
+      ifcUrl = localStorage.getItem("mi-casa-ifc-url") || ifcUrl;
+    } catch {
+      /* localStorage may be unavailable */
+    }
+    loadIfc(ifcUrl)
       .then(({ group, levels, bbox, center, snapX, snapZ }) => {
         if (!alive) return;
         const size = bbox.getSize(new THREE.Vector3());
