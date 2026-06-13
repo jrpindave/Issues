@@ -7,7 +7,7 @@ import Toolbar from "./Toolbar";
 import { usePlanner } from "@/lib/store";
 
 // Bump on every deploy so you can confirm the new build actually loaded.
-const APP_VERSION = "v19 · anti-liquidglass";
+const APP_VERSION = "v20 · viewport-lock";
 
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {
@@ -25,7 +25,7 @@ export default function Viewer() {
   const modelError = usePlanner((s) => s.modelError);
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden">
+    <div className="flex h-[100dvh] w-[100vw] flex-col overflow-hidden">
       <header className="flex items-center justify-between border-b border-zinc-800 bg-zinc-950/80 px-4 py-2.5 backdrop-blur">
         <div className="flex items-baseline gap-2">
           <h1 className="text-sm font-semibold tracking-wide text-zinc-100">Mi Casa</h1>

@@ -12,6 +12,12 @@ body {
   color: #e7ebef;
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   -webkit-font-smoothing: antialiased;
+  /* Lock the page to the viewport: no scroll → the mobile URL bar stops
+     showing/hiding and the canvas no longer jumps/resizes. */
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  overflow: hidden;
   overscroll-behavior: none;
   /* Avoid the browser selecting text / zooming on double-tap over the 3D. */
   -webkit-user-select: none;
