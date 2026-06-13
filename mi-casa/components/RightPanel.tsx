@@ -194,6 +194,14 @@ function Inspector() {
         </div>
       </Section>
 
+      <Section title="Posición (m)">
+        <PosRow label="X (ancho)" value={item.x} onChange={(v) => updateItem(item.id, { x: v })} />
+        <PosRow label="Z (largo)" value={item.z} onChange={(v) => updateItem(item.id, { z: v })} />
+        <p className="mt-1 text-[10px] leading-relaxed text-zinc-600">
+          También puedes arrastrar la pieza con el gizmo en la escena.
+        </p>
+      </Section>
+
       <Section title="Nivel">
         <div className="flex gap-1.5">
           {levelNames.map((name, i) => (
@@ -247,6 +255,42 @@ function Section({ title, children }: { title: string; children: React.ReactNode
     <div className="mb-3.5">
       <p className="mb-1.5 text-[10px] uppercase tracking-wider text-zinc-500">{title}</p>
       {children}
+    </div>
+  );
+}
+
+function PosRow({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const round = (v: number) => Math.round(v * 100) / 100;
+  return (
+    <div className="mb-1.5 flex items-center gap-2">
+      <span className="w-16 text-xs text-zinc-400">{label}</span>
+      <button
+        onClick={() => onChange(round(value - 0.1))}
+        className="h-7 w-7 rounded border border-zinc-700 bg-zinc-900 text-sm text-zinc-300 hover:bg-zinc-800"
+      >
+        −
+      </button>
+      <input
+        type="number"
+        step={0.05}
+        value={round(value)}
+        onChange={(e) => onChange(round(Number(e.target.value)))}
+        className="w-20 rounded border border-zinc-800 bg-zinc-900 px-1.5 py-1 text-right text-xs tabular-nums text-zinc-200 outline-none focus:border-sky-600"
+      />
+      <button
+        onClick={() => onChange(round(value + 0.1))}
+        className="h-7 w-7 rounded border border-zinc-700 bg-zinc-900 text-sm text-zinc-300 hover:bg-zinc-800"
+      >
+        +
+      </button>
     </div>
   );
 }

@@ -35,6 +35,7 @@ export const CATALOG: FurnitureTemplate[] = [
   // ── Equipamiento fijo (ya viene en la casa) ────────────────
   { type: "encimera", label: "Cocina / encimera", category: "Equipamiento fijo", width: 1.8, depth: 0.6, height: 0.9, color: "#c2c7cc", fixture: true },
   { type: "lavadora", label: "Lavadora", category: "Equipamiento fijo", width: 0.6, depth: 0.6, height: 0.85, color: "#e2e6ea", fixture: true },
+  { type: "lavaplatos", label: "Lavaplatos", category: "Equipamiento fijo", width: 1.2, depth: 0.6, height: 0.9, color: "#cdd3d8", fixture: true },
   { type: "mesa-trabajo", label: "Mesa de trabajo", category: "Equipamiento fijo", width: 1.2, depth: 0.6, height: 0.9, color: "#b9a88f", fixture: true },
   {
     type: "despensa-aerea",

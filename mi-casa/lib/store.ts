@@ -36,13 +36,16 @@ function seedFixtures(): FurnitureItem[] {
   // movable, so these are just sensible starting spots.
   const seeds: Array<[string, number, number, number, number]> = [
     // [type, x, z, rotationY, level]
-    ["encimera", 1.0, -1.0, 0, 0],
-    ["mesa-trabajo", 1.0, -2.1, 0, 0],
-    ["despensa-aerea", 3.0, -1.0, 0, 0],
-    ["lavadora", 3.1, -2.1, 0, 0],
-    // Closets near bedrooms on the upper level.
-    ["closet", 1.0, -5.6, Math.PI / 2, 1],
-    ["closet", 3.2, -5.6, Math.PI / 2, 1],
+    // Nivel 1 — cocina y lavandería (planta baja).
+    ["encimera", 0.7, -5.6, Math.PI / 2, 0],
+    ["lavaplatos", 0.7, -4.2, Math.PI / 2, 0],
+    ["lavadora", 0.7, -6.5, 0, 0],
+    ["mesa-trabajo", 3.4, -5.6, Math.PI / 2, 0],
+    ["despensa-aerea", 2.3, -6.6, 0, 0],
+    // Nivel 2 — clósets en los dormitorios.
+    ["closet", 0.6, -1.2, Math.PI / 2, 1],
+    ["closet", 3.5, -1.2, Math.PI / 2, 1],
+    ["closet", 3.5, -5.4, Math.PI / 2, 1],
   ];
   return seeds.map(([type, x, z, rot, level]) => {
     const item = itemFromTemplate(byType(type), x, z, level);
@@ -155,12 +158,21 @@ export const usePlanner = create<PlannerState>()(
     }),
     {
       name: "mi-casa-planner",
+      // Bump when the built-in fixture layout changes so it re-seeds on load.
+      version: 3,
       // Persist only the user's layout, not transient view/levels state.
       partialize: (s) => ({
         items: s.items,
         showGrid: s.showGrid,
         seeded: s.seeded,
       }),
+      // On a version bump, refresh the built-in fixtures (new positions/items)
+      // while keeping every movable piece the user placed.
+      migrate: (persisted) => {
+        const state = (persisted ?? {}) as { items?: FurnitureItem[]; showGrid?: boolean };
+        const movable = (state.items ?? []).filter((it) => !it.fixture);
+        return { ...state, items: [...movable, ...seedFixtures()], seeded: true };
+      },
     }
   )
 );
