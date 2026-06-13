@@ -26,6 +26,10 @@ export interface FurnitureTemplate {
   color: string;
   /** Optional overhead volume (pantry, upper cabinets). */
   upper?: UpperVolume;
+  /** "box" (default) or "L" for a corner sofa (two prisms in an L). */
+  shape?: "box" | "L";
+  /** Seat/arm thickness for the L shape, meters. */
+  arm?: number;
   /** Built-in fixtures that ship with the house (kitchen, laundry, closets…). */
   fixture?: boolean;
 }
@@ -45,9 +49,13 @@ export interface FurnitureItem {
   z: number;
   /** Rotation around the vertical axis, radians. */
   rotationY: number;
+  /** Manual vertical offset above the floor, meters (gizmo Y). */
+  yOffset?: number;
   /** 0 = ground level, 1 = upper level. */
   level: number;
   upper?: UpperVolume;
+  shape?: "box" | "L";
+  arm?: number;
   fixture?: boolean;
   /** Optional URL to the real product (store/catalog page). */
   link?: string;

@@ -162,6 +162,21 @@ function Inspector() {
         <DimRow label="Ancho" value={item.width} onChange={(v) => updateItem(item.id, { width: v })} />
         <DimRow label="Fondo" value={item.depth} onChange={(v) => updateItem(item.id, { depth: v })} />
         <DimRow label="Alto" value={item.height} onChange={(v) => updateItem(item.id, { height: v })} />
+        {item.shape === "L" && (
+          <DimRow
+            label="Asiento"
+            value={item.arm ?? 0.9}
+            onChange={(v) => updateItem(item.id, { arm: v })}
+          />
+        )}
+        {(item.yOffset ?? 0) !== 0 && (
+          <button
+            onClick={() => updateItem(item.id, { yOffset: 0 })}
+            className="mt-1 w-full rounded border border-zinc-700 bg-zinc-900 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800"
+          >
+            Apoyar en el piso (elevación {(item.yOffset ?? 0).toFixed(2)} m → 0)
+          </button>
+        )}
       </Section>
 
       <Section title="Rotación">

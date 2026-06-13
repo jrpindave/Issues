@@ -26,51 +26,57 @@ function snapAxis(center: number, half: number, planes: number[], threshold: num
   return center + bestShift;
 }
 
+type BoxDef = { args: [number, number, number]; pos: [number, number, number]; opacity: number };
+
+/** Compute the prisms for an item (L corner sofa, or box + optional upper). */
+function boxesFor(item: FurnitureItem): BoxDef[] {
+  const h = item.height;
+  if (item.shape === "L") {
+    const t = item.arm ?? Math.min(item.width, item.depth) * 0.45;
+    return [
+      // back arm along X
+      { args: [item.width, h, t], pos: [0, 0, -item.depth / 2 + t / 2], opacity: 1 },
+      // side arm along Z
+      { args: [t, h, item.depth], pos: [-item.width / 2 + t / 2, 0, 0], opacity: 1 },
+    ];
+  }
+  const boxes: BoxDef[] = [
+    { args: [item.width, h, item.depth], pos: [0, 0, 0], opacity: item.fixture ? 0.92 : 1 },
+  ];
+  if (item.upper) {
+    boxes.push({
+      args: [item.upper.width ?? item.width, item.upper.height, item.upper.depth ?? item.depth],
+      pos: [0, item.upper.topY - item.upper.height / 2 - h / 2, 0],
+      opacity: 0.9,
+    });
+  }
+  return boxes;
+}
+
 /**
- * The box(es) for one item. The parent group's origin sits at the item's vertical
- * center (so the move gizmo hugs the block); meshes are offset around it.
+ * The prism(s) for one item. The parent group's origin sits at the item's
+ * vertical center (so the move gizmo hugs the block); meshes are offset around it.
  */
 function PieceMeshes({ item, selected }: { item: FurnitureItem; selected: boolean }) {
   const emissive = selected ? "#3a3320" : "#000000";
   const edgeColor = selected ? "#ffd479" : item.fixture ? "#00000055" : "#00000033";
-
   return (
     <>
-      <mesh position={[0, 0, 0]} castShadow receiveShadow>
-        <boxGeometry args={[item.width, item.height, item.depth]} />
-        <meshStandardMaterial
-          color={item.color}
-          roughness={0.7}
-          metalness={0.04}
-          emissive={emissive}
-          emissiveIntensity={selected ? 1 : 0}
-          transparent={item.fixture}
-          opacity={item.fixture ? 0.92 : 1}
-        />
-        <Edges threshold={15} scale={1.001} color={edgeColor} />
-      </mesh>
-
-      {item.upper && (
-        <mesh
-          position={[0, item.upper.topY - item.upper.height / 2 - item.height / 2, 0]}
-          castShadow
-          receiveShadow
-        >
-          <boxGeometry
-            args={[item.upper.width ?? item.width, item.upper.height, item.upper.depth ?? item.depth]}
-          />
+      {boxesFor(item).map((b, i) => (
+        <mesh key={i} position={b.pos} castShadow receiveShadow>
+          <boxGeometry args={b.args} />
           <meshStandardMaterial
             color={item.color}
             roughness={0.7}
             metalness={0.04}
             emissive={emissive}
             emissiveIntensity={selected ? 1 : 0}
-            transparent
-            opacity={0.9}
+            transparent={b.opacity < 1}
+            opacity={b.opacity}
           />
           <Edges threshold={15} scale={1.001} color={edgeColor} />
         </mesh>
-      )}
+      ))}
     </>
   );
 }
@@ -102,10 +108,13 @@ export default function FurnitureLayer() {
       const r = selected.rotationY;
       const hx = Math.abs((selected.width / 2) * Math.cos(r)) + Math.abs((selected.depth / 2) * Math.sin(r));
       const hz = Math.abs((selected.width / 2) * Math.sin(r)) + Math.abs((selected.depth / 2) * Math.cos(r));
-      x = snapAxis(x, hx, snapXPlanes, 0.25);
-      z = snapAxis(z, hz, snapZPlanes, 0.25);
+      x = snapAxis(x, hx, snapXPlanes, 0.35);
+      z = snapAxis(z, hz, snapZPlanes, 0.35);
     }
-    updateItem(selected.id, { x, z });
+    // Vertical: keep whatever height the gizmo set, as an offset above the floor.
+    const baseY = levelElevation(levels, selected.level) + selected.height / 2;
+    const yOffset = Math.max(-selected.height / 2, g.position.y - baseY);
+    updateItem(selected.id, { x, z, yOffset });
   };
 
   // Persist the move when the drag ends. 'dragging-changed' is the reliable
@@ -133,7 +142,7 @@ export default function FurnitureLayer() {
         return (
           <group
             key={item.id}
-            position={[item.x, elev + item.height / 2, item.z]}
+            position={[item.x, elev + item.height / 2 + (item.yOffset ?? 0), item.z]}
             rotation={[0, item.rotationY, 0]}
             onClick={(e) => {
               e.stopPropagation();
@@ -154,7 +163,7 @@ export default function FurnitureLayer() {
             ref={selectedRef}
             position={[
               selected.x,
-              levelElevation(levels, selected.level) + selected.height / 2,
+              levelElevation(levels, selected.level) + selected.height / 2 + (selected.yOffset ?? 0),
               selected.z,
             ]}
             rotation={[0, selected.rotationY, 0]}
@@ -165,7 +174,6 @@ export default function FurnitureLayer() {
             ref={tcRef}
             object={selectedRef as React.RefObject<THREE.Object3D>}
             mode="translate"
-            showY={false}
             translationSnap={0.05}
           />
         </group>

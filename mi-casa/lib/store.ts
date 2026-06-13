@@ -22,8 +22,11 @@ function itemFromTemplate(t: FurnitureTemplate, x: number, z: number, level: num
     x,
     z,
     rotationY: 0,
+    yOffset: 0,
     level,
     upper: t.upper,
+    shape: t.shape,
+    arm: t.arm,
     fixture: t.fixture,
   };
 }

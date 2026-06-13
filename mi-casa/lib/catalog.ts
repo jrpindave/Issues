@@ -14,6 +14,7 @@ export const CATALOG: FurnitureTemplate[] = [
   { type: "sofa-3", label: "Sofá 3 cuerpos", category: "Living", width: 2.2, depth: 0.9, height: 0.8, color: "#6b8f71" },
   { type: "sofa-2", label: "Sofá 2 cuerpos", category: "Living", width: 1.6, depth: 0.9, height: 0.8, color: "#79a081" },
   { type: "sillon", label: "Sillón", category: "Living", width: 0.9, depth: 0.9, height: 0.8, color: "#8bb094" },
+  { type: "sofa-esquina", label: "Sofá esquinero (L)", category: "Living", width: 2.4, depth: 2.0, height: 0.8, color: "#6f9a8d", shape: "L", arm: 0.9 },
   { type: "mesa-centro", label: "Mesa de centro", category: "Living", width: 1.1, depth: 0.6, height: 0.4, color: "#9c6f4e" },
   { type: "mueble-tv", label: "Mueble TV", category: "Living", width: 1.8, depth: 0.4, height: 0.5, color: "#5c5c66" },
 

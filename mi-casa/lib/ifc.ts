@@ -245,14 +245,20 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
 
   const center = bbox.getCenter(new THREE.Vector3());
 
-  // Keep only prominent wall planes as snap targets (filters out clutter).
-  const planesFrom = (map: Map<number, number>, minArea: number) =>
-    [...map.entries()]
+  // Keep prominent wall planes as snap targets, merging near-duplicates.
+  const planesFrom = (map: Map<number, number>, minArea: number) => {
+    const raw = [...map.entries()]
       .filter(([, area]) => area >= minArea)
       .map(([c]) => c)
       .sort((a, b) => a - b);
-  const snapX = planesFrom(wallX, 0.4);
-  const snapZ = planesFrom(wallZ, 0.4);
+    const out: number[] = [];
+    for (const c of raw) {
+      if (out.length === 0 || Math.abs(c - out[out.length - 1]) > 0.06) out.push(c);
+    }
+    return out;
+  };
+  const snapX = planesFrom(wallX, 0.2);
+  const snapZ = planesFrom(wallZ, 0.2);
 
   return { group, levels, bbox, center, snapX, snapZ };
 }
