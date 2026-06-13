@@ -11,9 +11,12 @@ import { usePlanner } from "@/lib/store";
 
 /**
  * Configures the default OrbitControls once it exists:
- * wheel = zoom, right-drag = orbit, middle-drag = pan (inverted), left = select.
+ * wheel = zoom, drag = orbit (left OR right), middle-drag = pan (inverted),
+ * left-click = select. Left-drag orbit is included because Opera's mouse
+ * gestures hijack the right button, breaking right-drag orbit there.
  */
 function ControlsSetup() {
+  const gl = useThree((s) => s.gl);
   const controls = useThree((s) => s.controls) as unknown as {
     mouseButtons: { LEFT?: number; MIDDLE?: number; RIGHT?: number };
     touches: { ONE?: number; TWO?: number };
@@ -21,12 +24,23 @@ function ControlsSetup() {
     panSpeed: number;
   } | null;
   useEffect(() => {
-    if (!controls) return;
-    controls.mouseButtons = { LEFT: undefined, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE };
-    controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
-    controls.screenSpacePanning = true;
-    controls.panSpeed = -1; // invert pan on both axes
-  }, [controls]);
+    if (controls) {
+      controls.mouseButtons = {
+        LEFT: THREE.MOUSE.ROTATE,
+        MIDDLE: THREE.MOUSE.PAN,
+        RIGHT: THREE.MOUSE.ROTATE,
+      };
+      controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+      controls.screenSpacePanning = true;
+      controls.panSpeed = -1; // invert pan on both axes
+    }
+    // Hard-block the context menu on the canvas itself (capture phase) so a
+    // right-drag never leaves orbit "stuck".
+    const el = gl.domElement;
+    const prevent = (e: Event) => e.preventDefault();
+    el.addEventListener("contextmenu", prevent, { capture: true });
+    return () => el.removeEventListener("contextmenu", prevent, { capture: true } as EventListenerOptions);
+  }, [controls, gl]);
   return null;
 }
 
