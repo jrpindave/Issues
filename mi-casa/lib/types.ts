@@ -49,6 +49,8 @@ export interface FurnitureItem {
   level: number;
   upper?: UpperVolume;
   fixture?: boolean;
+  /** Optional URL to the real product (store/catalog page). */
+  link?: string;
 }
 
 export interface LevelInfo {

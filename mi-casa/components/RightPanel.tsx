@@ -232,6 +232,29 @@ function Inspector() {
         </div>
       </Section>
 
+      <Section title="Enlace al producto">
+        <div className="flex items-center gap-2">
+          <input
+            type="url"
+            inputMode="url"
+            placeholder="https://tienda.com/producto…"
+            value={item.link ?? ""}
+            onChange={(e) => updateItem(item.id, { link: e.target.value })}
+            className="min-w-0 flex-1 rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1 text-xs text-zinc-200 outline-none focus:border-sky-600"
+          />
+          {item.link && (
+            <a
+              href={item.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="shrink-0 rounded-md border border-sky-700/60 bg-sky-500/10 px-2 py-1 text-xs text-sky-200 hover:bg-sky-500/20"
+            >
+              Abrir
+            </a>
+          )}
+        </div>
+      </Section>
+
       <div className="mt-4 flex gap-2">
         <button
           onClick={() => duplicateItem(item.id)}

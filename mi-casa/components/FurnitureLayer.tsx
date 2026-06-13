@@ -10,6 +10,22 @@ function levelElevation(levels: LevelInfo[], level: number): number {
   return levels[level]?.elevation ?? 0;
 }
 
+/** Snap a center coordinate so the prism's nearest face lands on a wall plane. */
+function snapAxis(center: number, half: number, planes: number[], threshold: number): number {
+  let bestShift = 0;
+  let bestAbs = threshold;
+  for (const p of planes) {
+    for (const edge of [center - half, center + half]) {
+      const d = p - edge;
+      if (Math.abs(d) < bestAbs) {
+        bestAbs = Math.abs(d);
+        bestShift = d;
+      }
+    }
+  }
+  return center + bestShift;
+}
+
 /** The box(es) for one item, drawn relative to the floor of its level. */
 function PieceMeshes({ item, selected }: { item: FurnitureItem; selected: boolean }) {
   const emissive = selected ? "#3a3320" : "#000000";
@@ -63,6 +79,9 @@ export default function FurnitureLayer() {
   const selectedId = usePlanner((s) => s.selectedId);
   const select = usePlanner((s) => s.select);
   const updateItem = usePlanner((s) => s.updateItem);
+  const snapXPlanes = usePlanner((s) => s.snapX);
+  const snapZPlanes = usePlanner((s) => s.snapZ);
+  const snapEnabled = usePlanner((s) => s.snapEnabled);
 
   const selectedRef = useRef<THREE.Group>(null);
   const selected = items.find((it) => it.id === selectedId) ?? null;
@@ -71,7 +90,17 @@ export default function FurnitureLayer() {
   const commitSelected = () => {
     const g = selectedRef.current;
     if (!g || !selected) return;
-    updateItem(selected.id, { x: g.position.x, z: g.position.z });
+    let x = g.position.x;
+    let z = g.position.z;
+    if (snapEnabled) {
+      // Snap the prism's nearest face to a wall plane when close enough.
+      const r = selected.rotationY;
+      const hx = Math.abs((selected.width / 2) * Math.cos(r)) + Math.abs((selected.depth / 2) * Math.sin(r));
+      const hz = Math.abs((selected.width / 2) * Math.sin(r)) + Math.abs((selected.depth / 2) * Math.cos(r));
+      x = snapAxis(x, hx, snapXPlanes, 0.25);
+      z = snapAxis(z, hz, snapZPlanes, 0.25);
+    }
+    updateItem(selected.id, { x, z });
   };
 
   return (
@@ -85,7 +114,7 @@ export default function FurnitureLayer() {
             key={item.id}
             position={[item.x, elev, item.z]}
             rotation={[0, item.rotationY, 0]}
-            onPointerDown={(e) => {
+            onClick={(e) => {
               e.stopPropagation();
               select(item.id);
             }}

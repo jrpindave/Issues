@@ -24,7 +24,9 @@ export default function Scene3D() {
       dpr={[1, 2]}
       gl={{ antialias: true, preserveDrawingBuffer: true }}
       camera={{ position: [9, 8, 12], fov: 45, near: 0.05, far: 500 }}
-      onPointerMissed={() => select(null)}
+      onPointerMissed={(e) => {
+        if ((e as MouseEvent).button === 0) select(null);
+      }}
       className="h-full w-full"
     >
       <color attach="background" args={["#0b0d10"]} />
@@ -80,6 +82,12 @@ export default function Scene3D() {
         minDistance={1}
         maxDistance={80}
         maxPolarAngle={Math.PI / 2 - 0.02}
+        // Navegación: rueda = zoom, click derecho = orbitar, botón central = paneo
+        // (invertido), click izquierdo = seleccionar.
+        screenSpacePanning
+        panSpeed={-1}
+        mouseButtons={{ LEFT: undefined, MIDDLE: THREE.MOUSE.PAN, RIGHT: THREE.MOUSE.ROTATE }}
+        touches={{ ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN }}
       />
 
       <CameraController info={info} controls={controls} />

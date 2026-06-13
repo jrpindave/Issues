@@ -9,6 +9,9 @@ export interface LoadedModel {
   bbox: THREE.Box3;
   /** Plan-center of the footprint, used as the default drop point for new furniture. */
   center: THREE.Vector3;
+  /** Vertical wall planes (constant X and constant Z) used to snap furniture. */
+  snapX: number[];
+  snapZ: number[];
 }
 
 let apiPromise: Promise<IfcAPI> | null = null;
@@ -69,6 +72,13 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
     const k = Math.round(y / 0.05) * 0.05;
     floorHist.set(k, (floorHist.get(k) ?? 0) + area);
   };
+  // Histograms of vertical wall faces, keyed by their constant X or Z plane.
+  const wallX = new Map<number, number>();
+  const wallZ = new Map<number, number>();
+  const addWall = (map: Map<number, number>, c: number, area: number) => {
+    const k = Math.round(c / 0.02) * 0.02;
+    map.set(k, (map.get(k) ?? 0) + area);
+  };
 
   const v = new THREE.Vector3();
   const n = new THREE.Vector3();
@@ -122,9 +132,18 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
         const cy = uz * wx - ux * wz;
         const cz = ux * wy - uy * wx;
         const mag = Math.hypot(cx, cy, cz);
-        if (mag > 0 && Math.abs(cy) / mag > 0.9) {
+        if (mag <= 0) continue;
+        const area = 0.5 * mag;
+        if (Math.abs(cy) / mag > 0.9) {
           const avgY = (positions[a + 1] + positions[b + 1] + positions[c + 1]) / 3;
-          addFloor(avgY, 0.5 * mag);
+          addFloor(avgY, area);
+        } else if (Math.abs(cy) / mag < 0.2) {
+          // Vertical face: record its constant plane if axis-aligned in X or Z.
+          if (Math.abs(cx) / mag > 0.85) {
+            addWall(wallX, (positions[a] + positions[b] + positions[c]) / 3, area);
+          } else if (Math.abs(cz) / mag > 0.85) {
+            addWall(wallZ, (positions[a + 2] + positions[b + 2] + positions[c + 2]) / 3, area);
+          }
         }
       }
 
@@ -184,5 +203,15 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
   }
 
   const center = bbox.getCenter(new THREE.Vector3());
-  return { group, levels, bbox, center };
+
+  // Keep only prominent wall planes as snap targets (filters out clutter).
+  const planesFrom = (map: Map<number, number>, minArea: number) =>
+    [...map.entries()]
+      .filter(([, area]) => area >= minArea)
+      .map(([c]) => c)
+      .sort((a, b) => a - b);
+  const snapX = planesFrom(wallX, 0.4);
+  const snapZ = planesFrom(wallZ, 0.4);
+
+  return { group, levels, bbox, center, snapX, snapZ };
 }

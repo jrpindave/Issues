@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import { usePlanner } from "@/lib/store";
 
 function Chip({
@@ -37,7 +38,37 @@ export default function Toolbar() {
   const planView = usePlanner((s) => s.planView);
   const setPlanView = usePlanner((s) => s.setPlanView);
   const clearMovable = usePlanner((s) => s.clearMovable);
-  const restoreFixtures = usePlanner((s) => s.restoreFixtures);
+  const snapEnabled = usePlanner((s) => s.snapEnabled);
+  const setSnapEnabled = usePlanner((s) => s.setSnapEnabled);
+  const items = usePlanner((s) => s.items);
+  const importLayout = usePlanner((s) => s.importLayout);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const exportLayout = () => {
+    const blob = new Blob([JSON.stringify({ version: 1, items }, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "mi-casa-distribucion.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const onImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    file.text().then((txt) => {
+      try {
+        const data = JSON.parse(txt);
+        if (Array.isArray(data.items)) importLayout(data.items);
+      } catch {
+        /* archivo inválido: se ignora */
+      }
+    });
+    e.target.value = "";
+  };
 
   return (
     <div className="pointer-events-none absolute left-3 top-3 flex flex-col gap-2">
@@ -64,12 +95,33 @@ export default function Toolbar() {
         <Chip active={showGrid} onClick={() => setShowGrid(!showGrid)} title="Mostrar grilla">
           Grilla
         </Chip>
-        <Chip onClick={restoreFixtures} title="Reponer cocina, lavadora, despensa y clósets">
-          Restaurar fijos
+        <Chip
+          active={snapEnabled}
+          onClick={() => setSnapEnabled(!snapEnabled)}
+          title="Al soltar, pega la pieza a los muros del IFC"
+        >
+          Snap muros
         </Chip>
-        <Chip onClick={clearMovable} title="Quitar todos los muebles agregados (deja los fijos)">
-          Limpiar
+        <Chip onClick={clearMovable} title="Quitar todos los muebles agregados">
+          Vaciar
         </Chip>
+      </div>
+
+      <div className="pointer-events-auto flex flex-wrap items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950/80 p-1.5 backdrop-blur">
+        <span className="px-1 text-[10px] uppercase tracking-wider text-zinc-500">Config</span>
+        <Chip onClick={exportLayout} title="Descargar tu distribución como archivo .json">
+          Guardar
+        </Chip>
+        <Chip onClick={() => fileRef.current?.click()} title="Cargar una distribución desde un .json">
+          Cargar
+        </Chip>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="application/json,.json"
+          className="hidden"
+          onChange={onImportFile}
+        />
       </div>
     </div>
   );

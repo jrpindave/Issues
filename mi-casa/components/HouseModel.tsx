@@ -19,6 +19,7 @@ export default function HouseModel({ onLoaded }: Props) {
   const [group, setGroup] = useState<THREE.Group | null>(null);
   const setLevels = usePlanner((s) => s.setLevels);
   const setDrop = usePlanner((s) => s.setDrop);
+  const setSnapPlanes = usePlanner((s) => s.setSnapPlanes);
   const setModelStatus = usePlanner((s) => s.setModelStatus);
   const levelVisible = usePlanner((s) => s.levelVisible);
 
@@ -27,12 +28,13 @@ export default function HouseModel({ onLoaded }: Props) {
     let alive = true;
     setModelStatus("loading");
     loadIfc("/Casa.ifc")
-      .then(({ group, levels, bbox, center }) => {
+      .then(({ group, levels, bbox, center, snapX, snapZ }) => {
         if (!alive) return;
         const size = bbox.getSize(new THREE.Vector3());
         setGroup(group);
         setLevels(levels);
         setDrop(center.x, center.z);
+        setSnapPlanes(snapX, snapZ);
         setModelStatus("ready");
         onLoaded({ bbox, center, size });
       })

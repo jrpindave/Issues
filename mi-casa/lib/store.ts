@@ -28,31 +28,13 @@ function itemFromTemplate(t: FurnitureTemplate, x: number, z: number, level: num
   };
 }
 
-/** Built-in fixtures the house ships with, pre-placed (movable, "a criterio"). */
+/**
+ * The fixed equipment (kitchen, closets, sanitary…) now ships modeled inside the
+ * IFC, so the app no longer pre-seeds any furniture — the user adds movable
+ * pieces from the library as needed.
+ */
 function seedFixtures(): FurnitureItem[] {
-  const byType = (type: string) => CATALOG.find((t) => t.type === type)!;
-  // Kitchen + laundry clustered on level 0, near the origin (model is centered).
-  // Coordinates live inside the footprint (X≈0..4.1, Z≈-7..0). Everything is
-  // movable, so these are just sensible starting spots.
-  // Coordinates come from the named IFCSPACE rooms in Casa.ifc (same world axes
-  // the app renders in). Items sit against a wall inside their room.
-  const seeds: Array<[string, number, number, number, number]> = [
-    // [type, x, z, rotationY, level]
-    // Cocina (Nivel 1) — encimera contra el muro X≈4.0, lavadora al frente.
-    ["lavaplatos", 3.72, 0.9, Math.PI / 2, 0],
-    ["mesa-trabajo", 3.72, -0.3, Math.PI / 2, 0],
-    ["despensa-aerea", 3.72, -1.5, Math.PI / 2, 0],
-    ["lavadora", 2.6, -1.6, Math.PI / 2, 0],
-    // Clósets, uno por dormitorio.
-    ["closet", 1.11, -1.88, 0, 0], // Dormitorio 3 (Nivel 1)
-    ["closet", 0.35, 2.96, Math.PI / 2, 1], // Dormitorio 1 (Nivel 2)
-    ["closet", 0.35, -0.54, Math.PI / 2, 1], // Dormitorio 2 (Nivel 2)
-  ];
-  return seeds.map(([type, x, z, rot, level]) => {
-    const item = itemFromTemplate(byType(type), x, z, level);
-    item.rotationY = rot;
-    return item;
-  });
+  return [];
 }
 
 interface PlannerState {
@@ -69,10 +51,17 @@ interface PlannerState {
   /** Status of the IFC model load, surfaced to the UI for diagnostics. */
   modelStatus: "loading" | "ready" | "error";
   modelError: string | null;
+  /** Wall snap planes from the IFC, and whether snapping is on. */
+  snapX: number[];
+  snapZ: number[];
+  snapEnabled: boolean;
 
   setLevels: (levels: LevelInfo[]) => void;
   setDrop: (x: number, z: number) => void;
+  setSnapPlanes: (x: number[], z: number[]) => void;
+  setSnapEnabled: (v: boolean) => void;
   setModelStatus: (status: "loading" | "ready" | "error", error?: string | null) => void;
+  importLayout: (items: FurnitureItem[]) => void;
   addTemplate: (t: FurnitureTemplate, level: number) => void;
   updateItem: (id: string, patch: Partial<FurnitureItem>) => void;
   removeItem: (id: string) => void;
@@ -99,6 +88,9 @@ export const usePlanner = create<PlannerState>()(
       modelError: null,
       dropX: 0,
       dropZ: 0,
+      snapX: [],
+      snapZ: [],
+      snapEnabled: true,
 
       setLevels: (levels) =>
         set({
@@ -108,7 +100,12 @@ export const usePlanner = create<PlannerState>()(
 
       setDrop: (x, z) => set({ dropX: x, dropZ: z }),
 
+      setSnapPlanes: (x, z) => set({ snapX: x, snapZ: z }),
+      setSnapEnabled: (v) => set({ snapEnabled: v }),
+
       setModelStatus: (status, error = null) => set({ modelStatus: status, modelError: error }),
+
+      importLayout: (items) => set({ items, selectedId: null }),
 
       addTemplate: (t, level) => {
         // Drop at the footprint center with a small scatter so stacked adds don't overlap.
@@ -159,20 +156,20 @@ export const usePlanner = create<PlannerState>()(
     }),
     {
       name: "mi-casa-planner",
-      // Bump when the built-in fixture layout changes so it re-seeds on load.
-      version: 4,
-      // Persist only the user's layout, not transient view/levels state.
+      // Bump when the built-in layout changes so it re-seeds on load.
+      version: 5,
+      // Persist only the user's layout/preferences, not transient state.
       partialize: (s) => ({
         items: s.items,
         showGrid: s.showGrid,
-        seeded: s.seeded,
+        snapEnabled: s.snapEnabled,
       }),
-      // On a version bump, refresh the built-in fixtures (new positions/items)
-      // while keeping every movable piece the user placed.
+      // Fixed equipment now lives in the IFC, so drop any previously seeded
+      // fixtures while keeping every movable piece the user placed.
       migrate: (persisted) => {
         const state = (persisted ?? {}) as { items?: FurnitureItem[]; showGrid?: boolean };
         const movable = (state.items ?? []).filter((it) => !it.fixture);
-        return { ...state, items: [...movable, ...seedFixtures()], seeded: true };
+        return { ...state, items: movable };
       },
     }
   )
