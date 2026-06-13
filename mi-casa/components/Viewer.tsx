@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import RightPanel from "./RightPanel";
 import Toolbar from "./Toolbar";
+import { usePlanner } from "@/lib/store";
 
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {
@@ -17,6 +18,8 @@ const Scene3D = dynamic(() => import("./Scene3D"), {
 
 export default function Viewer() {
   const [panelOpen, setPanelOpen] = useState(true);
+  const modelStatus = usePlanner((s) => s.modelStatus);
+  const modelError = usePlanner((s) => s.modelError);
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden">
@@ -37,6 +40,22 @@ export default function Viewer() {
         <main className="relative min-w-0 flex-1">
           <Scene3D />
           <Toolbar />
+
+          {modelStatus === "loading" && (
+            <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-zinc-700 bg-zinc-950/80 px-3 py-1.5 text-xs text-zinc-300 backdrop-blur">
+              <span className="mr-2 inline-block h-3 w-3 animate-spin rounded-full border-2 border-zinc-600 border-t-sky-400 align-[-2px]" />
+              Cargando modelo IFC…
+            </div>
+          )}
+
+          {modelStatus === "error" && (
+            <div className="absolute bottom-4 left-1/2 max-w-[90%] -translate-x-1/2 rounded-lg border border-red-900/60 bg-red-950/70 px-3.5 py-2.5 text-xs text-red-200 backdrop-blur">
+              <p className="mb-1 font-semibold text-red-300">No se pudo cargar la casa (IFC)</p>
+              <p className="break-words font-mono text-[11px] leading-relaxed text-red-200/90">
+                {modelError ?? "Error desconocido"}
+              </p>
+            </div>
+          )}
         </main>
 
         {panelOpen && (

@@ -62,9 +62,13 @@ interface PlannerState {
   /** Default plan position where freshly added furniture appears. */
   dropX: number;
   dropZ: number;
+  /** Status of the IFC model load, surfaced to the UI for diagnostics. */
+  modelStatus: "loading" | "ready" | "error";
+  modelError: string | null;
 
   setLevels: (levels: LevelInfo[]) => void;
   setDrop: (x: number, z: number) => void;
+  setModelStatus: (status: "loading" | "ready" | "error", error?: string | null) => void;
   addTemplate: (t: FurnitureTemplate, level: number) => void;
   updateItem: (id: string, patch: Partial<FurnitureItem>) => void;
   removeItem: (id: string) => void;
@@ -87,6 +91,8 @@ export const usePlanner = create<PlannerState>()(
       showGrid: true,
       planView: false,
       seeded: true,
+      modelStatus: "loading",
+      modelError: null,
       dropX: 0,
       dropZ: 0,
 
@@ -97,6 +103,8 @@ export const usePlanner = create<PlannerState>()(
         }),
 
       setDrop: (x, z) => set({ dropX: x, dropZ: z }),
+
+      setModelStatus: (status, error = null) => set({ modelStatus: status, modelError: error }),
 
       addTemplate: (t, level) => {
         // Drop at the footprint center with a small scatter so stacked adds don't overlap.

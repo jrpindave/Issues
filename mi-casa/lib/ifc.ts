@@ -37,10 +37,22 @@ function readStoreyElevations(api: IfcAPI, modelID: number): number[] {
 }
 
 export async function loadIfc(url: string): Promise<LoadedModel> {
-  const api = await getApi();
+  let api: IfcAPI;
+  try {
+    api = await getApi();
+  } catch (e) {
+    throw new Error(`init web-ifc (WASM /wasm/): ${(e as Error).message ?? e}`);
+  }
 
-  const res = await fetch(url);
-  const data = new Uint8Array(await res.arrayBuffer());
+  let data: Uint8Array;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`HTTP ${res.status} al pedir ${url}`);
+    data = new Uint8Array(await res.arrayBuffer());
+  } catch (e) {
+    throw new Error(`fetch IFC (${url}): ${(e as Error).message ?? e}`);
+  }
+
   // web-ifc returns Y-up geometry; COORDINATE_TO_ORIGIN keeps coordinates small.
   const modelID = api.OpenModel(data, { COORDINATE_TO_ORIGIN: true });
   const storeyElevs = readStoreyElevations(api, modelID);

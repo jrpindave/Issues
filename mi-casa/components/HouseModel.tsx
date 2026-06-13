@@ -17,14 +17,15 @@ interface Props {
 
 export default function HouseModel({ onLoaded }: Props) {
   const [group, setGroup] = useState<THREE.Group | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const setLevels = usePlanner((s) => s.setLevels);
   const setDrop = usePlanner((s) => s.setDrop);
+  const setModelStatus = usePlanner((s) => s.setModelStatus);
   const levelVisible = usePlanner((s) => s.levelVisible);
 
   // Load the IFC once.
   useEffect(() => {
     let alive = true;
+    setModelStatus("loading");
     loadIfc("/Casa.ifc")
       .then(({ group, levels, bbox, center }) => {
         if (!alive) return;
@@ -32,11 +33,13 @@ export default function HouseModel({ onLoaded }: Props) {
         setGroup(group);
         setLevels(levels);
         setDrop(center.x, center.z);
+        setModelStatus("ready");
         onLoaded({ bbox, center, size });
       })
-      .catch((e) => {
+      .catch((e: unknown) => {
+        const msg = e instanceof Error ? `${e.message}` : String(e);
         console.error("Error cargando IFC:", e);
-        if (alive) setError(String(e));
+        if (alive) setModelStatus("error", msg);
       });
     return () => {
       alive = false;
@@ -54,11 +57,6 @@ export default function HouseModel({ onLoaded }: Props) {
       }
     });
   }, [group, levelVisible]);
-
-  if (error) {
-    // Surface a console error above; nothing to draw in-scene.
-    return null;
-  }
 
   return group ? <primitive object={group} /> : null;
 }
