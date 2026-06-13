@@ -25,14 +25,15 @@ function ControlsSetup() {
   } | null;
   useEffect(() => {
     if (controls) {
+      // Middle button is handled by our custom PanController (per-axis signs);
+      // left/right orbit, wheel zoom.
       controls.mouseButtons = {
         LEFT: THREE.MOUSE.ROTATE,
-        MIDDLE: THREE.MOUSE.PAN,
+        MIDDLE: undefined,
         RIGHT: THREE.MOUSE.ROTATE,
       };
       controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
       controls.screenSpacePanning = true;
-      controls.panSpeed = -1; // invert pan on both axes
     }
     // Hard-block the context menu on the canvas itself (capture phase) so a
     // right-drag never leaves orbit "stuck".
@@ -41,6 +42,70 @@ function ControlsSetup() {
     el.addEventListener("contextmenu", prevent, { capture: true });
     return () => el.removeEventListener("contextmenu", prevent, { capture: true } as EventListenerOptions);
   }, [controls, gl]);
+  return null;
+}
+
+/**
+ * Custom middle-button pan with per-axis control:
+ *   drag right → scene moves right (horizontal natural)
+ *   drag up    → scene moves down  (vertical inverted)
+ * (OrbitControls only offers a single panSpeed, so we can't mix axes there.)
+ */
+function PanController() {
+  const camera = useThree((s) => s.camera);
+  const gl = useThree((s) => s.gl);
+  const controls = useThree((s) => s.controls) as unknown as { target: THREE.Vector3 } | null;
+  useEffect(() => {
+    const el = gl.domElement;
+    let panning = false;
+    let lastX = 0;
+    let lastY = 0;
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3();
+    const offset = new THREE.Vector3();
+
+    const onDown = (e: PointerEvent) => {
+      if (e.button !== 1) return; // middle button only
+      panning = true;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      el.setPointerCapture?.(e.pointerId);
+      e.preventDefault();
+    };
+    const onMove = (e: PointerEvent) => {
+      if (!panning) return;
+      const dx = e.clientX - lastX;
+      const dy = e.clientY - lastY;
+      lastX = e.clientX;
+      lastY = e.clientY;
+      const target = controls?.target ?? new THREE.Vector3();
+      const dist = camera.position.distanceTo(target);
+      const fov = ((camera as THREE.PerspectiveCamera).fov ?? 45) * (Math.PI / 180);
+      const worldPerPixel = (2 * dist * Math.tan(fov / 2)) / el.clientHeight;
+      const m = camera.matrix.elements;
+      right.set(m[0], m[1], m[2]);
+      up.set(m[4], m[5], m[6]);
+      offset.set(0, 0, 0);
+      offset.addScaledVector(right, -dx * worldPerPixel); // horizontal natural
+      offset.addScaledVector(up, -dy * worldPerPixel); // vertical inverted
+      camera.position.add(offset);
+      if (controls) controls.target.add(offset);
+    };
+    const onUp = (e: PointerEvent) => {
+      if (!panning) return;
+      panning = false;
+      el.releasePointerCapture?.(e.pointerId);
+    };
+
+    el.addEventListener("pointerdown", onDown);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [camera, gl, controls]);
   return null;
 }
 
@@ -122,6 +187,7 @@ export default function Scene3D() {
         maxPolarAngle={Math.PI / 2 - 0.02}
       />
       <ControlsSetup />
+      <PanController />
 
       <CameraController info={info} controls={controls} />
     </Canvas>
