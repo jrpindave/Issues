@@ -1,7 +1,7 @@
 "use client";
 
 import { Canvas, useThree } from "@react-three/fiber";
-import { OrbitControls, Grid, ContactShadows } from "@react-three/drei";
+import { OrbitControls, Grid, ContactShadows, GizmoHelper, GizmoViewcube } from "@react-three/drei";
 import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import HouseModel, { type ModelInfo } from "./HouseModel";
@@ -128,74 +128,62 @@ function TouchController() {
   const controls = useThree((s) => s.controls) as unknown as {
     touches: { ONE?: number; TWO?: number };
   } | null;
-  const orbitMode = usePlanner((s) => s.orbitMode);
-  const toggleOrbitMode = usePlanner((s) => s.toggleOrbitMode);
 
-  // One-finger action follows the mode; two fingers always pan + pinch-zoom.
   useEffect(() => {
     if (!controls) return;
-    controls.touches = {
-      ONE: orbitMode ? THREE.TOUCH.ROTATE : THREE.TOUCH.PAN,
-      TWO: THREE.TOUCH.DOLLY_PAN,
-    };
-  }, [controls, orbitMode]);
-
-  // Double-tap toggles the mode; also block the browser's text selection.
-  useEffect(() => {
     const el = gl.domElement;
     const active = new Set<number>();
     let lastUp = 0;
-    let justToggled = false;
+    const setOne = (v: number | undefined) =>
+      (controls.touches = { ONE: v, TWO: THREE.TOUCH.DOLLY_PAN });
+    setOne(THREE.TOUCH.PAN); // default: one finger pans
+
     const onDown = (e: PointerEvent) => {
       if (e.pointerType !== "touch") return;
       active.add(e.pointerId);
-      // Second tap of a double-tap (detected on press) → toggle the mode and
-      // suppress iOS' long-press magnifier/selection.
-      if (active.size === 1 && performance.now() - lastUp < 280) {
-        toggleOrbitMode();
-        justToggled = true;
-        e.preventDefault();
+      // Second tap of a double-tap, held → orbit for this gesture only.
+      // Set ROTATE before OrbitControls (bubble phase) reads it.
+      if (active.size === 1 && performance.now() - lastUp < 300) {
+        setOne(THREE.TOUCH.ROTATE);
+        e.preventDefault(); // also kills iOS' long-press magnifier
       }
     };
     const onUp = (e: PointerEvent) => {
       if (e.pointerType !== "touch") return;
       active.delete(e.pointerId);
-      if (active.size !== 0) return;
-      if (justToggled) {
-        justToggled = false;
-        lastUp = 0;
-      } else {
+      if (active.size === 0) {
         lastUp = performance.now();
+        setOne(THREE.TOUCH.PAN); // release → back to pan
       }
     };
     const onSelectStart = (e: Event) => e.preventDefault();
-    // iOS Safari ignores user-scalable=no: block its pinch (page zoom / tab
-    // overview) so only OrbitControls (pointer events) zooms the 3D.
     const blockGesture = (e: Event) => e.preventDefault();
     const onTouchMove = (e: TouchEvent) => {
       if (e.touches.length > 1) e.preventDefault();
     };
-    const opts = { capture: true } as AddEventListenerOptions;
-    const nonPassive = { passive: false } as AddEventListenerOptions;
-    el.addEventListener("pointerdown", onDown, opts);
-    el.addEventListener("pointerup", onUp, opts);
-    el.addEventListener("pointercancel", onUp, opts);
+    const cap = { capture: true } as AddEventListenerOptions;
+    const np = { passive: false } as AddEventListenerOptions;
+    el.addEventListener("pointerdown", onDown, cap);
+    el.addEventListener("pointerup", onUp, cap);
+    el.addEventListener("pointercancel", onUp, cap);
     el.addEventListener("selectstart", onSelectStart);
-    el.addEventListener("gesturestart", blockGesture, nonPassive);
-    el.addEventListener("gesturechange", blockGesture, nonPassive);
-    el.addEventListener("gestureend", blockGesture, nonPassive);
-    el.addEventListener("touchmove", onTouchMove, nonPassive);
+    el.addEventListener("touchmove", onTouchMove, np);
+    // Block iOS pinch (page zoom / tab overview) document-wide, so a sloppy
+    // pinch that strays off the canvas can't zoom the whole app.
+    document.addEventListener("gesturestart", blockGesture, np);
+    document.addEventListener("gesturechange", blockGesture, np);
+    document.addEventListener("gestureend", blockGesture, np);
     return () => {
-      el.removeEventListener("pointerdown", onDown, opts);
-      el.removeEventListener("pointerup", onUp, opts);
-      el.removeEventListener("pointercancel", onUp, opts);
+      el.removeEventListener("pointerdown", onDown, cap);
+      el.removeEventListener("pointerup", onUp, cap);
+      el.removeEventListener("pointercancel", onUp, cap);
       el.removeEventListener("selectstart", onSelectStart);
-      el.removeEventListener("gesturestart", blockGesture, nonPassive);
-      el.removeEventListener("gesturechange", blockGesture, nonPassive);
-      el.removeEventListener("gestureend", blockGesture, nonPassive);
-      el.removeEventListener("touchmove", onTouchMove, nonPassive);
+      el.removeEventListener("touchmove", onTouchMove, np);
+      document.removeEventListener("gesturestart", blockGesture, np);
+      document.removeEventListener("gesturechange", blockGesture, np);
+      document.removeEventListener("gestureend", blockGesture, np);
     };
-  }, [gl, toggleOrbitMode]);
+  }, [gl, controls]);
   return null;
 }
 
@@ -279,6 +267,16 @@ export default function Scene3D() {
       <ControlsSetup />
       <PanController />
       <TouchController />
+
+      {/* Autodesk-style view cube: click faces/edges/corners to orient. */}
+      <GizmoHelper alignment="top-right" margin={[72, 72]}>
+        <GizmoViewcube
+          color="#2a2f37"
+          textColor="#e7ebef"
+          strokeColor="#4b5563"
+          hoverColor="#6ea8fe"
+        />
+      </GizmoHelper>
 
       <CameraController info={info} controls={controls} />
     </Canvas>

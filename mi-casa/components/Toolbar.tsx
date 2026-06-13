@@ -45,8 +45,6 @@ export default function Toolbar() {
   const paintColor = usePlanner((s) => s.paintColor);
   const setPaintColor = usePlanner((s) => s.setPaintColor);
   const resetWalls = usePlanner((s) => s.resetWalls);
-  const orbitMode = usePlanner((s) => s.orbitMode);
-  const toggleOrbitMode = usePlanner((s) => s.toggleOrbitMode);
   const items = usePlanner((s) => s.items);
   const importLayout = usePlanner((s) => s.importLayout);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -96,13 +94,6 @@ export default function Toolbar() {
       </div>
 
       <div className="pointer-events-auto flex flex-wrap items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950/80 p-1.5 backdrop-blur">
-        <Chip
-          active={orbitMode}
-          onClick={toggleOrbitMode}
-          title="Móvil: 1 dedo orbita (ON) o panea (OFF). También con doble-tap."
-        >
-          {orbitMode ? "Tocar: Orbitar" : "Tocar: Mover"}
-        </Chip>
         <Chip active={planView} onClick={() => setPlanView(!planView)} title="Vista en planta (cenital)">
           {planView ? "Vista planta" : "Vista órbita"}
         </Chip>
