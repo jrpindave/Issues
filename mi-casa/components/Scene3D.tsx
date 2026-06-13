@@ -33,7 +33,9 @@ function ControlsSetup() {
         MIDDLE: undefined,
         RIGHT: undefined,
       };
-      controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+      // One finger does nothing by default (so a tap selects and a drag doesn't
+      // orbit); TouchController arms one-finger orbit only on a double-tap-hold.
+      controls.touches = { ONE: undefined, TWO: THREE.TOUCH.DOLLY_PAN };
       controls.screenSpacePanning = true;
     }
     // Neutralise the right button on the canvas: block the context menu and the
@@ -119,6 +121,59 @@ function PanController() {
   return null;
 }
 
+/**
+ * Mobile gestures: 1 tap = select, double-tap then hold + drag = orbit,
+ * two fingers = pan + pinch-zoom. One-finger drag (without a preceding tap)
+ * does nothing, so it never orbits by accident.
+ */
+function TouchController() {
+  const gl = useThree((s) => s.gl);
+  const controls = useThree((s) => s.controls) as unknown as {
+    touches: { ONE?: number; TWO?: number };
+  } | null;
+  useEffect(() => {
+    if (!controls) return;
+    const el = gl.domElement;
+    const active = new Set<number>();
+    let lastUp = 0;
+    let armed = false;
+    const reset = () => (controls.touches = { ONE: undefined, TWO: THREE.TOUCH.DOLLY_PAN });
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      const first = active.size === 0;
+      active.add(e.pointerId);
+      if (!first) return; // a second finger → two-finger gesture, leave ONE off
+      if (performance.now() - lastUp < 320) {
+        armed = true;
+        controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+      } else {
+        reset();
+      }
+    };
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerType !== "touch") return;
+      active.delete(e.pointerId);
+      if (active.size === 0) {
+        lastUp = performance.now();
+        if (armed) {
+          armed = false;
+          reset();
+        }
+      }
+    };
+    const opts = { capture: true } as AddEventListenerOptions;
+    el.addEventListener("pointerdown", onDown, opts);
+    el.addEventListener("pointerup", onUp, opts);
+    el.addEventListener("pointercancel", onUp, opts);
+    return () => {
+      el.removeEventListener("pointerdown", onDown, opts);
+      el.removeEventListener("pointerup", onUp, opts);
+      el.removeEventListener("pointercancel", onUp, opts);
+    };
+  }, [controls, gl]);
+  return null;
+}
+
 export default function Scene3D() {
   const [info, setInfo] = useState<ModelInfo | null>(null);
   const controls = useRef<React.ComponentRef<typeof OrbitControls>>(null);
@@ -198,6 +253,7 @@ export default function Scene3D() {
       />
       <ControlsSetup />
       <PanController />
+      <TouchController />
 
       <CameraController info={info} controls={controls} />
     </Canvas>
