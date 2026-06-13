@@ -27,6 +27,15 @@ textarea {
 }
 canvas {
   touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+/* Kill iOS' long-press magnifier / selection "Liquid Glass" over the viewer. */
+* {
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Thin, unobtrusive scrollbars for the side panel. */

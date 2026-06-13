@@ -145,19 +145,27 @@ function TouchController() {
     const el = gl.domElement;
     const active = new Set<number>();
     let lastUp = 0;
+    let justToggled = false;
     const onDown = (e: PointerEvent) => {
-      if (e.pointerType === "touch") active.add(e.pointerId);
+      if (e.pointerType !== "touch") return;
+      active.add(e.pointerId);
+      // Second tap of a double-tap (detected on press) → toggle the mode and
+      // suppress iOS' long-press magnifier/selection.
+      if (active.size === 1 && performance.now() - lastUp < 280) {
+        toggleOrbitMode();
+        justToggled = true;
+        e.preventDefault();
+      }
     };
     const onUp = (e: PointerEvent) => {
       if (e.pointerType !== "touch") return;
       active.delete(e.pointerId);
       if (active.size !== 0) return;
-      const now = performance.now();
-      if (now - lastUp < 280) {
-        toggleOrbitMode();
+      if (justToggled) {
+        justToggled = false;
         lastUp = 0;
       } else {
-        lastUp = now;
+        lastUp = performance.now();
       }
     };
     const onSelectStart = (e: Event) => e.preventDefault();
