@@ -214,7 +214,18 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
       if (wallIds.has(flatMesh.expressID)) {
         mesh.userData.isWall = true;
         mesh.userData.wallId = flatMesh.expressID;
-        mesh.userData.baseColor = material.color.getHex();
+        // Per-vertex colors so each wall face can be painted independently.
+        const base = material.color.clone();
+        mesh.userData.baseRGB = [base.r, base.g, base.b];
+        const colArr = new Float32Array(positions.length);
+        for (let k = 0; k < positions.length; k += 3) {
+          colArr[k] = base.r;
+          colArr[k + 1] = base.g;
+          colArr[k + 2] = base.b;
+        }
+        bg.setAttribute("color", new THREE.BufferAttribute(colArr, 3));
+        material.vertexColors = true;
+        material.color.set(0xffffff);
       }
       meshes.push({ mesh, minY: meshMinY, expressID: flatMesh.expressID });
       bbox.expandByObject(mesh);

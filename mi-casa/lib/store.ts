@@ -61,7 +61,8 @@ interface PlannerState {
   /** Wall painting: mode on/off, active color, and per-wall overrides. */
   paintMode: boolean;
   paintColor: string;
-  wallColors: Record<number, string>;
+  /** Painted wall faces, keyed "wallId|side" (side = x+/x-/z+/z-). */
+  wallColors: Record<string, string>;
   /** Mobile: false = one finger pans, true = one finger orbits. */
   orbitMode: boolean;
   /** Gizmo behaviour for the selected piece. */
@@ -73,7 +74,7 @@ interface PlannerState {
   setSnapEnabled: (v: boolean) => void;
   setPaintMode: (v: boolean) => void;
   setPaintColor: (c: string) => void;
-  paintWall: (id: number) => void;
+  paintWallSide: (key: string) => void;
   resetWalls: () => void;
   toggleOrbitMode: () => void;
   setOrbitMode: (v: boolean) => void;
@@ -127,8 +128,8 @@ export const usePlanner = create<PlannerState>()(
       setSnapEnabled: (v) => set({ snapEnabled: v }),
       setPaintMode: (v) => set({ paintMode: v }),
       setPaintColor: (c) => set({ paintColor: c }),
-      paintWall: (id) =>
-        set((s) => ({ wallColors: { ...s.wallColors, [id]: s.paintColor } })),
+      paintWallSide: (key) =>
+        set((s) => ({ wallColors: { ...s.wallColors, [key]: s.paintColor } })),
       resetWalls: () => set({ wallColors: {} }),
       toggleOrbitMode: () => set((s) => ({ orbitMode: !s.orbitMode })),
       setOrbitMode: (v) => set({ orbitMode: v }),

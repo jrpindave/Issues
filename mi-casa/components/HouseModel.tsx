@@ -27,7 +27,7 @@ export default function HouseModel({ onLoaded }: Props) {
   const setModelStatus = usePlanner((s) => s.setModelStatus);
   const levelVisible = usePlanner((s) => s.levelVisible);
   const paintMode = usePlanner((s) => s.paintMode);
-  const paintWall = usePlanner((s) => s.paintWall);
+  const paintWallSide = usePlanner((s) => s.paintWallSide);
   const wallColors = usePlanner((s) => s.wallColors);
 
   // Load the IFC once. Default source is the Supabase Storage object (always the
@@ -82,26 +82,56 @@ export default function HouseModel({ onLoaded }: Props) {
     });
   }, [group, levelVisible]);
 
-  // Apply saved wall paint colors (and restore base color where cleared).
+  // Paint saved wall faces (per side) into the vertex colors; restore base first.
   useEffect(() => {
     if (!group) return;
+    const c = new THREE.Color();
     group.traverse((obj) => {
       const mesh = obj as THREE.Mesh;
       if (!mesh.userData?.isWall) return;
-      const mat = mesh.material as THREE.MeshStandardMaterial;
-      const override = wallColors[mesh.userData.wallId as number];
-      mat.color.set(override ?? (mesh.userData.baseColor as number));
+      const geo = mesh.geometry as THREE.BufferGeometry;
+      const colAttr = geo.getAttribute("color") as THREE.BufferAttribute | undefined;
+      const nor = geo.getAttribute("normal") as THREE.BufferAttribute | undefined;
+      const idx = geo.getIndex();
+      if (!colAttr || !nor || !idx) return;
+      const [br, bg, bb] = mesh.userData.baseRGB as [number, number, number];
+      for (let i = 0; i < colAttr.count; i++) colAttr.setXYZ(i, br, bg, bb);
+      const wallId = mesh.userData.wallId as number;
+      for (let t = 0; t < idx.count; t += 3) {
+        const a = idx.getX(t);
+        const side = faceSide(nor.getX(a), nor.getY(a), nor.getZ(a));
+        if (!side) continue;
+        const hex = wallColors[`${wallId}|${side}`];
+        if (!hex) continue;
+        c.set(hex);
+        colAttr.setXYZ(a, c.r, c.g, c.b);
+        colAttr.setXYZ(idx.getX(t + 1), c.r, c.g, c.b);
+        colAttr.setXYZ(idx.getX(t + 2), c.r, c.g, c.b);
+      }
+      colAttr.needsUpdate = true;
     });
   }, [group, wallColors]);
 
   return group ? (
     <primitive
       object={group}
-      onClick={(e: { object: THREE.Object3D; stopPropagation: () => void }) => {
-        if (!paintMode || !e.object.userData?.isWall) return;
+      onClick={(e: {
+        object: THREE.Object3D;
+        face?: { normal: THREE.Vector3 } | null;
+        stopPropagation: () => void;
+      }) => {
+        if (!paintMode || !e.object.userData?.isWall || !e.face) return;
         e.stopPropagation();
-        paintWall(e.object.userData.wallId as number);
+        const n = e.face.normal;
+        const side = faceSide(n.x, n.y, n.z);
+        if (side) paintWallSide(`${e.object.userData.wallId}|${side}`);
       }}
     />
   ) : null;
+}
+
+/** Quantize a face normal to a wall side; null for top/bottom faces. */
+function faceSide(nx: number, ny: number, nz: number): string | null {
+  if (Math.abs(ny) > 0.6) return null;
+  return Math.abs(nx) >= Math.abs(nz) ? (nx >= 0 ? "x+" : "x-") : nz >= 0 ? "z+" : "z-";
 }
