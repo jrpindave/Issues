@@ -7,7 +7,7 @@ import Toolbar from "./Toolbar";
 import { usePlanner } from "@/lib/store";
 
 // Bump on every deploy so you can confirm the new build actually loaded.
-const APP_VERSION = "v26 · resize-borde+rotar";
+const APP_VERSION = "v27 · pintura-robusta";
 
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {

@@ -94,7 +94,7 @@ export default function HouseModel({ onLoaded }: Props) {
     });
   }, [group, levelVisible]);
 
-  // Paint saved wall faces (per side AND per room) into the vertex colors.
+  // Paint each wall's segment that falls inside a painted room (no normals — robust).
   useEffect(() => {
     if (!group) return;
     const c = new THREE.Color();
@@ -104,28 +104,25 @@ export default function HouseModel({ onLoaded }: Props) {
       const geo = mesh.geometry as THREE.BufferGeometry;
       const colAttr = geo.getAttribute("color") as THREE.BufferAttribute | undefined;
       const pos = geo.getAttribute("position") as THREE.BufferAttribute | undefined;
-      const nor = geo.getAttribute("normal") as THREE.BufferAttribute | undefined;
       const idx = geo.getIndex();
-      if (!colAttr || !pos || !nor || !idx) return;
+      if (!colAttr || !pos || !idx) return;
       const [br, bg, bb] = mesh.userData.baseRGB as [number, number, number];
       for (let i = 0; i < colAttr.count; i++) colAttr.setXYZ(i, br, bg, bb);
       const wallId = mesh.userData.wallId as number;
-      for (let t = 0; t < idx.count; t += 3) {
-        const a = idx.getX(t), b = idx.getX(t + 1), d = idx.getX(t + 2);
-        const nx = nor.getX(a), ny = nor.getY(a), nz = nor.getZ(a);
-        const side = faceSide(nx, ny, nz);
-        if (!side) continue;
-        // Centroid nudged toward the room the face looks into.
-        const cx = (pos.getX(a) + pos.getX(b) + pos.getX(d)) / 3 + nx * 0.3;
-        const cy = (pos.getY(a) + pos.getY(b) + pos.getY(d)) / 3 + ny * 0.3;
-        const cz = (pos.getZ(a) + pos.getZ(b) + pos.getZ(d)) / 3 + nz * 0.3;
-        const room = roomOf(cx, cy, cz, rooms);
-        const hex = wallColors[`${wallId}|${side}|${room}`];
-        if (!hex) continue;
-        c.set(hex);
-        colAttr.setXYZ(a, c.r, c.g, c.b);
-        colAttr.setXYZ(b, c.r, c.g, c.b);
-        colAttr.setXYZ(d, c.r, c.g, c.b);
+      const prefix = `${wallId}|`;
+      if (Object.keys(wallColors).some((k) => k.startsWith(prefix))) {
+        for (let t = 0; t < idx.count; t += 3) {
+          const a = idx.getX(t), b = idx.getX(t + 1), d = idx.getX(t + 2);
+          const cx = (pos.getX(a) + pos.getX(b) + pos.getX(d)) / 3;
+          const cy = (pos.getY(a) + pos.getY(b) + pos.getY(d)) / 3;
+          const cz = (pos.getZ(a) + pos.getZ(b) + pos.getZ(d)) / 3;
+          const hex = paintedRoomColor(cx, cy, cz, wallId, rooms, wallColors);
+          if (!hex) continue;
+          c.set(hex);
+          colAttr.setXYZ(a, c.r, c.g, c.b);
+          colAttr.setXYZ(b, c.r, c.g, c.b);
+          colAttr.setXYZ(d, c.r, c.g, c.b);
+        }
       }
       colAttr.needsUpdate = true;
     });
@@ -136,29 +133,25 @@ export default function HouseModel({ onLoaded }: Props) {
       object={group}
       onClick={(e: {
         object: THREE.Object3D;
-        face?: { normal: THREE.Vector3 } | null;
         point?: THREE.Vector3;
+        camera?: THREE.Camera;
         stopPropagation: () => void;
       }) => {
-        if (!paintMode || !e.object.userData?.isWall || !e.face || !e.point) return;
+        if (!paintMode || !e.object.userData?.isWall || !e.point || !e.camera) return;
         e.stopPropagation();
-        const n = e.face.normal;
-        const side = faceSide(n.x, n.y, n.z);
-        if (!side) return;
-        const room = roomOf(e.point.x + n.x * 0.3, e.point.y + n.y * 0.3, e.point.z + n.z * 0.3, rooms);
-        paintWallSide(`${e.object.userData.wallId}|${side}|${room}`);
+        const p = e.point;
+        const cam = e.camera.position;
+        // Offset toward the camera to pick the room on the viewer's side.
+        const dx = cam.x - p.x, dy = cam.y - p.y, dz = cam.z - p.z;
+        const len = Math.hypot(dx, dy, dz) || 1;
+        const room = roomOf(p.x + (dx / len) * 0.4, p.y + (dy / len) * 0.4, p.z + (dz / len) * 0.4, rooms);
+        if (room >= 0) paintWallSide(`${e.object.userData.wallId}|${room}`);
       }}
     />
   ) : null;
 }
 
-/** Quantize a face normal to a wall side; null for top/bottom faces. */
-function faceSide(nx: number, ny: number, nz: number): string | null {
-  if (Math.abs(ny) > 0.6) return null;
-  return Math.abs(nx) >= Math.abs(nz) ? (nx >= 0 ? "x+" : "x-") : nz >= 0 ? "z+" : "z-";
-}
-
-/** Index of the smallest room containing the point (with small tolerance), or -1. */
+/** Index of the smallest room containing the point (with tolerance), or -1. */
 function roomOf(x: number, y: number, z: number, rooms: RoomInfo[]): number {
   let best = -1;
   let bestArea = Infinity;
@@ -170,11 +163,32 @@ function roomOf(x: number, y: number, z: number, rooms: RoomInfo[]): number {
       y >= r.minY - 0.3 && y <= r.maxY + 0.3
     ) {
       const area = (r.maxX - r.minX) * (r.maxZ - r.minZ);
-      if (area < bestArea) {
-        bestArea = area;
-        best = i;
-      }
+      if (area < bestArea) { bestArea = area; best = i; }
     }
   }
   return best;
+}
+
+/** Colour for a wall triangle: smallest painted room whose bounds contain it. */
+function paintedRoomColor(
+  x: number, y: number, z: number,
+  wallId: number, rooms: RoomInfo[], wallColors: Record<string, string>
+): string | null {
+  let hex: string | null = null;
+  let bestArea = Infinity;
+  for (let i = 0; i < rooms.length; i++) {
+    const r = rooms[i];
+    if (
+      x >= r.minX - 0.25 && x <= r.maxX + 0.25 &&
+      z >= r.minZ - 0.25 && z <= r.maxZ + 0.25 &&
+      y >= r.minY - 0.3 && y <= r.maxY + 0.3
+    ) {
+      const col = wallColors[`${wallId}|${i}`];
+      if (col) {
+        const area = (r.maxX - r.minX) * (r.maxZ - r.minZ);
+        if (area < bestArea) { bestArea = area; hex = col; }
+      }
+    }
+  }
+  return hex;
 }
