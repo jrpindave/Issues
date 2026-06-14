@@ -4,6 +4,8 @@
 $Key        = "TU_SERVICE_ROLE_KEY"
 $ProjectRef = "wetwdokwnstjidoceoib"
 $Bucket     = "ifc"
+# Carpeta por defecto (si existe, se usa directo sin preguntar):
+$DefaultFolder = "C:\Users\jirp_\OneDrive\JRP2\03. Obras\SAN PEDRO\SP296\Casa"
 # ============================================================
 
 if ($Key -eq "TU_SERVICE_ROLE_KEY") {
@@ -11,11 +13,15 @@ if ($Key -eq "TU_SERVICE_ROLE_KEY") {
   return
 }
 
-Add-Type -AssemblyName System.Windows.Forms
-$dlg = New-Object System.Windows.Forms.FolderBrowserDialog
-$dlg.Description = "Elige la carpeta que contiene el IFC"
-if ($dlg.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { Write-Host "Cancelado."; return }
-$folder = $dlg.SelectedPath
+if (Test-Path -LiteralPath $DefaultFolder) {
+  $folder = $DefaultFolder
+} else {
+  Add-Type -AssemblyName System.Windows.Forms
+  $dlg = New-Object System.Windows.Forms.FolderBrowserDialog
+  $dlg.Description = "Elige la carpeta que contiene el IFC"
+  if ($dlg.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { Write-Host "Cancelado."; return }
+  $folder = $dlg.SelectedPath
+}
 
 # Solo archivos .ifc (el mas reciente si hay varios).
 $ifc = Get-ChildItem -File -LiteralPath $folder -Filter *.ifc |
