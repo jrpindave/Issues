@@ -188,6 +188,69 @@ function TouchController() {
   return null;
 }
 
+/**
+ * Measuring: on a click (no drag) raycasts the model/furniture, then snaps the
+ * point to the nearest corner (vertex) of the hit face so dimensions are exact.
+ */
+function MeasureController() {
+  const camera = useThree((s) => s.camera);
+  const gl = useThree((s) => s.gl);
+  const scene = useThree((s) => s.scene);
+  const measureMode = usePlanner((s) => s.measureMode);
+  const addMeasurePoint = usePlanner((s) => s.addMeasurePoint);
+  useEffect(() => {
+    if (!measureMode) return;
+    const el = gl.domElement;
+    const ray = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    const v = new THREE.Vector3();
+    let downX = 0, downY = 0;
+    const onDown = (e: PointerEvent) => {
+      downX = e.clientX;
+      downY = e.clientY;
+    };
+    const onUp = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return; // it was a drag
+      const r = el.getBoundingClientRect();
+      ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
+      ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+      ray.setFromCamera(ndc, camera);
+      const hit = ray
+        .intersectObjects(scene.children, true)
+        .find(
+          (h) =>
+            (h.object as THREE.Mesh).isMesh &&
+            (h.object.userData.level !== undefined || h.object.parent?.userData?.itemId !== undefined)
+        );
+      if (!hit) return;
+      // Snap to the nearest vertex (corner) of the hit triangle, if close.
+      let point = hit.point.clone();
+      const geo = (hit.object as THREE.Mesh).geometry as THREE.BufferGeometry;
+      const posAttr = geo.getAttribute("position") as THREE.BufferAttribute | undefined;
+      if (posAttr && hit.face) {
+        let bestD = 0.35;
+        for (const idx of [hit.face.a, hit.face.b, hit.face.c]) {
+          v.fromBufferAttribute(posAttr, idx).applyMatrix4(hit.object.matrixWorld);
+          const d = v.distanceTo(hit.point);
+          if (d < bestD) {
+            bestD = d;
+            point = v.clone();
+          }
+        }
+      }
+      addMeasurePoint([point.x, point.y, point.z]);
+    };
+    el.addEventListener("pointerdown", onDown);
+    el.addEventListener("pointerup", onUp);
+    return () => {
+      el.removeEventListener("pointerdown", onDown);
+      el.removeEventListener("pointerup", onUp);
+    };
+  }, [measureMode, camera, gl, scene, addMeasurePoint]);
+  return null;
+}
+
 export default function Scene3D() {
   const [info, setInfo] = useState<ModelInfo | null>(null);
   const controls = useRef<React.ComponentRef<typeof OrbitControls>>(null);
@@ -231,6 +294,7 @@ export default function Scene3D() {
       <HouseModel onLoaded={setInfo} />
       <FurnitureLayer />
       <MeasureView />
+      <MeasureController />
 
       {showGrid && (
         <Grid
