@@ -6,9 +6,10 @@ import RightPanel from "./RightPanel";
 import Toolbar from "./Toolbar";
 import IfcSelector from "./IfcSelector";
 import { usePlanner } from "@/lib/store";
+import { useHover } from "@/lib/hoverStore";
 
 // Bump on every deploy so you can confirm the new build actually loaded.
-const APP_VERSION = "v32 · medir-snap";
+const APP_VERSION = "v33 · medir-hover";
 
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {
@@ -62,6 +63,7 @@ export default function Viewer() {
         <main className="relative min-w-0 flex-1">
           <Scene3D />
           <Toolbar />
+          <MeasureStatus />
 
           {modelStatus === "loading" && (
             <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-zinc-700 bg-zinc-950/80 px-3 py-1.5 text-xs text-zinc-300 backdrop-blur">
@@ -86,6 +88,24 @@ export default function Viewer() {
           </aside>
         )}
       </div>
+    </div>
+  );
+}
+
+/** Revit-like status line: what the measure tool will snap to. */
+function MeasureStatus() {
+  const measureMode = usePlanner((s) => s.measureMode);
+  const pending = usePlanner((s) => s.pendingPoint);
+  const info = useHover((s) => s.info);
+  if (!measureMode) return null;
+  return (
+    <div className="pointer-events-none absolute bottom-4 left-1/2 -translate-x-1/2 rounded-md border border-zinc-700 bg-zinc-950/85 px-3 py-1.5 text-xs text-zinc-200 backdrop-blur">
+      📏 {pending ? "Punto 2/2 · " : "Punto 1/2 · "}
+      {info ? (
+        <span className="font-medium text-emerald-300">{info}</span>
+      ) : (
+        <span className="text-zinc-500">mueve sobre la geometría…</span>
+      )}
     </div>
   );
 }

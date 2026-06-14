@@ -9,6 +9,7 @@ import FurnitureLayer from "./FurnitureLayer";
 import MeasureView from "./MeasureView";
 import CameraController from "./CameraController";
 import { usePlanner } from "@/lib/store";
+import { useHover } from "@/lib/hoverStore";
 
 /**
  * Configures the default OrbitControls once it exists:
@@ -189,8 +190,8 @@ function TouchController() {
 }
 
 /**
- * Measuring: on a click (no drag) raycasts the model/furniture, then snaps the
- * point to the nearest corner (vertex) of the hit face so dimensions are exact.
+ * Measuring: hover shows a snap marker + a status line of what it will attach to
+ * (corner/surface of a wall/structure/furniture); a click commits that point.
  */
 function MeasureController() {
   const camera = useThree((s) => s.camera);
@@ -199,22 +200,20 @@ function MeasureController() {
   const measureMode = usePlanner((s) => s.measureMode);
   const addMeasurePoint = usePlanner((s) => s.addMeasurePoint);
   useEffect(() => {
-    if (!measureMode) return;
+    if (!measureMode) {
+      useHover.getState().set(null, null, false);
+      return;
+    }
     const el = gl.domElement;
     const ray = new THREE.Raycaster();
     const ndc = new THREE.Vector2();
     const v = new THREE.Vector3();
     let downX = 0, downY = 0;
-    const onDown = (e: PointerEvent) => {
-      downX = e.clientX;
-      downY = e.clientY;
-    };
-    const onUp = (e: PointerEvent) => {
-      if (e.button !== 0) return;
-      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return; // it was a drag
+
+    const probe = (clientX: number, clientY: number) => {
       const r = el.getBoundingClientRect();
-      ndc.x = ((e.clientX - r.left) / r.width) * 2 - 1;
-      ndc.y = -((e.clientY - r.top) / r.height) * 2 + 1;
+      ndc.x = ((clientX - r.left) / r.width) * 2 - 1;
+      ndc.y = -((clientY - r.top) / r.height) * 2 + 1;
       ray.setFromCamera(ndc, camera);
       const hit = ray
         .intersectObjects(scene.children, true)
@@ -223,9 +222,9 @@ function MeasureController() {
             (h.object as THREE.Mesh).isMesh &&
             (h.object.userData.level !== undefined || h.object.parent?.userData?.itemId !== undefined)
         );
-      if (!hit) return;
-      // Snap to the nearest vertex (corner) of the hit triangle, if close.
+      if (!hit) return null;
       let point = hit.point.clone();
+      let snapped = false;
       const geo = (hit.object as THREE.Mesh).geometry as THREE.BufferGeometry;
       const posAttr = geo.getAttribute("position") as THREE.BufferAttribute | undefined;
       if (posAttr && hit.face) {
@@ -236,16 +235,46 @@ function MeasureController() {
           if (d < bestD) {
             bestD = d;
             point = v.clone();
+            snapped = true;
           }
         }
       }
-      addMeasurePoint([point.x, point.y, point.z]);
+      // Element label.
+      const o = hit.object;
+      let element = "Estructura";
+      if (o.userData.isWall) element = "Muro";
+      else if (o.parent?.userData?.itemId !== undefined) {
+        const id = o.parent.userData.itemId as string;
+        element = usePlanner.getState().items.find((it) => it.id === id)?.label ?? "Bloque";
+      }
+      const info = `${element} · ${snapped ? "esquina" : "superficie"}`;
+      return { point: [point.x, point.y, point.z] as [number, number, number], info, snapped };
     };
+
+    const onMove = (e: PointerEvent) => {
+      const res = probe(e.clientX, e.clientY);
+      if (res) useHover.getState().set(res.point, res.info, res.snapped);
+      else useHover.getState().set(null, null, false);
+    };
+    const onDown = (e: PointerEvent) => {
+      downX = e.clientX;
+      downY = e.clientY;
+    };
+    const onUp = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      if (Math.hypot(e.clientX - downX, e.clientY - downY) > 6) return; // drag
+      const res = probe(e.clientX, e.clientY);
+      if (res) addMeasurePoint(res.point);
+    };
+
+    el.addEventListener("pointermove", onMove);
     el.addEventListener("pointerdown", onDown);
     el.addEventListener("pointerup", onUp);
     return () => {
+      el.removeEventListener("pointermove", onMove);
       el.removeEventListener("pointerdown", onDown);
       el.removeEventListener("pointerup", onUp);
+      useHover.getState().set(null, null, false);
     };
   }, [measureMode, camera, gl, scene, addMeasurePoint]);
   return null;

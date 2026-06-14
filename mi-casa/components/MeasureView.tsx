@@ -3,6 +3,7 @@
 import { Line, Html } from "@react-three/drei";
 import * as THREE from "three";
 import { usePlanner } from "@/lib/store";
+import { useHover } from "@/lib/hoverStore";
 
 const labelStyle: React.CSSProperties = {
   pointerEvents: "none",
@@ -24,9 +25,18 @@ function fmt(d: number) {
 export default function MeasureView() {
   const measurements = usePlanner((s) => s.measurements);
   const pending = usePlanner((s) => s.pendingPoint);
+  const measureMode = usePlanner((s) => s.measureMode);
+  const hover = useHover((s) => s.point);
+  const snapped = useHover((s) => s.snapped);
 
   return (
     <>
+      {measureMode && hover && (
+        <mesh position={hover}>
+          <sphereGeometry args={[snapped ? 0.06 : 0.045, 16, 16]} />
+          <meshBasicMaterial color={snapped ? "#34d399" : "#6ea8fe"} transparent opacity={0.9} />
+        </mesh>
+      )}
       {measurements.map((m, i) => {
         const a = new THREE.Vector3(...m.a);
         const b = new THREE.Vector3(...m.b);
