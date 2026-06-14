@@ -55,13 +55,34 @@ export default function Toolbar() {
   const importLayout = usePlanner((s) => s.importLayout);
   const wallColors = usePlanner((s) => s.wallColors);
   const setWallColors = usePlanner((s) => s.setWallColors);
+  const activeConfig = usePlanner((s) => s.activeConfig);
+  const setActiveConfig = usePlanner((s) => s.setActiveConfig);
 
-  const saveCloud = async () => {
-    const name = window.prompt("Nombre de la configuración (nube):");
+  const writeConfig = async (name: string) => {
+    await saveConfig(name, { items, wallColors });
+    setActiveConfig(name);
+  };
+  // Quick-save to the active config (or ask once if there's none yet).
+  const quickSave = async () => {
+    try {
+      if (activeConfig) {
+        await writeConfig(activeConfig);
+        window.alert(`Guardado en "${activeConfig}" ✓`);
+      } else {
+        await saveAs();
+      }
+    } catch (e) {
+      window.alert("Error al guardar: " + (e as Error).message);
+    }
+  };
+  const saveAs = async () => {
+    const list = await listConfigs();
+    const existing = list.length ? "\nExistentes (escribe el mismo para sobrescribir):\n" + list.map((c) => "• " + c.name).join("\n") : "";
+    const name = window.prompt("Guardar como — nombre de la configuración:" + existing, activeConfig ?? "");
     if (!name) return;
     try {
-      await saveConfig(name, { items, wallColors });
-      window.alert("Guardado en la nube ✓");
+      await writeConfig(name.trim());
+      window.alert(`Guardado como "${name.trim()}" ✓`);
     } catch (e) {
       window.alert("Error al guardar: " + (e as Error).message);
     }
@@ -75,10 +96,11 @@ export default function Toolbar() {
     );
     if (!name) return;
     try {
-      const data = (await loadConfig(name)) as { items?: unknown; wallColors?: Record<string, string> } | null;
+      const data = (await loadConfig(name.trim())) as { items?: unknown; wallColors?: Record<string, string> } | null;
       if (data?.items) {
         importLayout(data.items as Parameters<typeof importLayout>[0]);
         setWallColors(data.wallColors ?? {});
+        setActiveConfig(name.trim());
       } else {
         window.alert("No encontré esa configuración.");
       }
@@ -180,17 +202,23 @@ export default function Toolbar() {
 
       <div className="pointer-events-auto flex flex-wrap items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950/80 p-1.5 backdrop-blur">
         <span className="px-1 text-[10px] uppercase tracking-wider text-zinc-500">Config</span>
-        <Chip onClick={exportLayout} title="Descargar tu distribución como archivo .json">
-          Guardar
+        <Chip
+          onClick={quickSave}
+          title={activeConfig ? `Guardado rápido en "${activeConfig}"` : "Guardar (pedirá nombre la 1ª vez)"}
+        >
+          💾 Guardar{activeConfig ? `: ${activeConfig}` : ""}
         </Chip>
-        <Chip onClick={() => fileRef.current?.click()} title="Cargar una distribución desde un .json">
-          Cargar
-        </Chip>
-        <Chip onClick={saveCloud} title="Guardar la configuración en Supabase (nube)">
-          ☁ Guardar
+        <Chip onClick={saveAs} title="Guardar como… (nuevo nombre o sobrescribir uno existente)">
+          Guardar como
         </Chip>
         <Chip onClick={loadCloud} title="Cargar una configuración desde Supabase (nube)">
           ☁ Cargar
+        </Chip>
+        <Chip onClick={exportLayout} title="Descargar la distribución como archivo .json">
+          Exportar JSON
+        </Chip>
+        <Chip onClick={() => fileRef.current?.click()} title="Importar una distribución desde un .json">
+          Importar JSON
         </Chip>
         <input
           ref={fileRef}

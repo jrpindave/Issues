@@ -75,6 +75,8 @@ interface PlannerState {
   measureMode: boolean;
   pendingPoint: Vec3 | null;
   measurements: { a: Vec3; b: Vec3 }[];
+  /** Name of the active cloud config (for quick-save). */
+  activeConfig: string | null;
 
   setLevels: (levels: LevelInfo[]) => void;
   setDrop: (x: number, z: number) => void;
@@ -93,6 +95,7 @@ interface PlannerState {
   setMeasureMode: (v: boolean) => void;
   addMeasurePoint: (p: Vec3) => void;
   clearMeasures: () => void;
+  setActiveConfig: (name: string | null) => void;
   setModelStatus: (status: "loading" | "ready" | "error", error?: string | null) => void;
   importLayout: (items: FurnitureItem[]) => void;
   addTemplate: (t: FurnitureTemplate, level: number) => void;
@@ -134,6 +137,7 @@ export const usePlanner = create<PlannerState>()(
       measureMode: false,
       pendingPoint: null,
       measurements: [],
+      activeConfig: null,
 
       setLevels: (levels) =>
         set({
@@ -164,6 +168,7 @@ export const usePlanner = create<PlannerState>()(
           return { measurements: [...s.measurements, { a: s.pendingPoint, b: p }], pendingPoint: null };
         }),
       clearMeasures: () => set({ measurements: [], pendingPoint: null }),
+      setActiveConfig: (name) => set({ activeConfig: name }),
 
       setModelStatus: (status, error = null) => set({ modelStatus: status, modelError: error }),
 
@@ -227,6 +232,7 @@ export const usePlanner = create<PlannerState>()(
         snapEnabled: s.snapEnabled,
         paintColor: s.paintColor,
         wallColors: s.wallColors,
+        activeConfig: s.activeConfig,
       }),
       // Fixed equipment now lives in the IFC, so drop any previously seeded
       // fixtures while keeping every movable piece the user placed.

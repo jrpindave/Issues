@@ -189,6 +189,12 @@ function TouchController() {
   return null;
 }
 
+/** True only if the object and all its ancestors are visible (skip hidden levels). */
+function isMeasurable(o: THREE.Object3D | null): boolean {
+  for (let cur = o; cur; cur = cur.parent) if (!cur.visible) return false;
+  return true;
+}
+
 /**
  * Measuring: hover shows a snap marker + a status line of what it will attach to
  * (corner/surface of a wall/structure/furniture); a click commits that point.
@@ -220,6 +226,7 @@ function MeasureController() {
         .find(
           (h) =>
             (h.object as THREE.Mesh).isMesh &&
+            isMeasurable(h.object) &&
             (h.object.userData.level !== undefined || h.object.parent?.userData?.itemId !== undefined)
         );
       if (!hit) return null;
@@ -228,7 +235,7 @@ function MeasureController() {
       const geo = (hit.object as THREE.Mesh).geometry as THREE.BufferGeometry;
       const posAttr = geo.getAttribute("position") as THREE.BufferAttribute | undefined;
       if (posAttr && hit.face) {
-        let bestD = 0.35;
+        let bestD = 0.2;
         for (const idx of [hit.face.a, hit.face.b, hit.face.c]) {
           v.fromBufferAttribute(posAttr, idx).applyMatrix4(hit.object.matrixWorld);
           const d = v.distanceTo(hit.point);

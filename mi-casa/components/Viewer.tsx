@@ -9,7 +9,7 @@ import { usePlanner } from "@/lib/store";
 import { useHover } from "@/lib/hoverStore";
 
 // Bump on every deploy so you can confirm the new build actually loaded.
-const APP_VERSION = "v33 · medir-hover";
+const APP_VERSION = "v34 · medir-visible+guardado";
 
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {
