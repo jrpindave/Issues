@@ -108,6 +108,8 @@ export default function FurnitureLayer() {
   const snapZPlanes = usePlanner((s) => s.snapZ);
   const snapEnabled = usePlanner((s) => s.snapEnabled);
   const gizmoMode = usePlanner((s) => s.gizmoMode);
+  const measureMode = usePlanner((s) => s.measureMode);
+  const addMeasurePoint = usePlanner((s) => s.addMeasurePoint);
 
   const selectedRef = useRef<THREE.Group>(null);
   // drei forwards the controls instance through this ref.
@@ -209,6 +211,10 @@ export default function FurnitureLayer() {
             rotation={[item.rotationX ?? 0, item.rotationY, item.rotationZ ?? 0]}
             onClick={(e) => {
               e.stopPropagation();
+              if (measureMode) {
+                addMeasurePoint([e.point.x, e.point.y, e.point.z]);
+                return;
+              }
               select(item.id);
             }}
           >

@@ -48,6 +48,9 @@ export default function Toolbar() {
   const resetWalls = usePlanner((s) => s.resetWalls);
   const gizmoMode = usePlanner((s) => s.gizmoMode);
   const setGizmoMode = usePlanner((s) => s.setGizmoMode);
+  const measureMode = usePlanner((s) => s.measureMode);
+  const setMeasureMode = usePlanner((s) => s.setMeasureMode);
+  const clearMeasures = usePlanner((s) => s.clearMeasures);
   const items = usePlanner((s) => s.items);
   const importLayout = usePlanner((s) => s.importLayout);
   const wallColors = usePlanner((s) => s.wallColors);
@@ -151,6 +154,18 @@ export default function Toolbar() {
         <Chip active={showGrid} onClick={() => setShowGrid(!showGrid)} title="Mostrar grilla">
           Grilla
         </Chip>
+        <Chip
+          active={measureMode}
+          onClick={() => setMeasureMode(!measureMode)}
+          title="Medir: toca dos puntos sobre la geometría para ver la distancia"
+        >
+          📏 Medir
+        </Chip>
+        {measureMode && (
+          <Chip onClick={clearMeasures} title="Borrar todas las cotas">
+            Limpiar cotas
+          </Chip>
+        )}
         <Chip
           active={snapEnabled}
           onClick={() => setSnapEnabled(!snapEnabled)}

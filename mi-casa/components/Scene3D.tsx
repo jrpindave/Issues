@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import HouseModel, { type ModelInfo } from "./HouseModel";
 import FurnitureLayer from "./FurnitureLayer";
+import MeasureView from "./MeasureView";
 import CameraController from "./CameraController";
 import { usePlanner } from "@/lib/store";
 
@@ -229,6 +230,7 @@ export default function Scene3D() {
 
       <HouseModel onLoaded={setInfo} />
       <FurnitureLayer />
+      <MeasureView />
 
       {showGrid && (
         <Grid

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { FurnitureItem, FurnitureTemplate, LevelInfo, RoomInfo } from "./types";
+import type { FurnitureItem, FurnitureTemplate, LevelInfo, RoomInfo, Vec3 } from "./types";
 import { CATALOG } from "./catalog";
 
 function uid(): string {
@@ -71,6 +71,10 @@ interface PlannerState {
   rooms: RoomInfo[];
   /** Where the loaded IFC came from. */
   ifcSource: "supabase" | "local" | null;
+  /** Measuring tool: pick two points to get a distance. */
+  measureMode: boolean;
+  pendingPoint: Vec3 | null;
+  measurements: { a: Vec3; b: Vec3 }[];
 
   setLevels: (levels: LevelInfo[]) => void;
   setDrop: (x: number, z: number) => void;
@@ -86,6 +90,9 @@ interface PlannerState {
   setGizmoMode: (m: "translate" | "rotate" | "scale") => void;
   setRooms: (r: RoomInfo[]) => void;
   setIfcSource: (s: "supabase" | "local") => void;
+  setMeasureMode: (v: boolean) => void;
+  addMeasurePoint: (p: Vec3) => void;
+  clearMeasures: () => void;
   setModelStatus: (status: "loading" | "ready" | "error", error?: string | null) => void;
   importLayout: (items: FurnitureItem[]) => void;
   addTemplate: (t: FurnitureTemplate, level: number) => void;
@@ -124,6 +131,9 @@ export const usePlanner = create<PlannerState>()(
       gizmoMode: "translate",
       rooms: [],
       ifcSource: null,
+      measureMode: false,
+      pendingPoint: null,
+      measurements: [],
 
       setLevels: (levels) =>
         set({
@@ -146,6 +156,14 @@ export const usePlanner = create<PlannerState>()(
       setGizmoMode: (m) => set({ gizmoMode: m }),
       setRooms: (r) => set({ rooms: r }),
       setIfcSource: (s) => set({ ifcSource: s }),
+      setMeasureMode: (v) =>
+        set((s) => ({ measureMode: v, pendingPoint: null, selectedId: v ? null : s.selectedId })),
+      addMeasurePoint: (p) =>
+        set((s) => {
+          if (!s.pendingPoint) return { pendingPoint: p };
+          return { measurements: [...s.measurements, { a: s.pendingPoint, b: p }], pendingPoint: null };
+        }),
+      clearMeasures: () => set({ measurements: [], pendingPoint: null }),
 
       setModelStatus: (status, error = null) => set({ modelStatus: status, modelError: error }),
 

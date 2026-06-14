@@ -31,6 +31,8 @@ export default function HouseModel({ onLoaded }: Props) {
   const wallColors = usePlanner((s) => s.wallColors);
   const setRooms = usePlanner((s) => s.setRooms);
   const setIfcSource = usePlanner((s) => s.setIfcSource);
+  const measureMode = usePlanner((s) => s.measureMode);
+  const addMeasurePoint = usePlanner((s) => s.addMeasurePoint);
 
   // Load the IFC once. Default source is the Supabase Storage object (always the
   // latest upload); falls back to the bundled file if it's missing/unreachable.
@@ -118,7 +120,12 @@ export default function HouseModel({ onLoaded }: Props) {
   return group ? (
     <primitive
       object={group}
-      onClick={(e: { object: THREE.Object3D; stopPropagation: () => void }) => {
+      onClick={(e: { object: THREE.Object3D; point?: THREE.Vector3; stopPropagation: () => void }) => {
+        if (measureMode && e.point) {
+          e.stopPropagation();
+          addMeasurePoint([e.point.x, e.point.y, e.point.z]);
+          return;
+        }
         if (!paintMode || !e.object.userData?.isWall) return;
         e.stopPropagation();
         paintWallSide(`${e.object.userData.wallId}`);
