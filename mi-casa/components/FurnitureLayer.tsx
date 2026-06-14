@@ -60,6 +60,22 @@ function boxesFor(item: FurnitureItem): BoxDef[] {
 function PieceMeshes({ item, selected }: { item: FurnitureItem; selected: boolean }) {
   const emissive = selected ? "#3a3320" : "#000000";
   const edgeColor = selected ? "#ffd479" : item.fixture ? "#00000055" : "#00000033";
+  if (item.shape === "cylinder") {
+    const r = item.width / 2;
+    return (
+      <mesh castShadow receiveShadow>
+        <cylinderGeometry args={[r, r, item.height, 32]} />
+        <meshStandardMaterial
+          color={item.color}
+          roughness={0.7}
+          metalness={0.04}
+          emissive={emissive}
+          emissiveIntensity={selected ? 1 : 0}
+        />
+        <Edges threshold={25} scale={1.001} color={edgeColor} />
+      </mesh>
+    );
+  }
   return (
     <>
       {boxesFor(item).map((b, i) => (

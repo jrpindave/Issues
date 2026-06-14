@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { FurnitureItem, FurnitureTemplate, LevelInfo } from "./types";
+import type { FurnitureItem, FurnitureTemplate, LevelInfo, RoomInfo } from "./types";
 import { CATALOG } from "./catalog";
 
 function uid(): string {
@@ -67,6 +67,10 @@ interface PlannerState {
   orbitMode: boolean;
   /** Gizmo behaviour for the selected piece. */
   gizmoMode: "translate" | "scale";
+  /** Named rooms from the IFC, for per-room wall painting. */
+  rooms: RoomInfo[];
+  /** Where the loaded IFC came from. */
+  ifcSource: "supabase" | "local" | null;
 
   setLevels: (levels: LevelInfo[]) => void;
   setDrop: (x: number, z: number) => void;
@@ -79,6 +83,8 @@ interface PlannerState {
   toggleOrbitMode: () => void;
   setOrbitMode: (v: boolean) => void;
   setGizmoMode: (m: "translate" | "scale") => void;
+  setRooms: (r: RoomInfo[]) => void;
+  setIfcSource: (s: "supabase" | "local") => void;
   setModelStatus: (status: "loading" | "ready" | "error", error?: string | null) => void;
   importLayout: (items: FurnitureItem[]) => void;
   addTemplate: (t: FurnitureTemplate, level: number) => void;
@@ -115,6 +121,8 @@ export const usePlanner = create<PlannerState>()(
       wallColors: {},
       orbitMode: false,
       gizmoMode: "translate",
+      rooms: [],
+      ifcSource: null,
 
       setLevels: (levels) =>
         set({
@@ -134,6 +142,8 @@ export const usePlanner = create<PlannerState>()(
       toggleOrbitMode: () => set((s) => ({ orbitMode: !s.orbitMode })),
       setOrbitMode: (v) => set({ orbitMode: v }),
       setGizmoMode: (m) => set({ gizmoMode: m }),
+      setRooms: (r) => set({ rooms: r }),
+      setIfcSource: (s) => set({ ifcSource: s }),
 
       setModelStatus: (status, error = null) => set({ modelStatus: status, modelError: error }),
 

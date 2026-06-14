@@ -26,8 +26,8 @@ export interface FurnitureTemplate {
   color: string;
   /** Optional overhead volume (pantry, upper cabinets). */
   upper?: UpperVolume;
-  /** "box" (default) or "L" for a corner sofa (two prisms in an L). */
-  shape?: "box" | "L";
+  /** "box" (default), "L" (corner sofa), or "cylinder" (width = diameter). */
+  shape?: "box" | "L" | "cylinder";
   /** Seat/arm thickness for the L shape, meters. */
   arm?: number;
   /** Built-in fixtures that ship with the house (kitchen, laundry, closets…). */
@@ -54,7 +54,7 @@ export interface FurnitureItem {
   /** 0 = ground level, 1 = upper level. */
   level: number;
   upper?: UpperVolume;
-  shape?: "box" | "L";
+  shape?: "box" | "L" | "cylinder";
   arm?: number;
   fixture?: boolean;
   /** Optional URL to the real product (store/catalog page). */
@@ -66,4 +66,15 @@ export interface LevelInfo {
   name: string;
   /** World-space Y of the floor for this level, meters. */
   elevation: number;
+}
+
+/** A named room (IFCSPACE), with its world-space plan bounds. */
+export interface RoomInfo {
+  name: string;
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+  minY: number;
+  maxY: number;
 }

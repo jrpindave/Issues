@@ -7,7 +7,7 @@ import Toolbar from "./Toolbar";
 import { usePlanner } from "@/lib/store";
 
 // Bump on every deploy so you can confirm the new build actually loaded.
-const APP_VERSION = "v24 · pintar-por-cara";
+const APP_VERSION = "v25 · cuarto+cilindro";
 
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {
@@ -23,6 +23,7 @@ export default function Viewer() {
   const [panelOpen, setPanelOpen] = useState(true);
   const modelStatus = usePlanner((s) => s.modelStatus);
   const modelError = usePlanner((s) => s.modelError);
+  const ifcSource = usePlanner((s) => s.ifcSource);
 
   return (
     <div className="flex h-[100dvh] w-[100vw] flex-col overflow-hidden">
@@ -33,6 +34,17 @@ export default function Viewer() {
           <span className="rounded bg-sky-500/15 px-1.5 py-0.5 text-[10px] font-medium text-sky-300">
             {APP_VERSION}
           </span>
+          {ifcSource && (
+            <span
+              className={`rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                ifcSource === "supabase"
+                  ? "bg-emerald-500/15 text-emerald-300"
+                  : "bg-zinc-500/15 text-zinc-400"
+              }`}
+            >
+              {ifcSource === "supabase" ? "IFC: Supabase ☁" : "IFC: local"}
+            </span>
+          )}
         </div>
         <button
           onClick={() => setPanelOpen((v) => !v)}

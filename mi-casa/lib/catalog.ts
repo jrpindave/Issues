@@ -30,6 +30,7 @@ export const CATALOG: FurnitureTemplate[] = [
 
   // ── Genéricos (prismas libres) ─────────────────────────────
   { type: "prisma", label: "Prisma libre", category: "Genéricos", width: 1.0, depth: 1.0, height: 1.0, color: "#9aa0a6" },
+  { type: "cilindro", label: "Cilindro (Ø)", category: "Genéricos", width: 0.5, depth: 0.5, height: 1.0, color: "#9aa0a6", shape: "cylinder" },
   { type: "mesa", label: "Mesa", category: "Genéricos", width: 1.2, depth: 0.6, height: 0.75, color: "#a8794f" },
   { type: "estanteria", label: "Estantería", category: "Genéricos", width: 0.8, depth: 0.3, height: 1.8, color: "#8a6d4f" },
 

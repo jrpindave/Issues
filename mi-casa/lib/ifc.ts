@@ -7,7 +7,7 @@ import {
   IFCWALL,
   IFCWALLSTANDARDCASE,
 } from "web-ifc";
-import type { LevelInfo } from "./types";
+import type { LevelInfo, RoomInfo } from "./types";
 
 export interface LoadedModel {
   /** All IFC meshes in three world space (Y-up). Each mesh has userData.level. */
@@ -19,6 +19,44 @@ export interface LoadedModel {
   /** Vertical wall planes (constant X and constant Z) used to snap furniture. */
   snapX: number[];
   snapZ: number[];
+  /** Named rooms with world-space bounds, for per-room wall painting. */
+  rooms: RoomInfo[];
+}
+
+/** Bounding boxes of every IFCSPACE in world coordinates. */
+function readRooms(api: IfcAPI, modelID: number, spaceIds: Set<number>): RoomInfo[] {
+  const rooms: RoomInfo[] = [];
+  for (const eid of spaceIds) {
+    const line = api.GetLine(modelID, eid) as { LongName?: { value?: string }; Name?: { value?: string } };
+    const name = line.LongName?.value || line.Name?.value || `Espacio ${eid}`;
+    let fm;
+    try {
+      fm = api.GetFlatMesh(modelID, eid);
+    } catch {
+      continue;
+    }
+    let mnx = Infinity, mxx = -Infinity, mny = Infinity, mxy = -Infinity, mnz = Infinity, mxz = -Infinity;
+    let has = false;
+    for (let g = 0; g < fm.geometries.size(); g++) {
+      const pg = fm.geometries.get(g);
+      const geo = api.GetGeometry(modelID, pg.geometryExpressID);
+      const va = api.GetVertexArray(geo.GetVertexData(), geo.GetVertexDataSize());
+      const m = pg.flatTransformation;
+      for (let v = 0; v < va.length; v += 6) {
+        const x = va[v], y = va[v + 1], z = va[v + 2];
+        const wx = m[0] * x + m[4] * y + m[8] * z + m[12];
+        const wy = m[1] * x + m[5] * y + m[9] * z + m[13];
+        const wz = m[2] * x + m[6] * y + m[10] * z + m[14];
+        mnx = Math.min(mnx, wx); mxx = Math.max(mxx, wx);
+        mny = Math.min(mny, wy); mxy = Math.max(mxy, wy);
+        mnz = Math.min(mnz, wz); mxz = Math.max(mxz, wz);
+        has = true;
+      }
+      geo.delete();
+    }
+    if (has) rooms.push({ name, minX: mnx, maxX: mxx, minZ: mnz, maxZ: mxz, minY: mny, maxY: mxy });
+  }
+  return rooms;
 }
 
 let apiPromise: Promise<IfcAPI> | null = null;
@@ -234,6 +272,7 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
     }
   });
 
+  const rooms = readRooms(api, modelID, spaceIds);
   api.CloseModel(modelID);
 
   const size = bbox.getSize(new THREE.Vector3());
@@ -290,5 +329,5 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
   const snapX = planesFrom(wallX, 0.2);
   const snapZ = planesFrom(wallZ, 0.2);
 
-  return { group, levels, bbox, center, snapX, snapZ };
+  return { group, levels, bbox, center, snapX, snapZ, rooms };
 }
