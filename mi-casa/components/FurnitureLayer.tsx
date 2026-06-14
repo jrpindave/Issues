@@ -118,15 +118,39 @@ export default function FurnitureLayer() {
   const commitSelected = () => {
     const g = selectedRef.current;
     if (!g || !selected) return;
-    if (gizmoMode === "scale") {
-      // Bake the gizmo scale into the piece's dimensions, then reset scale.
-      const clamp = (v: number) => Math.max(0.05, Math.min(8, v));
+    if (gizmoMode === "rotate") {
       updateItem(selected.id, {
-        width: clamp(selected.width * g.scale.x),
-        height: clamp(selected.height * g.scale.y),
-        depth: clamp(selected.depth * g.scale.z),
+        rotationX: g.rotation.x,
+        rotationY: g.rotation.y,
+        rotationZ: g.rotation.z,
       });
+      return;
+    }
+    if (gizmoMode === "scale") {
+      const clamp = (v: number) => Math.max(0.05, Math.min(8, v));
+      const newW = clamp(selected.width * g.scale.x);
+      const newH = clamp(selected.height * g.scale.y);
+      const newD = clamp(selected.depth * g.scale.z);
       g.scale.set(1, 1, 1);
+      if (selected.shape === "cylinder") {
+        // Diameter stays centered; height grows from the base (handled by yOffset).
+        updateItem(selected.id, { width: newW, height: newH, depth: newD });
+        return;
+      }
+      // Box/L: the parameter origin is the min (left/back) face, so growth goes
+      // toward +local X/Z. Height grows from the base (via the floor offset).
+      const dW = newW - selected.width;
+      const dD = newD - selected.depth;
+      const r = selected.rotationY;
+      const dx = (dW / 2) * Math.cos(r) + (dD / 2) * Math.sin(r);
+      const dz = -(dW / 2) * Math.sin(r) + (dD / 2) * Math.cos(r);
+      updateItem(selected.id, {
+        width: newW,
+        height: newH,
+        depth: newD,
+        x: selected.x + dx,
+        z: selected.z + dz,
+      });
       return;
     }
     let x = g.position.x;
@@ -171,7 +195,7 @@ export default function FurnitureLayer() {
           <group
             key={item.id}
             position={[item.x, elev + item.height / 2 + (item.yOffset ?? 0), item.z]}
-            rotation={[0, item.rotationY, 0]}
+            rotation={[item.rotationX ?? 0, item.rotationY, item.rotationZ ?? 0]}
             onClick={(e) => {
               e.stopPropagation();
               select(item.id);
@@ -194,7 +218,7 @@ export default function FurnitureLayer() {
               levelElevation(levels, selected.level) + selected.height / 2 + (selected.yOffset ?? 0),
               selected.z,
             ]}
-            rotation={[0, selected.rotationY, 0]}
+            rotation={[selected.rotationX ?? 0, selected.rotationY, selected.rotationZ ?? 0]}
           >
             <PieceMeshes item={selected} selected />
           </group>

@@ -97,11 +97,19 @@ export default function Toolbar() {
 
       <div className="pointer-events-auto flex flex-wrap items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950/80 p-1.5 backdrop-blur">
         <Chip
-          active={gizmoMode === "scale"}
-          onClick={() => setGizmoMode(gizmoMode === "scale" ? "translate" : "scale")}
-          title="Gizmo de la pieza: mover o redimensionar (arrastra las caras)"
+          active={gizmoMode !== "translate"}
+          onClick={() =>
+            setGizmoMode(
+              gizmoMode === "translate" ? "rotate" : gizmoMode === "rotate" ? "scale" : "translate"
+            )
+          }
+          title="Gizmo de la pieza: ciclar Mover → Rotar → Redimensionar"
         >
-          {gizmoMode === "scale" ? "Gizmo: Redimensionar" : "Gizmo: Mover"}
+          {gizmoMode === "translate"
+            ? "Gizmo: Mover"
+            : gizmoMode === "rotate"
+              ? "Gizmo: Rotar"
+              : "Gizmo: Redimensionar"}
         </Chip>
         <Chip active={planView} onClick={() => setPlanView(!planView)} title="Vista en planta (cenital)">
           {planView ? "Vista planta" : "Vista órbita"}

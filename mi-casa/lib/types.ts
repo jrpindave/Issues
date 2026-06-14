@@ -49,6 +49,9 @@ export interface FurnitureItem {
   z: number;
   /** Rotation around the vertical axis, radians. */
   rotationY: number;
+  /** Optional tilt around X/Z (radians) set by the rotate gizmo. */
+  rotationX?: number;
+  rotationZ?: number;
   /** Manual vertical offset above the floor, meters (gizmo Y). */
   yOffset?: number;
   /** 0 = ground level, 1 = upper level. */

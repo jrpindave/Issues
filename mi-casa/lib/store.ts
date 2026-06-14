@@ -66,7 +66,7 @@ interface PlannerState {
   /** Mobile: false = one finger pans, true = one finger orbits. */
   orbitMode: boolean;
   /** Gizmo behaviour for the selected piece. */
-  gizmoMode: "translate" | "scale";
+  gizmoMode: "translate" | "rotate" | "scale";
   /** Named rooms from the IFC, for per-room wall painting. */
   rooms: RoomInfo[];
   /** Where the loaded IFC came from. */
@@ -82,7 +82,7 @@ interface PlannerState {
   resetWalls: () => void;
   toggleOrbitMode: () => void;
   setOrbitMode: (v: boolean) => void;
-  setGizmoMode: (m: "translate" | "scale") => void;
+  setGizmoMode: (m: "translate" | "rotate" | "scale") => void;
   setRooms: (r: RoomInfo[]) => void;
   setIfcSource: (s: "supabase" | "local") => void;
   setModelStatus: (status: "loading" | "ready" | "error", error?: string | null) => void;
