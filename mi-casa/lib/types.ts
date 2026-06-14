@@ -62,6 +62,8 @@ export interface FurnitureItem {
   fixture?: boolean;
   /** Optional URL to the real product (store/catalog page). */
   link?: string;
+  /** Optional unit price for the cost analysis. */
+  price?: number;
 }
 
 export interface LevelInfo {

@@ -4,9 +4,10 @@ import { useEffect, useState } from "react";
 import { CATALOG, CATEGORIES } from "@/lib/catalog";
 import { usePlanner } from "@/lib/store";
 import type { FurnitureItem } from "@/lib/types";
+import CostPanel from "./CostPanel";
 
 export default function RightPanel() {
-  const [tab, setTab] = useState<"lib" | "insp">("lib");
+  const [tab, setTab] = useState<"lib" | "insp" | "cost">("lib");
   const selectedId = usePlanner((s) => s.selectedId);
 
   // Jump to the inspector when the user picks a piece.
@@ -23,9 +24,12 @@ export default function RightPanel() {
         <TabButton active={tab === "insp"} onClick={() => setTab("insp")}>
           Inspector
         </TabButton>
+        <TabButton active={tab === "cost"} onClick={() => setTab("cost")}>
+          Costos
+        </TabButton>
       </div>
       <div className="scroll-thin min-h-0 flex-1 overflow-y-auto">
-        {tab === "lib" ? <Library /> : <Inspector />}
+        {tab === "lib" ? <Library /> : tab === "insp" ? <Inspector /> : <CostPanel />}
       </div>
     </div>
   );
@@ -267,6 +271,24 @@ function Inspector() {
               Abrir
             </a>
           )}
+        </div>
+        <div className="mt-2 flex items-center gap-2">
+          <span className="text-xs text-zinc-400">Precio</span>
+          <span className="text-xs text-zinc-500">$</span>
+          <input
+            type="number"
+            inputMode="numeric"
+            min={0}
+            step={1000}
+            placeholder="0"
+            value={item.price ?? ""}
+            onChange={(e) =>
+              updateItem(item.id, {
+                price: e.target.value === "" ? undefined : Math.max(0, Number(e.target.value)),
+              })
+            }
+            className="w-32 rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1 text-right text-xs tabular-nums text-zinc-200 outline-none focus:border-sky-600"
+          />
         </div>
       </Section>
 
