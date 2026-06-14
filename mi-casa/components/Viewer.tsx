@@ -8,7 +8,7 @@ import IfcSelector from "./IfcSelector";
 import { usePlanner } from "@/lib/store";
 
 // Bump on every deploy so you can confirm the new build actually loaded.
-const APP_VERSION = "v29 · costos";
+const APP_VERSION = "v30 · snap-muros+ctrl";
 
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {

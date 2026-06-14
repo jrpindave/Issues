@@ -112,6 +112,17 @@ export default function FurnitureLayer() {
   const selectedRef = useRef<THREE.Group>(null);
   // drei forwards the controls instance through this ref.
   const tcRef = useRef<React.ComponentRef<typeof TransformControls>>(null);
+  // Hold Ctrl (or ⌘) while dragging to place freely (disables wall snap).
+  const ctrlRef = useRef(false);
+  useEffect(() => {
+    const set = (e: KeyboardEvent) => (ctrlRef.current = e.ctrlKey || e.metaKey);
+    window.addEventListener("keydown", set);
+    window.addEventListener("keyup", set);
+    return () => {
+      window.removeEventListener("keydown", set);
+      window.removeEventListener("keyup", set);
+    };
+  }, []);
   const selected = items.find((it) => it.id === selectedId) ?? null;
   const selectedVisible = selected ? levelVisible[selected.level] ?? true : false;
 
@@ -155,13 +166,13 @@ export default function FurnitureLayer() {
     }
     let x = g.position.x;
     let z = g.position.z;
-    if (snapEnabled) {
+    if (snapEnabled && !ctrlRef.current) {
       // Snap the prism's nearest face to a wall plane when close enough.
       const r = selected.rotationY;
       const hx = Math.abs((selected.width / 2) * Math.cos(r)) + Math.abs((selected.depth / 2) * Math.sin(r));
       const hz = Math.abs((selected.width / 2) * Math.sin(r)) + Math.abs((selected.depth / 2) * Math.cos(r));
-      x = snapAxis(x, hx, snapXPlanes, 0.35);
-      z = snapAxis(z, hz, snapZPlanes, 0.35);
+      x = snapAxis(x, hx, snapXPlanes, 0.2);
+      z = snapAxis(z, hz, snapZPlanes, 0.2);
     }
     // Vertical: keep whatever height the gizmo set, as an offset above the floor.
     const baseY = levelElevation(levels, selected.level) + selected.height / 2;
@@ -226,7 +237,6 @@ export default function FurnitureLayer() {
             ref={tcRef}
             object={selectedRef as React.RefObject<THREE.Object3D>}
             mode={gizmoMode}
-            translationSnap={0.05}
           />
         </group>
       )}

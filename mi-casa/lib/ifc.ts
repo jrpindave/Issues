@@ -202,6 +202,7 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
       }
 
       // Tally horizontal surface area to locate the floor planes.
+      const meshIsWall = wallIds.has(flatMesh.expressID);
       for (let t = 0; t < indices.length; t += 3) {
         const a = indices[t] * 3;
         const b = indices[t + 1] * 3;
@@ -221,8 +222,8 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
         if (Math.abs(cy) / mag > 0.9) {
           const avgY = (positions[a + 1] + positions[b + 1] + positions[c + 1]) / 3;
           addFloor(avgY, area);
-        } else if (Math.abs(cy) / mag < 0.2) {
-          // Vertical face: record its constant plane if axis-aligned in X or Z.
+        } else if (meshIsWall && Math.abs(cy) / mag < 0.2) {
+          // Vertical WALL face: record its constant plane (snap target).
           if (Math.abs(cx) / mag > 0.85) {
             addWall(wallX, (positions[a] + positions[b] + positions[c]) / 3, area);
           } else if (Math.abs(cz) / mag > 0.85) {
@@ -326,8 +327,8 @@ export async function loadIfc(url: string): Promise<LoadedModel> {
     }
     return out;
   };
-  const snapX = planesFrom(wallX, 0.2);
-  const snapZ = planesFrom(wallZ, 0.2);
+  const snapX = planesFrom(wallX, 0.6);
+  const snapZ = planesFrom(wallZ, 0.6);
 
   return { group, levels, bbox, center, snapX, snapZ, rooms };
 }
