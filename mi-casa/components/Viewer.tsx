@@ -4,10 +4,11 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 import RightPanel from "./RightPanel";
 import Toolbar from "./Toolbar";
+import IfcSelector from "./IfcSelector";
 import { usePlanner } from "@/lib/store";
 
 // Bump on every deploy so you can confirm the new build actually loaded.
-const APP_VERSION = "v27 · pintura-robusta";
+const APP_VERSION = "v28 · supabase+por-entidad";
 
 // web-ifc + three only run in the browser.
 const Scene3D = dynamic(() => import("./Scene3D"), {
@@ -46,12 +47,15 @@ export default function Viewer() {
             </span>
           )}
         </div>
-        <button
-          onClick={() => setPanelOpen((v) => !v)}
-          className="rounded-md border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
-        >
-          {panelOpen ? "Ocultar panel" : "Mostrar panel"}
-        </button>
+        <div className="flex items-center gap-2">
+          <IfcSelector />
+          <button
+            onClick={() => setPanelOpen((v) => !v)}
+            className="rounded-md border border-zinc-700 px-2.5 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+          >
+            {panelOpen ? "Ocultar panel" : "Mostrar panel"}
+          </button>
+        </div>
       </header>
 
       <div className="relative flex min-h-0 flex-1">

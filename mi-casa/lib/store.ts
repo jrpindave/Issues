@@ -80,6 +80,7 @@ interface PlannerState {
   setPaintColor: (c: string) => void;
   paintWallSide: (key: string) => void;
   resetWalls: () => void;
+  setWallColors: (m: Record<string, string>) => void;
   toggleOrbitMode: () => void;
   setOrbitMode: (v: boolean) => void;
   setGizmoMode: (m: "translate" | "rotate" | "scale") => void;
@@ -139,6 +140,7 @@ export const usePlanner = create<PlannerState>()(
       paintWallSide: (key) =>
         set((s) => ({ wallColors: { ...s.wallColors, [key]: s.paintColor } })),
       resetWalls: () => set({ wallColors: {} }),
+      setWallColors: (m) => set({ wallColors: m }),
       toggleOrbitMode: () => set((s) => ({ orbitMode: !s.orbitMode })),
       setOrbitMode: (v) => set({ orbitMode: v }),
       setGizmoMode: (m) => set({ gizmoMode: m }),

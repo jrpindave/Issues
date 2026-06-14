@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { usePlanner } from "@/lib/store";
+import { listConfigs, loadConfig, saveConfig } from "@/lib/supabase";
 
 function Chip({
   active,
@@ -49,6 +50,39 @@ export default function Toolbar() {
   const setGizmoMode = usePlanner((s) => s.setGizmoMode);
   const items = usePlanner((s) => s.items);
   const importLayout = usePlanner((s) => s.importLayout);
+  const wallColors = usePlanner((s) => s.wallColors);
+  const setWallColors = usePlanner((s) => s.setWallColors);
+
+  const saveCloud = async () => {
+    const name = window.prompt("Nombre de la configuración (nube):");
+    if (!name) return;
+    try {
+      await saveConfig(name, { items, wallColors });
+      window.alert("Guardado en la nube ✓");
+    } catch (e) {
+      window.alert("Error al guardar: " + (e as Error).message);
+    }
+  };
+  const loadCloud = async () => {
+    const list = await listConfigs();
+    if (!list.length) return window.alert("No hay configuraciones guardadas en la nube.");
+    const name = window.prompt(
+      "Cargar configuración:\n" + list.map((c) => "• " + c.name).join("\n"),
+      list[0].name
+    );
+    if (!name) return;
+    try {
+      const data = (await loadConfig(name)) as { items?: unknown; wallColors?: Record<string, string> } | null;
+      if (data?.items) {
+        importLayout(data.items as Parameters<typeof importLayout>[0]);
+        setWallColors(data.wallColors ?? {});
+      } else {
+        window.alert("No encontré esa configuración.");
+      }
+    } catch (e) {
+      window.alert("Error al cargar: " + (e as Error).message);
+    }
+  };
   const fileRef = useRef<HTMLInputElement>(null);
 
   const exportLayout = () => {
@@ -136,6 +170,12 @@ export default function Toolbar() {
         </Chip>
         <Chip onClick={() => fileRef.current?.click()} title="Cargar una distribución desde un .json">
           Cargar
+        </Chip>
+        <Chip onClick={saveCloud} title="Guardar la configuración en Supabase (nube)">
+          ☁ Guardar
+        </Chip>
+        <Chip onClick={loadCloud} title="Cargar una configuración desde Supabase (nube)">
+          ☁ Cargar
         </Chip>
         <input
           ref={fileRef}
