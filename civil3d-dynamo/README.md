@@ -1,4 +1,15 @@
-# Agregar guitarra "Cut Data_01" a varias vistas de perfil (Civil 3D + Dynamo)
+# Guitarras (bandas de perfil) en Civil 3D + Dynamo
+
+Dos scripts para Dynamo (nodo **Python Script**), pensados para operar sobre
+varias vistas de perfil **seleccionadas a mano**, sin tocar el resto:
+
+1. `AgregarGuitarra_CutData.py` — **agrega** la guitarra `Cut Data_01`.
+2. `ModificarPerfil2_ElevPerfil2.py` — **modifica** el Perfil 2 de una guitarra
+   existente (`COTA TERRENO POR PUNTOS_ELEVPERFIL2_V03`).
+
+---
+
+## 1) Agregar guitarra "Cut Data_01" a varias vistas de perfil
 
 Script para Dynamo (nodo **Python Script**) que agrega una guitarra de tipo
 **Datos de perfil** con estilo **`Cut Data_01`** a varias vistas de perfil
@@ -43,3 +54,34 @@ band_set.SetBottomBandItems(items)      # vuelve a escribir viejas + nueva
   **omite** y queda registrada en el `OUT` (no rompe el resto del proceso).
 - Los intervalos (principal/secundario) y demás formato se heredan del estilo
   `Cut Data_01`.
+
+---
+
+## 2) Cambiar el Perfil 2 de la guitarra "COTA TERRENO POR PUNTOS_ELEVPERFIL2_V03"
+
+Reasigna el **Perfil 2** de esa guitarra (ya existente) de
+`…Vialidad Completa` a `…Proyecto Completo`, en las vistas seleccionadas.
+**No agrega ni borra** guitarras: solo edita la que coincide por estilo.
+
+### Entradas del nodo Python
+
+| Puerto | Tipo   | Valor por defecto                        | Descripción |
+|--------|--------|------------------------------------------|-------------|
+| IN[0]  | string | `COTA TERRENO POR PUNTOS_ELEVPERFIL2_V03`| Estilo de la guitarra a editar |
+| IN[1]  | string | `Proyecto Completo`                      | Nuevo Perfil 2 (busca por "contiene") |
+| IN[2]  | bool   | `False`                                  | Disparador: `True` para ejecutar |
+
+### Cómo se usa
+
+1. Pegá `ModificarPerfil2_ElevPerfil2.py` en un nodo **Python Script**.
+2. Conectá los inputs (o dejá los valores por defecto en IN[0..1]).
+3. Poné IN[2] (RUN) en `True` y **seleccioná en pantalla** las vistas a modificar.
+
+### Detalles
+
+- Busca la guitarra por **nombre de estilo** y, donde la encuentra, le cambia el
+  `Profile2Id`. Recorre guitarras de la parte inferior y superior.
+- El `OUT` informa por vista: `OK` (con cantidad actualizada), `SIN CAMBIOS`
+  (no tenía esa guitarra) u `OMITIDA` (no encontró el perfil destino).
+- El emparejado del perfil destino es por **coincidencia parcial**, así que
+  `Proyecto Completo` engancha `F_Proyecto Completo - Superficie (122)`.
