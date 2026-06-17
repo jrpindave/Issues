@@ -1,119 +1,148 @@
-# -*- coding: utf-8 -*-
 # =====================================================================
-# Cambiar el PERFIL 2 de una guitarra existente (Datos de perfil) en
-# varias vistas de perfil seleccionadas, SIN tocar las demas guitarras.
+# Dynamo (nodo Python, motor IronPython 2.7) para Civil 3D
+# Cambia el PERFIL 2 de la guitarra cuyo estilo es
+# "COTA TERRENO POR PUNTOS_ELEVPERFIL2_V03" en varias vistas de perfil
+# SELECCIONADAS en pantalla, sin agregar ni borrar otras guitarras.
 #
-#   Guitarra (por estilo) : COTA TERRENO POR PUNTOS_ELEVPERFIL2_V03
-#   Perfil 2  ANTES        : (...) Vialidad Completa
-#   Perfil 2  DESPUES      : (...) Proyecto Completo
+#   Perfil 2  ANTES   : (...) Vialidad Completa
+#   Perfil 2  DESPUES : (...) Proyecto Completo
 #
-# Uso en Dynamo (nodo Python Script):
-#   IN[0] = BAND_STYLE_NAME -> "COTA TERRENO POR PUNTOS_ELEVPERFIL2_V03"
-#   IN[1] = NEW_PROF2_NAME  -> "Proyecto Completo"  (busca por "contiene")
-#   IN[2] = RUN             -> True/False (Boolean) para disparar
+# Inputs:
+#   IN[0] = BAND_STYLE_NAME ("COTA TERRENO POR PUNTOS_ELEVPERFIL2_V03")  -> match EXACTO
+#   IN[1] = NEW_PROF2_NAME  ("Proyecto Completo")  -> match por "contiene"
+#   IN[2] = RUN             (Boolean) -> True para ejecutar
 #
-# Al ejecutar, Civil 3D te pide SELECCIONAR en pantalla las vistas de
-# perfil. Solo modifica la guitarra cuyo estilo coincide; el resto queda igual.
+# NOTA: ver AgregarGuitarra_CutData.py sobre por que se usan get_prop/set_prop
+# por reflexion (las propiedades de Civil 3D no se leen/escriben directo).
 # =====================================================================
 
 import clr
+import traceback
+import System
+from System.Reflection import BindingFlags
+
 clr.AddReference('AcMgd')
-clr.AddReference('AcDbMgd')
 clr.AddReference('AcCoreMgd')
+clr.AddReference('AcDbMgd')
+clr.AddReference('AecBaseMgd')
+clr.AddReference('AecPropDataMgd')
 clr.AddReference('AeccDbMgd')
 
-from Autodesk.AutoCAD.ApplicationServices import Application as AcApp
-from Autodesk.AutoCAD.DatabaseServices import OpenMode, ObjectId
+from Autodesk.AutoCAD.ApplicationServices import Application
 from Autodesk.AutoCAD.EditorInput import PromptStatus
+from Autodesk.AutoCAD.DatabaseServices import OpenMode, ObjectId
 from Autodesk.Civil.ApplicationServices import CivilApplication
 from Autodesk.Civil.DatabaseServices import ProfileView
 
-# ----------------------- Parametros de entrada -----------------------
 BAND_STYLE_NAME = IN[0] if len(IN) > 0 and IN[0] else "COTA TERRENO POR PUNTOS_ELEVPERFIL2_V03"
 NEW_PROF2_NAME  = IN[1] if len(IN) > 1 and IN[1] else "Proyecto Completo"
 RUN             = IN[2] if len(IN) > 2 else False
 
-doc = AcApp.DocumentManager.MdiActiveDocument
-ed  = doc.Editor
-db  = doc.Database
-civ = CivilApplication.ActiveDocument
+adoc   = Application.DocumentManager.MdiActiveDocument
+editor = adoc.Editor
+civdoc = CivilApplication.ActiveDocument
+db     = adoc.Database
+log    = []
 
-log = []
+FLAGS = (BindingFlags.Public | BindingFlags.NonPublic |
+         BindingFlags.Instance | BindingFlags.DeclaredOnly)
 
+def get_prop(obj, name):
+    ty = obj.GetType()
+    while ty is not None:
+        pi = ty.GetProperty(name, FLAGS)
+        if pi is not None:
+            g = pi.GetGetMethod(True)
+            if g is not None:
+                try:
+                    return g.Invoke(obj, None)
+                except:
+                    pass
+        ty = ty.BaseType
+    return None
 
-def find_profile_id(tr, alignment_id, target):
-    """ObjectId del perfil cuyo nombre CONTIENE 'target' dentro del alineamiento."""
-    align = tr.GetObject(alignment_id, OpenMode.ForRead)
+def set_prop(obj, name, value):
+    try:
+        setattr(obj, name, value)
+        return True
+    except:
+        pass
+    ty = obj.GetType()
+    while ty is not None:
+        pi = ty.GetProperty(name, FLAGS)
+        if pi is not None:
+            s = pi.GetSetMethod(True)
+            if s is not None:
+                try:
+                    s.Invoke(obj, System.Array[System.Object]([value]))
+                    return True
+                except:
+                    pass
+        ty = ty.BaseType
+    return False
+
+def find_profile_id(t, alignment_id, target):
+    align = t.GetObject(alignment_id, OpenMode.ForRead)
     target = target.strip().lower()
     for pid in align.GetProfileIds():
-        prof = tr.GetObject(pid, OpenMode.ForRead)
-        if target in prof.Name.strip().lower():
+        prof = t.GetObject(pid, OpenMode.ForRead)
+        nm = get_prop(prof, "Name")
+        if nm is not None and target in nm.strip().lower():
             return pid
     return ObjectId.Null
 
-
-def style_name_of(tr, band_item):
-    """Nombre del estilo de una guitarra a partir de su BandStyleId."""
-    try:
-        return tr.GetObject(band_item.BandStyleId, OpenMode.ForRead).Name.strip().lower()
-    except Exception:
+def style_name_of(t, it):
+    sid = get_prop(it, "BandStyleId")
+    if sid is None or sid.IsNull:
         return ""
+    st = t.GetObject(sid, OpenMode.ForRead)
+    nm = get_prop(st, "Name")
+    return nm.strip().lower() if nm else ""
 
-
-def update_collection(tr, items, target_style, new_p2_id):
-    """Recorre una coleccion de guitarras y cambia Perfil2 en las que matchean."""
+def update_collection(t, items, target_style, new_p2_id):
+    target = target_style.strip().lower()
     changed = 0
-    target_style = target_style.strip().lower()
     for it in items:
-        if target_style in style_name_of(tr, it):
-            it.Profile2Id = new_p2_id
+        if style_name_of(t, it) == target:        # match EXACTO
+            set_prop(it, "Profile2Id", new_p2_id)
             changed += 1
     return changed
-
 
 if not RUN:
     OUT = "RUN = False. Pone el booleano en True para ejecutar."
 else:
-    res = ed.GetSelection()
+    res = editor.GetSelection()
     if res.Status != PromptStatus.OK:
         OUT = "Seleccion cancelada o vacia."
     else:
-        with doc.LockDocument():
-            with db.TransactionManager.StartTransaction() as tr:
-                for so in res.Value:
-                    obj = tr.GetObject(so.ObjectId, OpenMode.ForRead)
-                    if not isinstance(obj, ProfileView):
-                        continue
-                    pv = tr.GetObject(so.ObjectId, OpenMode.ForWrite)
-
-                    new_p2 = find_profile_id(tr, pv.AlignmentId, NEW_PROF2_NAME)
-                    if new_p2.IsNull:
-                        log.append("OMITIDA %s (no encontro perfil '%s')"
-                                   % (pv.Name, NEW_PROF2_NAME))
-                        continue
-
-                    band_set = pv.Bands
-                    total = 0
-
-                    # Guitarras de la parte inferior
-                    bottom = band_set.GetBottomBandItems()
-                    n_b = update_collection(tr, bottom, BAND_STYLE_NAME, new_p2)
-                    if n_b:
-                        band_set.SetBottomBandItems(bottom)
-                    total += n_b
-
-                    # Guitarras de la parte superior (por las dudas)
-                    top = band_set.GetTopBandItems()
-                    n_t = update_collection(tr, top, BAND_STYLE_NAME, new_p2)
-                    if n_t:
-                        band_set.SetTopBandItems(top)
-                    total += n_t
-
-                    if total:
-                        log.append("OK %s (%d guitarra/s actualizada/s)" % (pv.Name, total))
-                    else:
-                        log.append("SIN CAMBIOS %s (no tiene la guitarra '%s')"
-                                   % (pv.Name, BAND_STYLE_NAME))
-
-                tr.Commit()
-                OUT = log or ["No se selecciono ninguna vista de perfil valida."]
+        try:
+            with adoc.LockDocument():
+                with db.TransactionManager.StartTransaction() as t:
+                    for so in res.Value:
+                        obj = t.GetObject(so.ObjectId, OpenMode.ForRead)
+                        if not isinstance(obj, ProfileView):
+                            continue
+                        pv = t.GetObject(so.ObjectId, OpenMode.ForWrite)
+                        new_p2 = find_profile_id(t, pv.AlignmentId, NEW_PROF2_NAME)
+                        if new_p2.IsNull:
+                            log.append("OMITIDA %s (no encontro '%s')"
+                                       % (get_prop(pv, "Name"), NEW_PROF2_NAME))
+                            continue
+                        bs = pv.Bands
+                        bottom = bs.GetBottomBandItems()
+                        nb = update_collection(t, bottom, BAND_STYLE_NAME, new_p2)
+                        if nb:
+                            bs.SetBottomBandItems(bottom)
+                        top = bs.GetTopBandItems()
+                        nt = update_collection(t, top, BAND_STYLE_NAME, new_p2)
+                        if nt:
+                            bs.SetTopBandItems(top)
+                        total = nb + nt
+                        if total:
+                            log.append("OK %s (%d guitarra/s)" % (get_prop(pv, "Name"), total))
+                        else:
+                            log.append("SIN CAMBIOS %s" % get_prop(pv, "Name"))
+                    t.Commit()
+                    OUT = log if log else ["No se selecciono ninguna vista valida."]
+        except:
+            OUT = "ERROR REAL:\n" + traceback.format_exc()
