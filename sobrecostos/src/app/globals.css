@@ -1,26 +1,155 @@
 @import "tailwindcss";
 
+/* ==========================================================================
+   GARCÍA CONSTRUCTORA — Design System tokens, mapped into Tailwind v4.
+   Tema claro · papel cálido · azul corporativo #2871B8 + cafés · "pliego técnico".
+   Fuente: Constructora-Garcia/Utilidades · Garcia Constructora Design System.
+   ========================================================================== */
+
+@theme {
+  /* ---- Tipografía (Century Gothic → Jost · IBM Plex Sans · IBM Plex Mono) -- */
+  --font-display: var(--font-jost), "Jost", "Century Gothic", "Futura", system-ui, sans-serif;
+  --font-sans: var(--font-plex-sans), "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-plex-mono), "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* ---- Azul corporativo (primario) — PANTONE 660 C ---- */
+  --color-azul-50: #eef4fb;
+  --color-azul-100: #d6e6f5;
+  --color-azul-200: #aecced;
+  --color-azul-300: #7fb0e2;
+  --color-azul-400: #5191d2;
+  --color-azul-500: #2871b8;
+  --color-azul-600: #21609f;
+  --color-azul-700: #1c4f83;
+  --color-azul-800: #1a4269;
+  --color-azul-900: #15375a;
+
+  /* ---- Café corporativo (neutral cálido / secundario) — PANTONE 411 C ---- */
+  --color-cafe-50: #f6f4f3;
+  --color-cafe-100: #ebe7e6;
+  --color-cafe-200: #d8d1cf;
+  --color-cafe-300: #beb4b1;
+  --color-cafe-400: #968a87;
+  --color-cafe-500: #6f6462;
+  --color-cafe-600: #5b5250;
+  --color-cafe-700: #4f3f3f;
+  --color-cafe-800: #3c3130;
+  --color-cafe-900: #2a2322;
+
+  /* ---- Grises neutros ---- */
+  --color-gris-0: #ffffff;
+  --color-gris-50: #f7f8f9;
+  --color-gris-100: #eef0f2;
+  --color-gris-200: #e1e4e7;
+  --color-gris-300: #cbd0d4;
+  --color-gris-400: #999999;
+  --color-gris-500: #6e7378;
+  --color-gris-600: #4f5458;
+  --color-gris-700: #3a3e41;
+  --color-gris-800: #333333;
+  --color-gris-900: #1d1f21;
+
+  /* ---- Estados semánticos (derivados para software) ---- */
+  --color-success-50: #eaf5ee;
+  --color-success-100: #cce8d6;
+  --color-success-500: #2f8f5b;
+  --color-success-700: #1f6b41;
+
+  --color-warning-50: #fbf3e3;
+  --color-warning-100: #f6e4c2;
+  --color-warning-500: #d4922a;
+  --color-warning-700: #9c6814;
+
+  --color-danger-50: #fbecea;
+  --color-danger-100: #f6d3ce;
+  --color-danger-500: #c0392b;
+  --color-danger-700: #8f261b;
+
+  /* ---- Superficies y líneas (papel cálido + hairlines cálidos) ---- */
+  --color-paper: #f6f4f3;
+  --color-sunken: #ebe7e6;
+  --color-line: #e8e2df;
+  --color-line-strong: #d8d0cd;
+
+  /* ---- Radios tight (lenguaje rectilíneo / pliego técnico) ---- */
+  --radius-ds-sm: 2px;
+  --radius-ds: 3px;
+  --radius-ds-lg: 4px;
+
+  /* ---- Sombras corporativas de baja difusión ---- */
+  --shadow-ds-xs: 0 1px 2px rgba(29, 31, 33, 0.06);
+  --shadow-ds-sm: 0 1px 3px rgba(29, 31, 33, 0.08), 0 1px 2px rgba(29, 31, 33, 0.06);
+  --shadow-ds-md: 0 2px 6px rgba(29, 31, 33, 0.08), 0 4px 12px rgba(29, 31, 33, 0.06);
+}
+
+/* ==========================================================================
+   Alias semánticos (para estilos inline en gráficos SVG / Recharts).
+   ========================================================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --text-strong: var(--color-gris-900);
+  --text-body: var(--color-gris-800);
+  --text-muted: var(--color-gris-500);
+  --text-subtle: var(--color-gris-400);
+  --brand-primary: var(--color-azul-500);
+  --brand-secondary: var(--color-cafe-500);
+  --border-subtle: var(--color-line);
+  --grid-faint: #f0ebe8;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ==========================================================================
+   Base — los tokens hacen el trabajo pesado, esto es mínimo.
+   ========================================================================== */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-paper);
+  color: var(--color-gris-800);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--color-gris-900);
+}
+
+/* Cifras: siempre tabulares y monoespaciadas (montos, m², %, fechas, RUT). */
+.num,
+.tabular,
+[data-num] {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Eyebrow / cabecera corta — versales con tracking amplio (eco del wordmark). */
+.eyebrow {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-azul-500);
+}
+
+a {
+  color: var(--color-azul-600);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+::selection {
+  background: var(--color-azul-200);
+  color: var(--color-gris-900);
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(40, 113, 184, 0.3);
+  border-radius: 2px;
 }

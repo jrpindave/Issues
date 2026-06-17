@@ -21,16 +21,16 @@ export interface ObraBarDatum {
 }
 
 const SERIES = [
-  { key: "presupuesto", name: "Presupuesto", color: "#94a3b8" },
-  { key: "comprado", name: "Comprado", color: "#60a5fa" },
-  { key: "recepcionado", name: "Recepcionado", color: "#f59e0b" },
-  { key: "real_obra", name: "Real obra", color: "#10b981" },
+  { key: "presupuesto", name: "Presupuesto", color: "#beb4b1" },
+  { key: "comprado", name: "Comprado", color: "#7fb0e2" },
+  { key: "recepcionado", name: "Recepcionado", color: "#d4922a" },
+  { key: "real_obra", name: "Real obra", color: "#2871b8" },
 ] as const;
 
 export function ObrasBarChart({ data }: { data: ObraBarDatum[] }) {
   if (data.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-slate-500">
+      <p className="py-12 text-center text-sm text-gris-500">
         Selecciona al menos una obra para comparar.
       </p>
     );
@@ -42,25 +42,30 @@ export function ObrasBarChart({ data }: { data: ObraBarDatum[] }) {
         layout="vertical"
         margin={{ left: 8, right: 24, top: 8, bottom: 8 }}
       >
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#f0ebe8" />
         <XAxis
           type="number"
           tickFormatter={(v) => formatCLPCompact(v as number)}
-          tick={{ fontSize: 11, fill: "#64748b" }}
+          tick={{ fontSize: 10, fill: "#6e7378", fontFamily: "var(--font-mono)" }}
         />
         <YAxis
           type="category"
           dataKey="obra"
           width={72}
-          tick={{ fontSize: 12, fill: "#334155" }}
+          tick={{ fontSize: 11, fill: "#3a3e41", fontFamily: "var(--font-mono)" }}
         />
         <Tooltip
           formatter={(v, name) => [formatCLP(Number(v)), name]}
-          contentStyle={{ fontSize: 12, borderRadius: 8 }}
+          contentStyle={{
+            fontSize: 12,
+            borderRadius: 3,
+            border: "1px solid #e8e2df",
+            fontFamily: "var(--font-mono)",
+          }}
         />
-        <Legend wrapperStyle={{ fontSize: 12 }} />
+        <Legend wrapperStyle={{ fontSize: 11, fontFamily: "var(--font-mono)" }} />
         {SERIES.map((s) => (
-          <Bar key={s.key} dataKey={s.key} name={s.name} fill={s.color} radius={2} />
+          <Bar key={s.key} dataKey={s.key} name={s.name} fill={s.color} radius={1} />
         ))}
       </BarChart>
     </ResponsiveContainer>

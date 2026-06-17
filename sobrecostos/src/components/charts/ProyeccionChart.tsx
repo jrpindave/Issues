@@ -18,7 +18,7 @@ export function ProyeccionChart({
 }) {
   if (data.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-slate-500">
+      <p className="py-12 text-center text-sm text-gris-500">
         Sin proyección para esta selección.
       </p>
     );
@@ -28,31 +28,36 @@ export function ProyeccionChart({
       <AreaChart data={data} margin={{ left: 8, right: 16, top: 8, bottom: 8 }}>
         <defs>
           <linearGradient id="proy" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.35} />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity={0} />
+            <stop offset="0%" stopColor="#2871b8" stopOpacity={0.28} />
+            <stop offset="100%" stopColor="#2871b8" stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#f0ebe8" />
         <XAxis
           dataKey="periodo"
           tickFormatter={(v) => formatMonthYear(v as string)}
-          tick={{ fontSize: 11, fill: "#64748b" }}
+          tick={{ fontSize: 10, fill: "#6e7378", fontFamily: "var(--font-mono)" }}
           minTickGap={16}
         />
         <YAxis
           tickFormatter={(v) => formatCLPCompact(v as number)}
-          tick={{ fontSize: 11, fill: "#64748b" }}
+          tick={{ fontSize: 10, fill: "#6e7378", fontFamily: "var(--font-mono)" }}
           width={64}
         />
         <Tooltip
           labelFormatter={(v) => formatMonthYear(v as string)}
           formatter={(v) => [formatCLP(Number(v)), "Proyectado"]}
-          contentStyle={{ fontSize: 12, borderRadius: 8 }}
+          contentStyle={{
+            fontSize: 12,
+            borderRadius: 3,
+            border: "1px solid #e8e2df",
+            fontFamily: "var(--font-mono)",
+          }}
         />
         <Area
           type="monotone"
           dataKey="monto"
-          stroke="#2563eb"
+          stroke="#21609f"
           strokeWidth={2}
           fill="url(#proy)"
         />

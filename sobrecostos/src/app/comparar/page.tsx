@@ -85,10 +85,11 @@ export default async function CompararPage({
     : null;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-8">
       <header>
-        <h1 className="text-xl font-semibold text-slate-900">Comparar obras</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="eyebrow">02 · Comparador</p>
+        <h1 className="mt-1 text-2xl text-gris-900">Comparar obras</h1>
+        <p className="mt-1.5 max-w-2xl text-sm text-gris-500">
           {ccLabel
             ? `Centro de costo: ${cc} · ${ccLabel}`
             : "Todos los centros de costo. Filtra por uno para comparar el mismo ítem entre obras."}
@@ -115,22 +116,22 @@ export default async function CompararPage({
         <CardHeader>
           <CardTitle>Detalle</CardTitle>
         </CardHeader>
-        <CardContent className="px-0 pb-0">
+        <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-y border-slate-200 text-left text-xs uppercase tracking-wide text-slate-500">
-                  <th className="px-5 py-2 font-medium">Obra</th>
-                  <th className="px-3 py-2 font-medium">Programa</th>
-                  <th className="px-3 py-2 text-right font-medium">
+                <tr className="border-b border-line text-left font-mono text-[10.5px] uppercase tracking-[0.08em] text-gris-500">
+                  <th className="px-5 py-2.5 font-medium">Obra</th>
+                  <th className="px-3 py-2.5 font-medium">Programa</th>
+                  <th className="px-3 py-2.5 text-right font-medium">
                     Presupuesto
                   </th>
-                  <th className="px-3 py-2 text-right font-medium">Comprado</th>
-                  <th className="px-3 py-2 text-right font-medium">
+                  <th className="px-3 py-2.5 text-right font-medium">Comprado</th>
+                  <th className="px-3 py-2.5 text-right font-medium">
                     Recepcionado
                   </th>
-                  <th className="px-3 py-2 text-right font-medium">Real</th>
-                  <th className="px-5 py-2 text-right font-medium">Desvío</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Real</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Desvío</th>
                 </tr>
               </thead>
               <tbody>
@@ -139,24 +140,24 @@ export default async function CompararPage({
                   return (
                     <tr
                       key={r.obra}
-                      className="border-b border-slate-100 last:border-0 hover:bg-slate-50"
+                      className="border-b border-line last:border-0 hover:bg-cafe-50"
                     >
-                      <td className="px-5 py-2.5 font-medium text-slate-900">
+                      <td className="px-5 py-2.5 font-mono font-medium text-gris-900">
                         {r.obra}
                       </td>
                       <td className="px-3 py-2.5">
                         <ProgramaBadge programa={r.programa} />
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular">
+                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
                         {formatCLP(r.presupuesto)}
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular">
+                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
                         {formatCLP(r.comprado)}
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular">
+                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
                         {formatCLP(r.recepcionado)}
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular">
+                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
                         {formatCLP(r.real_obra)}
                       </td>
                       <td className="px-5 py-2.5 text-right">
@@ -169,7 +170,7 @@ export default async function CompararPage({
                   <tr>
                     <td
                       colSpan={7}
-                      className="px-5 py-8 text-center text-slate-500"
+                      className="px-5 py-8 text-center text-gris-500"
                     >
                       Selecciona obras para comparar.
                     </td>

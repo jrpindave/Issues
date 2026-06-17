@@ -63,31 +63,31 @@ export function ObraFilterBar({
   };
 
   return (
-    <div className="flex flex-col gap-4 rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+    <div className="flex flex-col gap-4 rounded-[3px] border border-line bg-white p-4">
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-xs font-medium uppercase tracking-wide text-slate-500">
+        <span className="font-mono text-[10.5px] font-medium uppercase tracking-[0.1em] text-gris-500">
           Programa
         </span>
-        <div className="inline-flex rounded-lg border border-slate-200 p-0.5">
+        <div className="inline-flex rounded-[2px] border border-line p-0.5">
           {PROGRAMAS.map((p) => (
             <button
               key={p.key}
               type="button"
               onClick={() => selectPrograma(p.key)}
-              className="rounded-md px-3 py-1 text-sm font-medium text-slate-600 hover:bg-slate-100"
+              className="rounded-[2px] px-3 py-1 text-sm font-medium text-gris-600 transition-colors hover:bg-cafe-50 hover:text-gris-900"
             >
               {p.label}
             </button>
           ))}
         </div>
 
-        <span className="ml-auto text-xs font-medium uppercase tracking-wide text-slate-500">
+        <span className="ml-auto font-mono text-[10.5px] font-medium uppercase tracking-[0.1em] text-gris-500">
           Centro de costo
         </span>
         <select
           value={cc}
           onChange={(e) => push({ cc: e.target.value })}
-          className="max-w-xs rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700"
+          className="max-w-xs rounded-[2px] border border-line-strong bg-white px-2 py-1.5 text-sm text-gris-700 focus:border-azul-500"
         >
           <option value="">Todos los centros</option>
           {centros.map((c) => (
@@ -107,10 +107,10 @@ export function ObraFilterBar({
               type="button"
               onClick={() => toggleObra(o.obra)}
               className={cn(
-                "rounded-full border px-3 py-1 text-sm transition-colors",
+                "rounded-[2px] border px-3 py-1 font-mono text-[12px] font-medium transition-colors",
                 active
-                  ? "border-slate-900 bg-slate-900 text-white"
-                  : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50",
+                  ? "border-azul-600 bg-azul-500 text-white"
+                  : "border-line-strong bg-white text-gris-600 hover:bg-cafe-50",
               )}
             >
               {o.obra}

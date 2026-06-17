@@ -26,7 +26,7 @@ export function CcSelect({
     <select
       value={cc}
       onChange={(e) => onChange(e.target.value)}
-      className="max-w-md rounded-md border border-slate-300 bg-white px-2 py-1.5 text-sm text-slate-700"
+      className="max-w-md rounded-[2px] border border-line-strong bg-white px-2 py-1.5 text-sm text-gris-700 focus:border-azul-500"
     >
       <option value="">Todos los centros de costo</option>
       {centros.map((c) => (

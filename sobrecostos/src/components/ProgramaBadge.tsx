@@ -1,10 +1,11 @@
 import { cn } from "@/lib/utils";
 import type { Programa } from "@/lib/types";
 
+/** Etiqueta de programa: tag mono cuadrado (no pill), códigos del manual. */
 const styles: Record<string, string> = {
-  DS19: "bg-blue-50 text-blue-700 ring-blue-600/20",
-  DS49: "bg-amber-50 text-amber-700 ring-amber-600/20",
-  "—": "bg-slate-100 text-slate-500 ring-slate-500/20",
+  DS19: "border-azul-200 bg-azul-50 text-azul-700",
+  DS49: "border-cafe-200 bg-cafe-50 text-cafe-700",
+  "—": "border-gris-200 bg-gris-50 text-gris-500",
 };
 
 export function ProgramaBadge({
@@ -18,7 +19,7 @@ export function ProgramaBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset",
+        "inline-flex items-center rounded-[2px] border px-1.5 py-0.5 font-mono text-[11px] font-medium tracking-wide",
         styles[label] ?? styles["—"],
         className,
       )}
