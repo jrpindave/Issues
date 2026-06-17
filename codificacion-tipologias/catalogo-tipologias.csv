@@ -1,0 +1,57 @@
+nombre,superficie_m2,cod_parlante,cod_numerico,cod_correlativo
+Pareada Estándar (A) 2 Pisos,47.34,PA-EST-A-2P,10010120,CG-PAR-001
+Pareada Estándar (B) 2 Pisos,47.34,PA-EST-B-2P,10010220,CG-PAR-002
+Aislada Estándar (A) 2 Pisos,48.12,AI-EST-A-2P,20010120,CG-AIS-001
+Aislada Estándar (B) 2 Pisos,48.12,AI-EST-B-2P,20010220,CG-AIS-002
+Aislada Estándar (L) 2 Pisos,48.12,AI-EST-L-2P,20010320,CG-AIS-003
+Aislada Estándar 2 Pisos + Mansarda,62.2,AI-EST-2PM,20010930,CG-AIS-004
+Pareada Estándar 2 Pisos + Mansarda,60.65,PA-EST-2PM,10010930,CG-PAR-003
+Tren 3 Interior,180.55,TR-TRN3-I,30093100,CG-TRN-001
+Tren 3 Derecho,180.55,TR-TRN3-D,30093200,CG-TRN-002
+Tren 3 Izquierdo,180.55,TR-TRN3-Z,30093300,CG-TRN-003
+Tren 4 Interior,239.75,TR-TRN4-I,30094100,CG-TRN-004
+Tren 4 Derecho,239.75,TR-TRN4-D,30094200,CG-TRN-005
+Tren 4 Izquierdo,239.75,TR-TRN4-Z,30094300,CG-TRN-006
+Aislada Estándar 2 Pisos + Mansarda,62.2,AI-EST-2PM,20010930,CG-AIS-005
+Pareada Estándar 2 Pisos + Mansarda,60.65,PA-EST-2PM,10010930,CG-PAR-004
+Tren Unidad Interior,59.2,TR-TRNU-I,30099100,CG-TRN-007
+Tren Unidad Derecha sin vanos,60.65,TR-TRNU-D-SV,30099202,CG-TRN-008
+Tren Unidad Izquierda sin vanos,60.7,TR-TRNU-Z-SV,30099302,CG-TRN-009
+Tren Unidad Derecha con vanos,60.65,TR-TRNU-D-CV,30099201,CG-TRN-010
+Tren Unidad Izquierda con vanos,60.7,TR-TRNU-Z-CV,30099301,CG-TRN-011
+Pareada Sensorial Mental 2 Pisos,55.53,PA-SEN-M-2P,10020120,CG-PAR-005
+Pareada Sensorial Auditivo 2 Pisos,55.53,PA-SEN-A-2P,10020220,CG-PAR-006
+Pareada Sensorial Visual 2 Pisos,55.53,PA-SEN-V-2P,10020320,CG-PAR-007
+Pareada Sensorial Físico 2 Pisos,55.53,PA-SEN-F-2P,10020420,CG-PAR-008
+Aislada Sensorial Mental 2 Pisos,56.53,AI-SEN-M-2P,20020120,CG-AIS-006
+Aislada Sensorial Auditivo 2 Pisos,56.53,AI-SEN-A-2P,20020220,CG-AIS-007
+Aislada Sensorial Visual 2 Pisos,56.53,AI-SEN-V-2P,20020320,CG-AIS-008
+Aislada Sensorial Físico 2 Pisos,56.53,AI-SEN-F-2P,20020420,CG-AIS-009
+Pareada Adulto Mayor (P) 2 Pisos,48.41,PA-AM-P-2P,10030120,CG-PAR-009
+Pareada Adulto Mayor (L) 2 Pisos,55.57,PA-AM-L-2P,10030220,CG-PAR-010
+Pareada Discapacitado Físico 1 Piso,55.89,PA-DF-1P,10040010,CG-PAR-011
+Aislada Discapacitado Físico 1 Piso,56.44,AI-DF-1P,20040010,CG-AIS-010
+Pareada Sensorial Mental 3D 2 Pisos,57.83,PA-SEN-M3D-2P,10021120,CG-PAR-012
+Pareada Sensorial Auditivo  3D 2 Pisos,57.83,PA-SEN-A3D-2P,10021220,CG-PAR-013
+Pareada Sensorial Visual  3D 2 Pisos,57.83,PA-SEN-V3D-2P,10021320,CG-PAR-014
+Pareada Sensorial Físico  3D 2 Pisos,57.83,PA-SEN-F3D-2P,10021420,CG-PAR-015
+Aislada Sensorial Mental  3D 2 Pisos,58.75,AI-SEN-M3D-2P,20021120,CG-AIS-011
+Aislada Sensorial Auditivo  3D 2 Pisos,58.75,AI-SEN-A3D-2P,20021220,CG-AIS-012
+Aislada Sensorial Visual  3D 2 Pisos,58.75,AI-SEN-V3D-2P,20021320,CG-AIS-013
+Aislada Sensorial Físico  3D 2 Pisos,58.75,AI-SEN-F3D-2P,20021420,CG-AIS-014
+Pareada Estándar (A) 2 Pisos - AMPLIADA,56.61,PA-EST-A-2P-AMP,10010121,CG-PAR-016
+Aislada Estándar (A) 2 Pisos - AMPLIADA,57.57,AI-EST-A-2P-AMP,20010121,CG-AIS-015
+Pareada Estándar (B) 2 Pisos - AMPLIADA,56.85,PA-EST-B-2P-AMP,10010221,CG-PAR-017
+Aislada Estándar (B) 2 Pisos - AMPLIADA,57.43,AI-EST-B-2P-AMP,20010221,CG-AIS-016
+Aislada Estándar (L) 2 Pisos - AMPLIADA,57.42,AI-EST-L-2P,20010320,CG-AIS-017
+Pareada Sensorial Mental 2 Pisos - AMPLIADA,64.96,PA-SEN-M-2P-AMP,10020121,CG-PAR-018
+Pareada Sensorial Auditivo 2 Pisos - AMPLIADA,64.96,PA-SEN-A-2P-AMP,10020221,CG-PAR-019
+Pareada Sensorial Visual 2 Pisos - AMPLIADA,64.96,PA-SEN-V-2P-AMP,10020321,CG-PAR-020
+Pareada Sensorial Físico 2 Pisos - AMPLIADA,64.96,PA-SEN-F-2P-AMP,10020421,CG-PAR-021
+Aislada Sensorial Mental 2 Pisos - AMPLIADA,66.12,AI-SEN-M-2P-AMP,20020121,CG-AIS-018
+Aislada Sensorial Auditivo 2 Pisos - AMPLIADA,66.12,AI-SEN-A-2P-AMP,20020221,CG-AIS-019
+Aislada Sensorial Visual 2 Pisos - AMPLIADA,66.12,AI-SEN-V-2P-AMP,20020321,CG-AIS-020
+Aislada Sensorial Físico 2 Pisos - AMPLIADA,66.12,AI-SEN-F-2P-AMP,20020421,CG-AIS-021
+Pareada Adulto Mayor (P) 2 Pisos - AMPLIADA,58.03,PA-AM-P-2P-AMP,10030121,CG-PAR-022
+Pareada Discapacitado Físico 1 Piso - AMPLIADA,65.26,PA-DF-1P-AMP,10040011,CG-PAR-023
+Aislada Discapacitado Físico 1 Piso - AMPLIADA,65.81,AI-DF-1P-AMP,20040011,CG-AIS-022
