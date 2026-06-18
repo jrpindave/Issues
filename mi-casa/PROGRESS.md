@@ -1,61 +1,64 @@
 # Mi Casa — Planificador 3D (avance)
 
-Visualizador 3D para explorar y amoblar una casa a partir de su IFC. Dos niveles,
-sin cubierta, con biblioteca de muebles paramétricos.
+Visualizador 3D para explorar y amoblar una casa desde su IFC. Dos niveles, sin
+cubierta, con biblioteca de muebles paramétricos, costos y mediciones.
 
-**Producción (auto-actualiza):** https://issues-eight.vercel.app
+- **Producción (auto-actualiza):** https://issues-eight.vercel.app
+- **Versión actual:** v34 (la cabecera muestra `APP_VERSION` para confirmar el build cargado).
+
+## Ramas / deploy
+- **Desarrollo:** `claude/optimistic-darwin-tvgz7t`.
+- **Producción (Vercel):** `claude/github-pages-html-819lvi`. Publicar = fast-forward de
+  desarrollo → producción y push (Vercel reconstruye solo).
+- Build estático: `output: "export"`; `vercel.json` en la raíz compila `mi-casa/` y sirve `mi-casa/out`.
 
 ## Stack
-- **Next.js 16** (App Router) + **TypeScript** + **Tailwind v4**, salida estática (`output: "export"`).
-- **react-three-fiber 9** + **drei 10** + **three 0.176** para el 3D.
-- **web-ifc 0.0.77** (WASM por CDN unpkg) para parsear el IFC en el cliente.
-- **zustand 5** (con `persist` en localStorage) para el estado.
+- **Next.js 16** (App Router) + **TypeScript** + **Tailwind v4**, export estático.
+- **react-three-fiber 9** + **drei 10** + **three 0.176**.
+- **web-ifc 0.0.77** (WASM por CDN unpkg) — parseo del IFC en el cliente.
+- **zustand 5** (`persist` en localStorage) para el estado. Cliente Supabase por `fetch` (anon key).
 
-## Arquitectura
-- `app/` layout + page (renderiza `<Viewer/>`).
+## Archivos clave
+- `app/` layout + page → `<Viewer/>`.
 - `components/`
-  - `Viewer.tsx` — shell (cabecera con versión + fuente IFC, panel, overlay de carga/error).
-  - `Scene3D.tsx` — Canvas r3f, luces, OrbitControls, **PanController** (paneo propio por eje),
-    **TouchController** (gestos móviles), **GizmoViewcube** (cubo de vista), grilla, sombras.
-  - `HouseModel.tsx` — carga el IFC, visibilidad por nivel, **pintura de muros** por habitación.
-  - `FurnitureLayer.tsx` — render de muebles, selección, **TransformControls** (Mover/Rotar/Redimensionar), snap.
-  - `RightPanel.tsx` — Biblioteca + Inspector. `Toolbar.tsx` — controles flotantes.
+  - `Viewer.tsx` — shell (cabecera: versión, fuente IFC, selector de IFC; barra de estado de medición).
+  - `Scene3D.tsx` — Canvas, luces, OrbitControls, **PanController** (paneo por eje), **TouchController**
+    (gestos móviles), **MeasureController** (medición), **GizmoViewcube**, grilla, sombras.
+  - `HouseModel.tsx` — carga IFC (Supabase→fallback local), visibilidad por nivel, **pintura de muros**.
+  - `FurnitureLayer.tsx` — muebles, selección, **TransformControls** (Mover/Rotar/Redimensionar), snap, CTRL.
+  - `RightPanel.tsx` — pestañas Biblioteca / Inspector / **Costos**. `CostPanel.tsx` — tabla + comparador.
+  - `MeasureView.tsx` — cotas + marcador de snap. `IfcSelector.tsx` — selector de IFC. `Toolbar.tsx`.
 - `lib/`
-  - `ifc.ts` — carga/tessela el IFC; detecta pisos, niveles (por contención IFC), planos de muro
-    (snap), habitaciones (IFCSPACE bbox), y marca muros con vertex-colors para pintar.
-  - `store.ts` — estado global + persistencia. `catalog.ts` — catálogo de prismas. `types.ts`.
-- `public/Casa.ifc` — IFC embebido (fallback). `scripts/` — subidor a Supabase.
+  - `ifc.ts` — tessela IFC; pisos/niveles, planos de snap (solo muros), habitaciones (IFCSPACE),
+    vertex-colors en muros para pintar.
+  - `store.ts` — estado + persistencia. `supabase.ts` — IFCs del bucket + tabla `configs`.
+  - `hoverStore.ts` — hover de medición (no persistido). `catalog.ts`, `types.ts`.
+- `public/Casa.ifc` — IFC embebido (fallback). `scripts/` — subidor a Supabase (`.bat` + `.ps1`).
 
-## Carga del IFC
-1. Intenta `https://wetwdokwnstjidoceoib.supabase.co/storage/v1/object/public/ifc/casa.ifc` (Supabase).
-2. Si falla → usa `public/Casa.ifc` (embebido). Indicador en la cabecera: **IFC: Supabase / local**.
-3. Override manual: `localStorage["mi-casa-ifc-url"]`.
-- Subida del IFC: `scripts/SubirCarpeta.bat` + `subir-carpeta.ps1` (elige carpeta → sube el `.ifc`
-  más reciente como `casa.ifc`; bucket público **`ifc`**, key service_role).
-
-## Coordenadas (clave)
-- web-ifc entrega geometría **Y-up**. Se usa `COORDINATE_TO_ORIGIN`.
-- Pisos detectados por histograma de superficies horizontales; niveles por elevación de storeys.
+## Datos en Supabase (proyecto `wetwdokwnstjidoceoib`)
+- **Storage** bucket público `ifc`: objeto `casa.ifc` = última versión; además cada IFC con su nombre
+  (para el selector). Subida: `scripts/SubirCarpeta.bat` + `subir-carpeta.ps1` (key service_role).
+- **Tabla `configs`** (name PK, data jsonb, updated_at) con RLS anon — guarda muebles + precios + colores.
 
 ## Features
-- Niveles (mostrar/ocultar), vista planta/órbita, grilla, cubo de vista.
-- Navegación PC: orbitar = click izq. arrastrado, paneo = botón central (H natural / arriba baja
-  encuadre), zoom = rueda, derecho inerte (anti-Opera). Móvil: tap = seleccionar, 1 dedo = paneo,
-  doble-tap mantenido = orbitar, 2 dedos = zoom/paneo. Viewport bloqueado (sin scroll/zoom de página).
-- Biblioteca de prismas paramétricos (incl. **sofá L** y **cilindro Ø**). Inspector: medidas,
-  posición X/Z, rotación, color, **enlace a producto**, nivel, duplicar/eliminar.
-- Gizmo: **Mover / Rotar (X·Y·Z) / Redimensionar** (crece desde la cara de inicio, no desde el centro).
-- **Snap a muros** del IFC. **Pintar muros** por habitación (vertex-colors, recorte por IFCSPACE).
-- Persistencia local + **Guardar/Cargar** `.json`.
-
-## Deploy / flujo
-- Desarrollo en rama `claude/optimistic-darwin-tvgz7t`.
-- Publicación: se hace fast-forward de esa rama a `claude/github-pages-html-819lvi` (rama de
-  producción de Vercel) → `issues-eight.vercel.app` se reconstruye solo.
-- La cabecera muestra `APP_VERSION` (bump en cada deploy) para confirmar la versión cargada.
+- **Carga IFC:** Supabase (selector de versiones) con fallback embebido; indicador en cabecera.
+  Override `localStorage["mi-casa-ifc-url"]`.
+- **Navegación PC:** orbitar = click izq. arrastrado, paneo = botón central (H natural / arriba baja
+  encuadre), zoom = rueda, derecho inerte. **Móvil:** tap=seleccionar, 1 dedo=paneo, doble-tap mantenido=
+  orbitar, 2 dedos=zoom/paneo. Viewport bloqueado; pinch solo afecta el 3D. **Cubo de vista**.
+- **Muebles:** biblioteca de prismas (incl. sofá L y cilindro Ø). Inspector: medidas, posición X/Z,
+  rotación, color, **enlace + precio**, nivel.
+- **Gizmo:** Mover / Rotar (X·Y·Z) / Redimensionar (crece desde la cara de inicio). **Snap a muros**
+  del IFC; **CTRL** lo desactiva al arrastrar (movimiento libre, sin grilla).
+- **Pintar muros:** por entidad IFC (clic = muro completo). Para per-room real, segmentar muros por cuarto.
+- **Medir:** modo Medir → hover muestra snap (esquina/superficie) + barra de estado; clic fija el punto;
+  cota con distancia. Solo geometría visible.
+- **Costos:** precio por pieza → tabla de la config actual + **comparador de 2 configuraciones** (nube).
+- **Guardado:** 💾 Guardar (quick-save a config activa), Guardar como (con lista), ☁ Cargar,
+  Exportar/Importar JSON. Persistencia local + nube (sincroniza entre dispositivos).
 
 ## Pendientes / ideas
-- Selector de IFC en la app (elegir versión del bucket) — requiere anon key / listado.
-- Guardar configuraciones en **tabla de Supabase** (sincronía multi-dispositivo) — requiere anon key + tabla + RLS.
-- Render "Nivel 1": materiales PBR + HDRI + (opcional) path-tracer para un JPG fotográfico.
-- Pintura solo cara interior estricta (hoy recorta por habitación, ambas caras del muro compartido tintan).
+- **Pintura per-room** exacta: requiere muros segmentados por habitación en el IFC.
+- **Render "Nivel 1"**: materiales PBR + HDRI + (opcional) path-tracer para un JPG fotográfico.
+- Snap de medición a **puntos medios de aristas**; mostrar componentes X/Y/Z.
+- Exportar costos a CSV/Excel; gráfico comparativo.
