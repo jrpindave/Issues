@@ -66,11 +66,29 @@ SUPABASE_ACCESS_TOKEN=... python3 maerecurso_load.py       # carga vía Manageme
 Importada aparte desde `Sobrecostos.xlsx` (ver `README.md`). Itemizado y PRP-C
 por obra, con `cc_codigo` (centro de costo) y `nivel` CC/CTA.
 
+## 4. Desvío COSTO NETO vs última proyección (`sql/03_proyeccion_familia.sql`)
+
+- **"Última proyección" = columna PROY más a la derecha del Excel** = `max(col_idx)`
+  por obra (NO el período más reciente). Ej. LA_365 → `col_idx` 38 = **PROY. MAR-25**,
+  porque hay un segundo bloque ene–mar-25 a la derecha del bloque feb24–dic25.
+- Métrica: `desvío = proy_ultima − costo_neto` (positivo = sobrecosto proyectado).
+- Vistas: `..._v_desvio_proy_linea` (CTA), `..._v_desvio_proy_obra` (con cobertura
+  `lineas_con_proy`/`lineas`), `..._v_desvio_proy_cc`.
+- ⚠️ Obras con una sola columna PROY parcial (LA_179, SP_296, MU_293) dan desvíos
+  grandes y poco representativos → la UI marca "parcial" cuando la cobertura < 100%.
+
+## 5. Gasto por familia (`sql/03_proyeccion_familia.sql`)
+
+- `SobrecostosDboard_obra_un`: mapea las 9 obras → `unidad_negocio_cod` del ERP
+  (la obra se identifica por **unidad de negocio** en compras, no por centro de costo).
+- `SobrecostosDboard_v_gasto_familia`: compras (`v_compras_detalle`) por obra +
+  familia (subclase), clasificadas vía `MaeRecurso_v_dim`.
+
+Ambas alimentan el dashboard: `/` (costo neto vs última proyección por obra) y
+`/obra/[obra]` (desvío por centro de costo + gasto por familia).
+
 ## Pendientes (parking)
 
-- **Métrica COSTO (NETO) vs última proyección**: el dashboard hoy calcula
-  `real_obra − costo_con_iva`, no esto. Las columnas `PROY.*` son re-proyecciones
-  totales (snapshots), no flujo mensual; la tabla duplica CC+CTA (filtrar `nivel='CTA'`).
-  Falta definir "última proyección" (p. ej. LA_365 → `PROY. MAR-25`, col AO).
 - **Subsegmentos / tipologías** (Vivienda 2 pisos · ARQ GF · Mansarda): no están
   en la data; agregar como mapeo igual que `programa`. Falta tipología de `LA_179`.
+- **SP_296 = MU_293**: itemizado idéntico en el Excel origen (copia sin actualizar).

@@ -2,6 +2,9 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 import type {
   CcObra,
   CentroCosto,
+  DesvioProyCc,
+  DesvioProyObra,
+  GastoFamilia,
   ItemizadoLinea,
   ObraResumen,
   ProyeccionMes,
@@ -12,6 +15,9 @@ const T = {
   ccObra: "SobrecostosDboard_v_cc_obra",
   itemizado: "SobrecostosDboard_itemizado",
   proyeccion: "SobrecostosDboard_v_proyeccion_mensual",
+  desvioProyObra: "SobrecostosDboard_v_desvio_proy_obra",
+  desvioProyCc: "SobrecostosDboard_v_desvio_proy_cc",
+  gastoFamilia: "SobrecostosDboard_v_gasto_familia",
 } as const;
 
 /** Resumen por obra (las 9 obras, con su programa DS19/DS49). */
@@ -87,4 +93,40 @@ export async function getProyeccionObra(
   return [...byMonth.entries()]
     .map(([periodo, monto]) => ({ periodo, monto }))
     .sort((a, b) => a.periodo.localeCompare(b.periodo));
+}
+
+/** Desvío COSTO NETO vs última proyección registrada, por obra. */
+export async function getDesvioProyObra(): Promise<DesvioProyObra[]> {
+  const supabase = await getSupabaseServer();
+  const { data, error } = await supabase
+    .from(T.desvioProyObra)
+    .select("*")
+    .order("programa", { ascending: true })
+    .order("obra", { ascending: true });
+  if (error) throw new Error(`getDesvioProyObra: ${error.message}`);
+  return (data ?? []) as DesvioProyObra[];
+}
+
+/** Desvío COSTO NETO vs última proyección por centro de costo de una obra. */
+export async function getDesvioProyCc(obra: string): Promise<DesvioProyCc[]> {
+  const supabase = await getSupabaseServer();
+  const { data, error } = await supabase
+    .from(T.desvioProyCc)
+    .select("*")
+    .eq("obra", obra)
+    .order("cc_codigo", { ascending: true });
+  if (error) throw new Error(`getDesvioProyCc: ${error.message}`);
+  return (data ?? []) as DesvioProyCc[];
+}
+
+/** Gasto de compras por familia de recurso, para una obra. */
+export async function getGastoFamilia(obra: string): Promise<GastoFamilia[]> {
+  const supabase = await getSupabaseServer();
+  const { data, error } = await supabase
+    .from(T.gastoFamilia)
+    .select("*")
+    .eq("obra", obra)
+    .order("gasto", { ascending: false });
+  if (error) throw new Error(`getGastoFamilia: ${error.message}`);
+  return (data ?? []) as GastoFamilia[];
 }

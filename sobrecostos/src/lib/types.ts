@@ -52,3 +52,37 @@ export interface CentroCosto {
   cc_codigo: string;
   cc_nombre: string | null;
 }
+
+/** Desvío COSTO NETO vs última proyección registrada (por obra). */
+export interface DesvioProyObra {
+  obra: string;
+  obra_nombre: string | null;
+  programa: Programa;
+  proy_periodo: string | null;
+  costo_neto: number;
+  proy_ultima: number;
+  desvio: number;
+  lineas: number;
+  lineas_con_proy: number;
+}
+
+/** Desvío COSTO NETO vs última proyección por centro de costo (detalle de obra). */
+export interface DesvioProyCc {
+  obra: string;
+  programa: Programa;
+  cc_codigo: string;
+  cc_nombre: string | null;
+  costo_neto: number;
+  proy_ultima: number;
+  desvio: number;
+}
+
+/** Gasto de compras por familia de recurso (taxonomía del maestro). */
+export interface GastoFamilia {
+  obra: string;
+  clase: string;
+  subclase_cod: string;
+  familia: string;
+  lineas: number;
+  gasto: number;
+}

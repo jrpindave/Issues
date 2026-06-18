@@ -7,11 +7,13 @@ import { CcSelect } from "@/components/filters/CcSelect";
 import { ProyeccionChart } from "@/components/charts/ProyeccionChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import {
+  getDesvioProyCc,
+  getGastoFamilia,
   getItemizadoObra,
   getObraResumen,
   getProyeccionObra,
 } from "@/lib/queries";
-import { formatCLP, formatPct } from "@/lib/format";
+import { formatCLP, formatCLPCompact, formatPct } from "@/lib/format";
 import type { CentroCosto, ItemizadoLinea } from "@/lib/types";
 
 interface Fila {
@@ -46,12 +48,16 @@ export default async function ObraPage({
   const { obra } = await params;
   const { cc = "" } = await searchParams;
 
-  const [resumen, lineas] = await Promise.all([
+  const [resumen, lineas, desvioCc, familias] = await Promise.all([
     getObraResumen(),
     getItemizadoObra(obra),
+    getDesvioProyCc(obra),
+    getGastoFamilia(obra),
   ]);
   const meta = resumen.find((r) => r.obra === obra);
   if (!meta) notFound();
+
+  const gastoTotal = familias.reduce((a, f) => a + f.gasto, 0);
 
   const cta = lineas.filter((l) => l.nivel === "CTA");
 
@@ -231,6 +237,137 @@ export default async function ObraPage({
                       className="px-5 py-8 text-center text-gris-500"
                     >
                       Sin líneas de costo para esta selección.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex-col items-start gap-0.5">
+          <CardTitle>Costo neto vs. proyección por centro de costo</CardTitle>
+          <p className="text-xs text-gris-500">
+            COSTO (NETO) contra la última proyección registrada de la obra.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left font-mono text-[10.5px] uppercase tracking-[0.08em] text-gris-500">
+                  <th className="px-5 py-2.5 font-medium">Centro de costo</th>
+                  <th className="px-3 py-2.5 text-right font-medium">
+                    Costo neto
+                  </th>
+                  <th className="px-3 py-2.5 text-right font-medium">
+                    Proyección
+                  </th>
+                  <th className="px-5 py-2.5 text-right font-medium">Desvío</th>
+                </tr>
+              </thead>
+              <tbody>
+                {desvioCc.map((r) => {
+                  const fr = r.costo_neto ? r.desvio / r.costo_neto : null;
+                  return (
+                    <tr
+                      key={r.cc_codigo}
+                      className="border-b border-line last:border-0 hover:bg-cafe-50"
+                    >
+                      <td className="px-5 py-2.5">
+                        <span className="font-mono text-xs text-gris-500">
+                          {r.cc_codigo}
+                        </span>{" "}
+                        <span className="text-gris-800">{r.cc_nombre}</span>
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
+                        {formatCLP(r.costo_neto)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
+                        {formatCLP(r.proy_ultima)}
+                      </td>
+                      <td className="px-5 py-2.5 text-right">
+                        <DesvioPill monto={r.desvio} fraction={fr} />
+                      </td>
+                    </tr>
+                  );
+                })}
+                {desvioCc.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-5 py-8 text-center text-gris-500"
+                    >
+                      Sin proyección registrada para esta obra.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card accent>
+        <CardHeader className="flex-col items-start gap-0.5">
+          <CardTitle>Gasto por familia de recurso</CardTitle>
+          <p className="text-xs text-gris-500">
+            Compras de la obra clasificadas por familia (taxonomía del maestro de
+            recursos). Total clasificado: {formatCLP(gastoTotal)}.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left font-mono text-[10.5px] uppercase tracking-[0.08em] text-gris-500">
+                  <th className="px-5 py-2.5 font-medium">Familia</th>
+                  <th className="px-3 py-2.5 font-medium">Clase</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Líneas</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Gasto</th>
+                </tr>
+              </thead>
+              <tbody>
+                {familias.map((f) => {
+                  const share = gastoTotal ? f.gasto / gastoTotal : 0;
+                  return (
+                    <tr
+                      key={`${f.subclase_cod}-${f.familia}`}
+                      className="border-b border-line last:border-0 hover:bg-cafe-50"
+                    >
+                      <td className="px-5 py-2.5">
+                        <div className="text-gris-800">{f.familia}</div>
+                        <div className="mt-1 h-1 w-full max-w-[220px] bg-cafe-50">
+                          <div
+                            className="h-1 bg-azul-500"
+                            style={{ width: `${(share * 100).toFixed(1)}%` }}
+                          />
+                        </div>
+                      </td>
+                      <td className="px-3 py-2.5 text-xs text-gris-500">
+                        {f.clase}
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular text-gris-600">
+                        {f.lineas}
+                      </td>
+                      <td className="px-5 py-2.5 text-right tabular text-gris-800">
+                        {formatCLPCompact(f.gasto)}
+                        <span className="ml-2 text-xs text-gris-400">
+                          {(share * 100).toFixed(1)}%
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+                {familias.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-5 py-8 text-center text-gris-500"
+                    >
+                      Sin compras clasificadas para esta obra.
                     </td>
                   </tr>
                 )}
