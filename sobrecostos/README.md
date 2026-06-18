@@ -42,8 +42,11 @@ npm run dev
 
 ## Deploy (Vercel)
 
-- Equipo: **Constructora García**. Root Directory: `apps/sobrecostos-dashboard`.
+- Producción: **https://cgarcia-sobrecostos.vercel.app** · team **Constructora
+  García** · proyecto `cgarcia-sobrecostos` · Root Directory: `sobrecostos/`.
 - Variables: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Pasos detallados, desarrollo local e **inventario para la migración a cuenta
+  corporativa**: ver [`DEPLOY.md`](./DEPLOY.md).
 
 ## Notas
 
