@@ -70,44 +70,32 @@ npm run dev        # o: npm run build && npm run start
 
 ---
 
-## Migración a cuenta corporativa
+## Cuentas, secretos y continuidad
 
-Inventario de **propiedad actual** de cada servicio. Algunas piezas ya están en
-cuentas corporativas; lo que sigue siendo personal está marcado ⚠️.
+Los recursos del proyecto **no dependen de la cuenta de Claude Code**: viven en
+GitHub, Vercel y Supabase. La sesión de Claude no guarda nada propio — todo el
+estado del trabajo está commiteado y pusheado a git. Si se cambia de cuenta de
+Claude (p. ej. a una corporativa), basta con **reconectar** esos servicios.
 
-| Servicio | Owner / cuenta actual | Tipo | Recurso |
-|---|---|---|---|
-| **GitHub** | `jrpindave` ⚠️ | Personal | repo `Issues` (carpeta `sobrecostos/`) |
-| **Vercel** | team `constructora-garcia` · operador `jrodriguez-5110` ⚠️ (token personal) | Team corporativo + operador personal | proyecto `cgarcia-sobrecostos` |
-| **Supabase** | org `Constructora Garcia Ltda` | Corporativo | proyecto `vkmkfmjzgrugrkpxdrbe` |
+### Dónde vive cada cosa
 
-**Cuenta corporativa destino:** _por definir_.
+| Servicio | Owner / cuenta | Recurso |
+|---|---|---|
+| **GitHub** | `jrpindave` | repo `Issues` · branch `claude/blissful-fermat-plnq5x` · carpeta `sobrecostos/` |
+| **Vercel** | team `constructora-garcia` (operador `jrodriguez-5110`) | proyecto `cgarcia-sobrecostos` |
+| **Supabase** | org `Constructora Garcia Ltda` | proyecto `vkmkfmjzgrugrkpxdrbe` |
 
-### Checklist por servicio
+### Continuar en otra cuenta de Claude Code (p. ej. corporativa)
 
-**GitHub — `jrpindave` → org corporativa**
-- [ ] Crear / confirmar la organización corporativa en GitHub.
-- [ ] Transferir el repo `Issues` (Settings → Transfer ownership) **o** mover solo
-      `sobrecostos/` a un repo nuevo de la org.
-- [ ] Actualizar `git remote set-url origin …` en clones y en la integración de
-      Claude Code (el repo en scope de la sesión cambia).
-- [ ] Revisar accesos / equipos / branch protection en la org.
+Migrar la **cuenta de Claude Code** no toca GitHub/Vercel/Supabase; esos
+servicios solo necesitan que la cuenta nueva tenga acceso/credenciales. Para
+retomar el trabajo desde una cuenta nueva:
 
-**Vercel — operador personal → cuenta/servicio corporativo**
-- [ ] El team `constructora-garcia` ya es corporativo; falta dejar de depender del
-      usuario personal `jrodriguez-5110`.
-- [ ] Reconectar el proyecto `cgarcia-sobrecostos` al **nuevo repo** (Git
-      Integration) tras la migración de GitHub.
-- [ ] Emitir un **token de servicio** del team (no personal) y reemplazar
-      `VERCEL_TOKEN` en el entorno de Claude Code / CI.
-- [ ] Confirmar que las env vars de producción siguen presentes tras reconectar.
-
-**Supabase — ya corporativo**
-- [ ] Org `Constructora Garcia Ltda` ya es corporativa: sin migración de owner.
-- [ ] (Recomendado) Activar **RLS** con políticas de solo lectura antes de abrir
-      acceso amplio (hoy RLS está desactivado; ver README).
-- [ ] Si se rota la anon key, actualizar la env var en Vercel.
-
-### Orden sugerido
-1. GitHub (transferencia del repo) → 2. Vercel (reconectar git + token de servicio)
-→ 3. Re-deploy de verificación → 4. Supabase (RLS/keys, opcional).
+- [ ] Dar acceso al repo `jrpindave/Issues` (agregarlo al scope de la sesión) y
+      seleccionar la branch `claude/blissful-fermat-plnq5x`.
+- [ ] Reconectar los conectores MCP en la cuenta nueva: **GitHub**, **Vercel**,
+      **Supabase**.
+- [ ] Configurar el entorno: env var `VERCEL_TOKEN` con acceso al team
+      `constructora-garcia`, y política de red que permita `vercel.com`,
+      `*.vercel.com` y `*.vercel.app`.
+- [ ] Verificar: `cd sobrecostos && npm ci && npm run build`.
