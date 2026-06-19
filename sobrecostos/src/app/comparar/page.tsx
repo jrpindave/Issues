@@ -5,8 +5,8 @@ import { ProgramaBadge } from "@/components/ProgramaBadge";
 import { DesvioPill } from "@/components/DesvioPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { getNetoProyCc, getNetoProyObra } from "@/lib/queries";
-import { incidenciaPorClase } from "@/lib/cta";
-import { formatCLP } from "@/lib/format";
+import { incidenciaPorClase, topFamiliasDeCC } from "@/lib/cta";
+import { formatCLP, formatCLPCompact } from "@/lib/format";
 import type { CentroCosto, Programa } from "@/lib/types";
 
 interface Row {
@@ -127,6 +127,7 @@ export default async function CompararPage({
           proy_ultima: r.proy_ultima,
           desvio: r.desvio,
           incidencia: sumAbs ? Math.abs(r.desvio) / sumAbs : 0,
+          familias: topFamiliasDeCC(obra, r.cc_codigo, 3),
         }));
       return {
         obra,
@@ -334,6 +335,32 @@ export default async function CompararPage({
                         </tr>
                       );
                     })}
+                    {o.top.map((r) =>
+                      r.familias.length ? (
+                        <tr key={`${o.obra}-${r.cc_codigo}-fam`}>
+                          <td colSpan={5} className="px-5 pb-2 pl-12 pt-0">
+                            <span className="font-mono text-[10px] uppercase tracking-wide text-gris-400">
+                              {r.cc_codigo} · top familias:
+                            </span>{" "}
+                            {r.familias.map((f, i) => (
+                              <span key={f.key} className="text-[12px] text-gris-600">
+                                {i > 0 && " · "}
+                                {f.key}{" "}
+                                <span
+                                  className={
+                                    f.desvio > 0
+                                      ? "text-danger-700"
+                                      : "text-success-700"
+                                  }
+                                >
+                                  {formatCLPCompact(f.desvio)}
+                                </span>
+                              </span>
+                            ))}
+                          </td>
+                        </tr>
+                      ) : null,
+                    )}
                   </Fragment>
                 ))}
               </tbody>

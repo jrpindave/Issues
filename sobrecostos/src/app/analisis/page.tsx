@@ -6,8 +6,9 @@ import {
 import { ProgramaBadge } from "@/components/ProgramaBadge";
 import { DesvioPill } from "@/components/DesvioPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { TopCcDrilldown } from "@/components/TopCcDrilldown";
 import { getNetoProyObra } from "@/lib/queries";
-import { familiasDeObra, puntosObraFamilia } from "@/lib/cta";
+import { familiasDeObra, puntosObraFamilia, topCentrosGlobal } from "@/lib/cta";
 import { formatCLP } from "@/lib/format";
 import type { NetoProyObra } from "@/lib/types";
 
@@ -138,6 +139,7 @@ export default async function AnalisisPage({
   const obrasMeta = await getNetoProyObra();
   const ds19 = obrasMeta.find((o) => o.programa === "DS19")?.obra ?? "";
   const ds49 = obrasMeta.find((o) => o.programa === "DS49")?.obra ?? "";
+  const topCentros = topCentrosGlobal(20, 30);
 
   return (
     <div className="space-y-8">
@@ -158,6 +160,23 @@ export default async function AnalisisPage({
         <Panel pre="a" sp={sp} obrasMeta={obrasMeta} defaultObra={ds19} />
         <Panel pre="b" sp={sp} obrasMeta={obrasMeta} defaultObra={ds49} />
       </div>
+
+      <Card>
+        <CardHeader className="flex-col items-start gap-0.5">
+          <CardTitle>
+            Top 20 centros de costo con más desvío — todos los proyectos
+          </CardTitle>
+          <p className="text-xs text-gris-500">
+            Agregado por código de centro de costo sobre todas las obras.
+            Incidencia = participación en el desvío absoluto total. Abrí un
+            centro de costo para ver sus familias con más desvío; al clickear
+            una familia se carga en ambos paneles de arriba.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <TopCcDrilldown centros={topCentros} />
+        </CardContent>
+      </Card>
     </div>
   );
 }

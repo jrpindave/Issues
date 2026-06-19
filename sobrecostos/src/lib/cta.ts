@@ -84,6 +84,106 @@ export function puntosObraFamilia(
   return [...m.values()].sort((a, b) => b.costo_neto - a.costo_neto);
 }
 
+export interface FamiliaAgg {
+  key: string;
+  clase: string;
+  costo_neto: number;
+  proy_ultima: number;
+  desvio: number;
+}
+
+/** Top familias (por |desvío|) de un centro de costo de una obra. */
+export function topFamiliasDeCC(
+  obra: string,
+  cc: string,
+  n: number,
+): FamiliaAgg[] {
+  const m = new Map<string, FamiliaAgg>();
+  for (const r of ROWS) {
+    if (r.obra !== obra || r.cc_codigo !== cc) continue;
+    const acc =
+      m.get(r.subclase_desc) ??
+      m
+        .set(r.subclase_desc, {
+          key: r.subclase_desc,
+          clase: r.clase_desc,
+          costo_neto: 0,
+          proy_ultima: 0,
+          desvio: 0,
+        })
+        .get(r.subclase_desc)!;
+    acc.costo_neto += r.costo_neto;
+    acc.proy_ultima += r.proy_ultima;
+    acc.desvio += r.proy_ultima - r.costo_neto;
+  }
+  return [...m.values()]
+    .sort((a, b) => Math.abs(b.desvio) - Math.abs(a.desvio))
+    .slice(0, n);
+}
+
+export interface CentroGlobal {
+  cc_codigo: string;
+  cc_nombre: string;
+  costo_neto: number;
+  proy_ultima: number;
+  desvio: number;
+  incidencia: number;
+  familias: FamiliaAgg[];
+}
+
+/** Top N centros de costo (código único, agregados sobre TODAS las obras) por
+ *  |desvío|, con incidencia sobre el desvío absoluto total y sus top familias. */
+export function topCentrosGlobal(n: number, nFam = 30): CentroGlobal[] {
+  const cc = new Map<
+    string,
+    { cc_codigo: string; cc_nombre: string; costo_neto: number; proy_ultima: number; desvio: number }
+  >();
+  const fam = new Map<string, Map<string, FamiliaAgg>>();
+  for (const r of ROWS) {
+    const c =
+      cc.get(r.cc_codigo) ??
+      cc
+        .set(r.cc_codigo, {
+          cc_codigo: r.cc_codigo,
+          cc_nombre: r.cc_nombre,
+          costo_neto: 0,
+          proy_ultima: 0,
+          desvio: 0,
+        })
+        .get(r.cc_codigo)!;
+    const d = r.proy_ultima - r.costo_neto;
+    c.costo_neto += r.costo_neto;
+    c.proy_ultima += r.proy_ultima;
+    c.desvio += d;
+    const fm = fam.get(r.cc_codigo) ?? fam.set(r.cc_codigo, new Map()).get(r.cc_codigo)!;
+    const fa =
+      fm.get(r.subclase_desc) ??
+      fm
+        .set(r.subclase_desc, {
+          key: r.subclase_desc,
+          clase: r.clase_desc,
+          costo_neto: 0,
+          proy_ultima: 0,
+          desvio: 0,
+        })
+        .get(r.subclase_desc)!;
+    fa.costo_neto += r.costo_neto;
+    fa.proy_ultima += r.proy_ultima;
+    fa.desvio += d;
+  }
+  const sumAbs = [...cc.values()].reduce((a, c) => a + Math.abs(c.desvio), 0);
+  return [...cc.values()]
+    .sort((a, b) => Math.abs(b.desvio) - Math.abs(a.desvio))
+    .slice(0, n)
+    .map((c) => ({
+      ...c,
+      incidencia: sumAbs ? Math.abs(c.desvio) / sumAbs : 0,
+      familias: [...(fam.get(c.cc_codigo)?.values() ?? [])]
+        .sort((a, b) => Math.abs(b.desvio) - Math.abs(a.desvio))
+        .slice(0, nFam),
+    }));
+}
+
 /** Incidencia por clase sobre un conjunto de obras: desvío y participación en
  *  el desvío absoluto total. Para "qué familia/clase incide más en el desvío". */
 export function incidenciaPorClase(
