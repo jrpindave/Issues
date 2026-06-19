@@ -271,4 +271,46 @@ muestra comprado / presupuesto-con-IVA / real-obra, por pedido del equipo).
 | `sobrecostos/etl/sql/00–05_*.sql` | DDL y vistas aplicadas en Supabase |
 | `sobrecostos/etl/maerecurso_*.py` | ETL del maestro de recursos |
 | `sobrecostos/etl/itemizado_neto_proy.py` | ETL NETO vs última proyección (hojas ITEMIZADO) |
+| `sobrecostos/etl/itemizado_cta.py` | ETL detalle de cuentas/familia (matcheado a MaeRecurso) |
+| `sobrecostos/src/data/cta.json` | Detalle de cuentas pre-matcheado (bundle de la app) |
+
+---
+
+## 10. Estado de iteración — UI de reportes y análisis (handoff)
+
+Convención del tablero: **solo Costo NETO vs. última proyección + desvío**
+(desvío = proyección − neto; positivo = sobrecosto, rojo). Sin comprado/
+presupuesto/real. Pestañas: **Resumen** (`/`), **Reportes** (`/comparar`),
+y la nueva **Análisis** (`/analisis`).
+
+### Hecho y desplegado
+- `/`: sin panel de totales acumulados. Dos gráficos: barras absolutas
+  (neto vs proy) + **Ranking de desvíos** (`DesvioRankingChart`, barras
+  divergentes por desvío % relativo al neto).
+- `/comparar` (Reportes): filtro de subsegmento **respeta el programa**
+  (`ObraFilterBar.visibleSubs`); panel **"Centros de costo que más se desvían
+  — por obra"** (top 5 por |desvío|) con **incidencia = |desvío_cc| /
+  Σ|desvío_cc|**; comparación por subsegmento; detalle por obra.
+
+### Datos
+- CC level: tabla `SobrecostosDboard_neto_proy` + vistas `_v_neto_proy_obra` /
+  `_v_neto_proy_cc` (en Supabase, 275 filas). **Fuente de la mayoría de la UI.**
+- **Detalle de cuentas (familia)**: 2.811 filas parseadas de las hojas
+  ITEMIZADO (filas `outline_level 1`), con NETO y la **misma** última columna
+  PROY que el nivel CC. **Decisión:** se sirve como **JSON bundleado en la app**
+  (`src/data/cta.json`), no por DB — porque el bulk-load a Supabase es caro en
+  contexto y el dato es estático. El match a la taxonomía (`MaeRecurso_subclase`
+  → clase/subclase) se hace al generar el JSON (`etl/itemizado_cta.py`, lee el
+  maestro por la API REST anon de solo lectura). La tabla DB
+  `SobrecostosDboard_neto_proy_cta` quedó creada pero **vacía/sin usar**
+  (se puede dropear).
+
+### Pendiente (en curso)
+1. Panel en Reportes: **qué familia/clase incide más en el desvío** por obra/
+   segmento (desde `cta.json`).
+2. Página **`/analisis`**: dos paneles enfrentados, cada uno con filtro
+   programa+subsegmento → obra y selector de clase/familia; **dispersión**
+   X=neto, Y=proyección, línea y=x; puntos = centros de costo de esa obra para
+   la familia elegida (ej. "SUELDOS DE OBRA"). Incidencia de desvío visible.
+3. Agregar "Análisis" al nav (`SiteHeader`).
 | `sobrecostos/src/` | App Next.js (queries, tipos, páginas, componentes) |

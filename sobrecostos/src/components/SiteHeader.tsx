@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 const NAV = [
   { href: "/", label: "Resumen" },
   { href: "/comparar", label: "Reportes" },
+  { href: "/analisis", label: "Análisis" },
 ];
 
 function isActive(pathname: string, href: string) {

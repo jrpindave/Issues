@@ -5,6 +5,7 @@ import { ProgramaBadge } from "@/components/ProgramaBadge";
 import { DesvioPill } from "@/components/DesvioPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { getNetoProyCc, getNetoProyObra } from "@/lib/queries";
+import { incidenciaPorClase } from "@/lib/cta";
 import { formatCLP } from "@/lib/format";
 import type { CentroCosto, Programa } from "@/lib/types";
 
@@ -135,6 +136,10 @@ export default async function CompararPage({
       };
     })
     .filter((o) => o.top.length > 0);
+
+  // Qué clase/familia de recurso incide más en el desvío (sobre las obras
+  // seleccionadas), matcheada al maestro MaeRecurso.
+  const clases = incidenciaPorClase(selected);
 
   // Agregación por subsegmento (sobre las obras seleccionadas).
   const segRows = [
@@ -331,6 +336,63 @@ export default async function CompararPage({
                     })}
                   </Fragment>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="flex-col items-start gap-0.5">
+          <CardTitle>Familia de recurso que más incide en el desvío</CardTitle>
+          <p className="text-xs text-gris-500">
+            Gasto por clase de recurso (taxonomía del maestro) en las obras
+            seleccionadas. Incidencia = participación en el desvío absoluto total.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left font-mono text-[10.5px] uppercase tracking-[0.08em] text-gris-500">
+                  <th className="px-5 py-2.5 font-medium">Clase de recurso</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Costo neto</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Proyección</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Desvío</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Incidencia</th>
+                </tr>
+              </thead>
+              <tbody>
+                {clases.map((c) => {
+                  const fr = c.costo_neto ? c.desvio / c.costo_neto : null;
+                  return (
+                    <tr
+                      key={c.clase}
+                      className="border-b border-line last:border-0 hover:bg-cafe-50"
+                    >
+                      <td className="px-5 py-2.5 text-gris-800">{c.clase}</td>
+                      <td className="px-3 py-2.5 text-right tabular text-gris-700">
+                        {formatCLP(c.costo_neto)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular text-gris-700">
+                        {formatCLP(c.proy_ultima)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right">
+                        <DesvioPill monto={c.desvio} fraction={fr} />
+                      </td>
+                      <td className="px-5 py-2.5 text-right tabular text-gris-700">
+                        {(c.incidencia * 100).toFixed(0)}%
+                      </td>
+                    </tr>
+                  );
+                })}
+                {clases.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-8 text-center text-gris-500">
+                      Selecciona obras para ver la incidencia por familia.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
