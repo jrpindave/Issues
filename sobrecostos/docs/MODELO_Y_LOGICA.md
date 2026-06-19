@@ -173,6 +173,22 @@ embebida en el `recurso_cod`. Se importó el maestro del ERP como dimensiones:
   (positivo = sobrecosto). Convive con la nueva métrica de proyección; son cosas
   distintas y se muestran por separado.
 
+### 5.6 Subsegmento / tipología (dimensión de comparación)
+- El **subsegmento** (tipología de vivienda) **no viene del ERP ni del Excel**:
+  es un mapeo manual obra→tipología, mismo criterio que `programa` (sección 5 de
+  `etl/MODELO_DATOS.md`). Columna `subsegmento` en `SobrecostosDboard_obra`.
+- Mapeo definido con el equipo:
+
+  | Programa | Subsegmento | Obras |
+  |---|---|---|
+  | DS19 | Vivienda 2 pisos ARQ. GF | CH_228, SP_296 |
+  | DS19 | Vivienda 2 pisos ARQ. BV | LA_179 |
+  | DS49 | Vivienda 2 pisos | HUA_202, NE_149, LA_247, LA_365 |
+  | DS49 | Vivienda 2 pisos_Mansarda | NA_162, MU_293 |
+
+- `LA_179` quedó como **Vivienda 2 pisos ARQ. BV** (cuarta tipología, cerró el
+  pendiente que estaba abierto).
+
 ---
 
 ## 6. Lo que se construyó
@@ -184,12 +200,18 @@ embebida en el `recurso_cod`. Se importó el maestro del ERP como dimensiones:
     última proyección (con cobertura).
   - `SobrecostosDboard_obra_un` + `SobrecostosDboard_v_gasto_familia` — gasto de
     compras por obra y familia, clasificado vía el maestro.
+- `04_subsegmento.sql` — columna `subsegmento` (tipología) en
+  `SobrecostosDboard_obra`, expuesta en `..._v_obra_resumen` y `..._v_cc_obra`.
 
 ### 6.2 Dashboard (Next.js 16, `sobrecostos/src/`)
 - `/` (resumen): nueva sección **"Costo neto vs. última proyección"** por obra,
   con período (ej. MAR-25) y aviso "parcial" según cobertura.
 - `/obra/[obra]` (detalle): **desvío de proyección por centro de costo** y
   **gasto por familia** (con barra de participación).
+- `/comparar` (multiobra): **subsegmento/tipología como dimensión de
+  comparación** — selector de subsegmento, columna en el detalle y tabla
+  **"Comparación por subsegmento"** (agregada por tipología sobre las obras
+  seleccionadas).
 - Datos vía `src/lib/queries.ts` (tipos en `src/lib/types.ts`); RSC-first.
 - Verificado: `tsc --noEmit`, `eslint`, `next build` en verde.
 
@@ -214,9 +236,6 @@ embebida en el `recurso_cod`. Se importó el maestro del ERP como dimensiones:
 
 ## 8. Pendientes (parking)
 
-- **Subsegmentos / tipologías** (Vivienda 2 pisos · ARQ GF · Mansarda): aún no
-  están en la data; agregar como mapeo igual que `programa`. **Falta definir la
-  tipología de `LA_179`.**
 - **Nivel recurso fino**: el dashboard de sobrecostos llega a cuenta contable;
   el análisis por recurso individual usa la capa ERP (`v_compras_detalle`, etc.)
   ya clasificada por `MaeRecurso_v_dim`.
@@ -234,6 +253,6 @@ embebida en el `recurso_cod`. Se importó el maestro del ERP como dimensiones:
 | `sobrecostos/DEPLOY.md` | Runbook de deploy + continuidad de cuenta |
 | `sobrecostos/docs/MODELO_Y_LOGICA.md` | **Este documento** |
 | `sobrecostos/etl/MODELO_DATOS.md` | Referencia técnica del modelo de datos |
-| `sobrecostos/etl/sql/00–03_*.sql` | DDL y vistas aplicadas en Supabase |
+| `sobrecostos/etl/sql/00–04_*.sql` | DDL y vistas aplicadas en Supabase |
 | `sobrecostos/etl/maerecurso_*.py` | ETL del maestro de recursos |
 | `sobrecostos/src/` | App Next.js (queries, tipos, páginas, componentes) |

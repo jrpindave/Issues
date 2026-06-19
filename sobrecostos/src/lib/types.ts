@@ -4,6 +4,7 @@ export interface ObraResumen {
   obra: string;
   nombre: string | null;
   programa: Programa;
+  subsegmento: string | null;
   presupuesto: number;
   comprado: number;
   recepcionado: number;
@@ -16,6 +17,7 @@ export interface CcObra {
   obra: string;
   obra_nombre: string | null;
   programa: Programa;
+  subsegmento: string | null;
   cc_codigo: string;
   cc_nombre: string | null;
   presupuesto: number;

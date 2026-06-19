@@ -11,6 +11,11 @@ interface ObraOpt {
   programa: Programa;
 }
 
+interface SubsegmentoOpt {
+  label: string;
+  obras: string[];
+}
+
 const PROGRAMAS: { key: "todos" | "DS19" | "DS49"; label: string }[] = [
   { key: "todos", label: "Todos" },
   { key: "DS19", label: "DS19" },
@@ -19,11 +24,13 @@ const PROGRAMAS: { key: "todos" | "DS19" | "DS49"; label: string }[] = [
 
 export function ObraFilterBar({
   obras,
+  subsegmentos,
   centros,
   selected,
   cc,
 }: {
   obras: ObraOpt[];
+  subsegmentos: SubsegmentoOpt[];
   centros: CentroCosto[];
   selected: string[];
   cc: string;
@@ -55,6 +62,19 @@ export function ObraFilterBar({
     push({ obras: next });
   };
 
+  const selectSubsegmento = (label: string) => {
+    const seg = subsegmentos.find((s) => s.label === label);
+    push({ obras: seg ? seg.obras : obras.map((o) => o.obra) });
+  };
+
+  // Subsegmento "activo": el que cubre exactamente las obras seleccionadas.
+  const activeSubsegmento =
+    subsegmentos.find(
+      (s) =>
+        s.obras.length === selected.length &&
+        s.obras.every((o) => selected.includes(o)),
+    )?.label ?? "";
+
   const toggleObra = (obra: string) => {
     const set = new Set(selected);
     if (set.has(obra)) set.delete(obra);
@@ -80,6 +100,22 @@ export function ObraFilterBar({
             </button>
           ))}
         </div>
+
+        <span className="font-mono text-[10.5px] font-medium uppercase tracking-[0.1em] text-gris-500">
+          Subsegmento
+        </span>
+        <select
+          value={activeSubsegmento}
+          onChange={(e) => selectSubsegmento(e.target.value)}
+          className="max-w-xs rounded-[2px] border border-line-strong bg-white px-2 py-1.5 text-sm text-gris-700 focus:border-azul-500"
+        >
+          <option value="">Todos los subsegmentos</option>
+          {subsegmentos.map((s) => (
+            <option key={s.label} value={s.label}>
+              {s.label} ({s.obras.length})
+            </option>
+          ))}
+        </select>
 
         <span className="ml-auto font-mono text-[10.5px] font-medium uppercase tracking-[0.1em] text-gris-500">
           Centro de costo

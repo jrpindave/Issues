@@ -21,4 +21,7 @@ Convenciones:
 - **Formato** de montos/porcentajes: `src/lib/format.ts` (CLP, es-CL).
 - Programas: **DS19** = CH_228, SP_296, LA_179 · **DS49** = HUA_202, LA_247,
   LA_365, NA_162, MU_293, NE_149 (columna `programa` en `SobrecostosDboard_obra`).
+- Subsegmento (tipología) = mapeo manual obra→tipología, mismo criterio que
+  `programa` (columna `subsegmento`, ver `etl/sql/04`). Dimensión de comparación
+  en `/comparar`.
 - Desvío = `real_obra − presupuesto`. Verde si < 0 (bajo presupuesto), rojo si > 0.

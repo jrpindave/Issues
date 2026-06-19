@@ -9,6 +9,7 @@ import { formatCLP } from "@/lib/format";
 interface Row {
   obra: string;
   programa: "DS19" | "DS49" | null;
+  subsegmento: string | null;
   presupuesto: number;
   comprado: number;
   recepcionado: number;
@@ -35,6 +36,19 @@ export default async function CompararPage({
     programa: r.programa,
   }));
 
+  // Subsegmentos (tipologías) disponibles, con sus obras — dimensión de comparación.
+  const subsegmentoOpts = [
+    ...resumen
+      .reduce((map, r) => {
+        const label = r.subsegmento ?? "(sin tipología)";
+        (map.get(label) ?? map.set(label, []).get(label)!).push(r.obra);
+        return map;
+      }, new Map<string, string[]>())
+      .entries(),
+  ]
+    .map(([label, obras]) => ({ label, obras }))
+    .sort((a, b) => a.label.localeCompare(b.label, "es"));
+
   // Selección: por defecto todas las obras.
   const selected = sp.obras
     ? sp.obras.split(",").filter(Boolean)
@@ -51,6 +65,7 @@ export default async function CompararPage({
       return {
         obra,
         programa: meta?.programa ?? null,
+        subsegmento: meta?.subsegmento ?? null,
         presupuesto: r?.presupuesto ?? 0,
         comprado: r?.comprado ?? 0,
         recepcionado: r?.recepcionado ?? 0,
@@ -64,6 +79,7 @@ export default async function CompararPage({
       .map((r) => ({
         obra: r.obra,
         programa: r.programa,
+        subsegmento: r.subsegmento,
         presupuesto: r.presupuesto,
         comprado: r.comprado,
         recepcionado: r.recepcionado,
@@ -84,6 +100,42 @@ export default async function CompararPage({
     ? centros.find((c) => c.cc_codigo === cc)?.cc_nombre ?? cc
     : null;
 
+  // Comparación agregada por subsegmento (sobre las obras seleccionadas).
+  const segRows = [
+    ...rows
+      .reduce((map, r) => {
+        const key = r.subsegmento ?? "(sin tipología)";
+        const acc =
+          map.get(key) ??
+          map
+            .set(key, {
+              subsegmento: key,
+              programa: r.programa,
+              obras: 0,
+              presupuesto: 0,
+              comprado: 0,
+              real_obra: 0,
+              sobrecosto: 0,
+            })
+            .get(key)!;
+        acc.obras += 1;
+        acc.presupuesto += r.presupuesto;
+        acc.comprado += r.comprado;
+        acc.real_obra += r.real_obra;
+        acc.sobrecosto += r.sobrecosto;
+        return map;
+      }, new Map<string, {
+        subsegmento: string;
+        programa: "DS19" | "DS49" | null;
+        obras: number;
+        presupuesto: number;
+        comprado: number;
+        real_obra: number;
+        sobrecosto: number;
+      }>())
+      .values(),
+  ].sort((a, b) => a.subsegmento.localeCompare(b.subsegmento, "es"));
+
   return (
     <div className="space-y-8">
       <header>
@@ -98,6 +150,7 @@ export default async function CompararPage({
 
       <ObraFilterBar
         obras={obraOpts}
+        subsegmentos={subsegmentoOpts}
         centros={centros}
         selected={selected}
         cc={cc}
@@ -114,6 +167,74 @@ export default async function CompararPage({
 
       <Card>
         <CardHeader>
+          <CardTitle>Comparación por subsegmento</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left font-mono text-[10.5px] uppercase tracking-[0.08em] text-gris-500">
+                  <th className="px-5 py-2.5 font-medium">Subsegmento</th>
+                  <th className="px-3 py-2.5 font-medium">Programa</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Obras</th>
+                  <th className="px-3 py-2.5 text-right font-medium">
+                    Presupuesto
+                  </th>
+                  <th className="px-3 py-2.5 text-right font-medium">Comprado</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Real</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Desvío</th>
+                </tr>
+              </thead>
+              <tbody>
+                {segRows.map((s) => {
+                  const f = s.presupuesto ? s.sobrecosto / s.presupuesto : null;
+                  return (
+                    <tr
+                      key={s.subsegmento}
+                      className="border-b border-line last:border-0 hover:bg-cafe-50"
+                    >
+                      <td className="px-5 py-2.5 font-medium text-gris-900">
+                        {s.subsegmento}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <ProgramaBadge programa={s.programa} />
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
+                        {s.obras}
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
+                        {formatCLP(s.presupuesto)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
+                        {formatCLP(s.comprado)}
+                      </td>
+                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
+                        {formatCLP(s.real_obra)}
+                      </td>
+                      <td className="px-5 py-2.5 text-right">
+                        <DesvioPill monto={s.sobrecosto} fraction={f} />
+                      </td>
+                    </tr>
+                  );
+                })}
+                {segRows.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-5 py-8 text-center text-gris-500"
+                    >
+                      Selecciona obras para comparar por subsegmento.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Detalle</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -123,6 +244,7 @@ export default async function CompararPage({
                 <tr className="border-b border-line text-left font-mono text-[10.5px] uppercase tracking-[0.08em] text-gris-500">
                   <th className="px-5 py-2.5 font-medium">Obra</th>
                   <th className="px-3 py-2.5 font-medium">Programa</th>
+                  <th className="px-3 py-2.5 font-medium">Subsegmento</th>
                   <th className="px-3 py-2.5 text-right font-medium">
                     Presupuesto
                   </th>
@@ -148,6 +270,9 @@ export default async function CompararPage({
                       <td className="px-3 py-2.5">
                         <ProgramaBadge programa={r.programa} />
                       </td>
+                      <td className="px-3 py-2.5 text-gris-700">
+                        {r.subsegmento ?? "—"}
+                      </td>
                       <td className="px-3 py-2.5 text-right tabular text-gris-800">
                         {formatCLP(r.presupuesto)}
                       </td>
@@ -169,7 +294,7 @@ export default async function CompararPage({
                 {rows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-5 py-8 text-center text-gris-500"
                     >
                       Selecciona obras para comparar.

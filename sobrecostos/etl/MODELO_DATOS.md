@@ -87,8 +87,20 @@ por obra, con `cc_codigo` (centro de costo) y `nivel` CC/CTA.
 Ambas alimentan el dashboard: `/` (costo neto vs última proyección por obra) y
 `/obra/[obra]` (desvío por centro de costo + gasto por familia).
 
+## 6. Subsegmento / tipología (`sql/04_subsegmento.sql`)
+
+El **subsegmento** (tipología de vivienda) no viene del ERP ni del Excel: es un
+mapeo manual obra→tipología, mismo criterio que `programa` (sql/01). Columna
+`subsegmento` en `SobrecostosDboard_obra`, expuesta en `..._v_obra_resumen` y
+`..._v_cc_obra`. Alimenta `/comparar` como dimensión de comparación.
+
+| Programa | Subsegmento | Obras |
+|---|---|---|
+| DS19 | Vivienda 2 pisos ARQ. GF | CH_228, SP_296 |
+| DS19 | Vivienda 2 pisos ARQ. BV | LA_179 |
+| DS49 | Vivienda 2 pisos | HUA_202, NE_149, LA_247, LA_365 |
+| DS49 | Vivienda 2 pisos_Mansarda | NA_162, MU_293 |
+
 ## Pendientes (parking)
 
-- **Subsegmentos / tipologías** (Vivienda 2 pisos · ARQ GF · Mansarda): no están
-  en la data; agregar como mapeo igual que `programa`. Falta tipología de `LA_179`.
 - **SP_296 = MU_293**: itemizado idéntico en el Excel origen (copia sin actualizar).

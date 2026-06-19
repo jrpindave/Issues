@@ -20,11 +20,12 @@
 - UI alineada al **Design System García**: tema claro, papel cálido, azul `#2871B8`
   + cafés, tipografías Jost / IBM Plex, AppShell solo topbar (aún **Prototipo**).
 - Rutas: `/` (resumen + DS19/DS49 + dispersión de CC + **costo neto vs última
-  proyección**), `/comparar` (multiobra), `/obra/[obra]` (detalle + **desvío de
-  proyección por CC** + **gasto por familia**).
+  proyección**), `/comparar` (multiobra + **comparación por subsegmento/tipología**),
+  `/obra/[obra]` (detalle + **desvío de proyección por CC** + **gasto por familia**).
 - Datos en Supabase (ver `etl/MODELO_DATOS.md`): taxonomía de recursos
   `MaeRecurso_*` (`sql/02`), vistas de desvío de proyección y gasto por familia
-  (`sql/03`). Migraciones ya aplicadas en el proyecto.
+  (`sql/03`), subsegmento/tipología por obra (`sql/04`). Migraciones ya aplicadas
+  en el proyecto.
 - `next build` + typecheck + lint en verde; verificado en local con datos reales.
 
 ## Variables de entorno (producción y local)
