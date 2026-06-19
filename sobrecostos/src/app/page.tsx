@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { KpiCard } from "@/components/KpiCard";
 import { ProgramaBadge } from "@/components/ProgramaBadge";
 import { DesvioPill } from "@/components/DesvioPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ObrasBarChart, type ObraBarDatum } from "@/components/charts/ObrasBarChart";
 import { getNetoProyObra } from "@/lib/queries";
-import { formatCLP, formatPct } from "@/lib/format";
+import { formatCLP } from "@/lib/format";
 import type { NetoProyObra, Programa } from "@/lib/types";
 
 function totals(rows: NetoProyObra[]) {
@@ -58,8 +57,6 @@ function ProgramaCard({
 
 export default async function ResumenPage() {
   const rows = await getNetoProyObra();
-  const t = totals(rows);
-  const frac = t.costo_neto ? t.desvio / t.costo_neto : null;
   const ds19 = rows.filter((r) => r.programa === "DS19");
   const ds49 = rows.filter((r) => r.programa === "DS49");
 
@@ -82,20 +79,6 @@ export default async function ResumenPage() {
           sobrecosto proyectado, en rojo).
         </p>
       </header>
-
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <KpiCard label="Costo neto total" value={formatCLP(t.costo_neto)} />
-        <KpiCard
-          label="Última proyección total"
-          value={formatCLP(t.proy_ultima)}
-        />
-        <KpiCard
-          label="Desvío"
-          value={formatCLP(t.desvio)}
-          hint={frac != null ? formatPct(frac) + " vs. costo neto" : undefined}
-          tone={t.desvio > 0 ? "negative" : "positive"}
-        />
-      </section>
 
       <section className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <ProgramaCard programa="DS19" rows={ds19} />

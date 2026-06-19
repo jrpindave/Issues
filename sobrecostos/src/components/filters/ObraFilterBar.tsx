@@ -67,6 +67,12 @@ export function ObraFilterBar({
     push({ obras: seg ? seg.obras : obras.map((o) => o.obra) });
   };
 
+  // Subsegmentos visibles según la selección actual: solo los que tienen todas
+  // sus obras dentro de lo seleccionado (al elegir DS19 quedan solo los de DS19).
+  const visibleSubs = subsegmentos.filter((s) =>
+    s.obras.every((o) => selected.includes(o)),
+  );
+
   // Subsegmento "activo": el que cubre exactamente las obras seleccionadas.
   const activeSubsegmento =
     subsegmentos.find(
@@ -110,7 +116,7 @@ export function ObraFilterBar({
           className="max-w-xs rounded-[2px] border border-line-strong bg-white px-2 py-1.5 text-sm text-gris-700 focus:border-azul-500"
         >
           <option value="">Todos los subsegmentos</option>
-          {subsegmentos.map((s) => (
+          {visibleSubs.map((s) => (
             <option key={s.label} value={s.label}>
               {s.label} ({s.obras.length})
             </option>
