@@ -48,6 +48,15 @@ npm run dev
 - Pasos detallados, desarrollo local e **inventario para la migración a cuenta
   corporativa**: ver [`DEPLOY.md`](./DEPLOY.md).
 
+## Documentación
+
+- [`docs/MODELO_Y_LOGICA.md`](./docs/MODELO_Y_LOGICA.md) — documento integral:
+  modelo de negocio, datos en Supabase, taxonomía de recursos, lo solicitado,
+  lógicas/decisiones y avances.
+- [`etl/MODELO_DATOS.md`](./etl/MODELO_DATOS.md) — referencia técnica del modelo
+  de datos (espejo ERP, taxonomía `MaeRecurso_*`, vistas).
+- [`DEPLOY.md`](./DEPLOY.md) — runbook de deploy y continuidad de cuenta.
+
 ## Notas
 
 - ⚠️ Las tablas tienen **RLS desactivado**; el dashboard usa la anon key en modo
