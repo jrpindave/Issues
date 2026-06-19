@@ -3,6 +3,10 @@ import { ProgramaBadge } from "@/components/ProgramaBadge";
 import { DesvioPill } from "@/components/DesvioPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { ObrasBarChart, type ObraBarDatum } from "@/components/charts/ObrasBarChart";
+import {
+  DesvioRankingChart,
+  type RankingDatum,
+} from "@/components/charts/DesvioRankingChart";
 import { getNetoProyObra } from "@/lib/queries";
 import { formatCLP } from "@/lib/format";
 import type { NetoProyObra, Programa } from "@/lib/types";
@@ -66,6 +70,11 @@ export default async function ResumenPage() {
     proy_ultima: r.proy_ultima,
   }));
 
+  const ranking: RankingDatum[] = rows.map((r) => ({
+    obra: r.obra,
+    pct: r.costo_neto ? r.desvio / r.costo_neto : 0,
+  }));
+
   return (
     <div className="space-y-8">
       <header>
@@ -85,14 +94,30 @@ export default async function ResumenPage() {
         <ProgramaCard programa="DS49" rows={ds49} />
       </section>
 
-      <Card accent>
-        <CardHeader>
-          <CardTitle>Costo neto vs. proyección por obra</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ObrasBarChart data={chartData} />
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <Card accent>
+          <CardHeader className="flex-col items-start gap-0.5">
+            <CardTitle>Costo neto vs. proyección por obra</CardTitle>
+            <p className="text-xs text-gris-500">Magnitudes absolutas (CLP).</p>
+          </CardHeader>
+          <CardContent>
+            <ObrasBarChart data={chartData} />
+          </CardContent>
+        </Card>
+
+        <Card accent>
+          <CardHeader className="flex-col items-start gap-0.5">
+            <CardTitle>Ranking de desvíos</CardTitle>
+            <p className="text-xs text-gris-500">
+              Desvío relativo a su costo neto. Rojo = sobrecosto proyectado;
+              verde = bajo el neto.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <DesvioRankingChart data={ranking} />
+          </CardContent>
+        </Card>
+      </div>
 
       <Card>
         <CardHeader>

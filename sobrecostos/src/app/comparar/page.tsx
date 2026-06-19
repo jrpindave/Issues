@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { ObraFilterBar } from "@/components/filters/ObraFilterBar";
 import { ObrasBarChart, type ObraBarDatum } from "@/components/charts/ObrasBarChart";
 import { ProgramaBadge } from "@/components/ProgramaBadge";
@@ -107,6 +108,33 @@ export default async function CompararPage({
   const ccLabel = cc
     ? centros.find((c) => c.cc_codigo === cc)?.cc_nombre ?? cc
     : null;
+
+  // Ranking de centros de costo que más se desvían EN CADA OBRA, con incidencia
+  // de desvío = |desvío_cc| / Σ|desvío_cc| de la obra. Top 5 por obra.
+  const ccPorObra = selected
+    .map((obra) => {
+      const meta = resumen.find((r) => r.obra === obra);
+      const filas = ccAll.filter((r) => r.obra === obra);
+      const sumAbs = filas.reduce((a, r) => a + Math.abs(r.desvio), 0);
+      const top = [...filas]
+        .sort((a, b) => Math.abs(b.desvio) - Math.abs(a.desvio))
+        .slice(0, 5)
+        .map((r) => ({
+          cc_codigo: r.cc_codigo,
+          cc_nombre: r.cc_nombre,
+          costo_neto: r.costo_neto,
+          proy_ultima: r.proy_ultima,
+          desvio: r.desvio,
+          incidencia: sumAbs ? Math.abs(r.desvio) / sumAbs : 0,
+        }));
+      return {
+        obra,
+        programa: meta?.programa ?? null,
+        subsegmento: meta?.subsegmento ?? null,
+        top,
+      };
+    })
+    .filter((o) => o.top.length > 0);
 
   // Agregación por subsegmento (sobre las obras seleccionadas).
   const segRows = [
@@ -230,6 +258,79 @@ export default async function CompararPage({
                     </td>
                   </tr>
                 )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card accent>
+        <CardHeader className="flex-col items-start gap-0.5">
+          <CardTitle>Centros de costo que más se desvían — por obra</CardTitle>
+          <p className="text-xs text-gris-500">
+            Top 5 centros de costo por magnitud de desvío en cada obra.
+            Incidencia = participación de ese CC en el desvío total de la obra.
+          </p>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-line text-left font-mono text-[10.5px] uppercase tracking-[0.08em] text-gris-500">
+                  <th className="px-5 py-2.5 font-medium">Obra / Centro de costo</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Costo neto</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Proyección</th>
+                  <th className="px-3 py-2.5 text-right font-medium">Desvío</th>
+                  <th className="px-5 py-2.5 text-right font-medium">Incidencia</th>
+                </tr>
+              </thead>
+              <tbody>
+                {ccPorObra.map((o) => (
+                  <Fragment key={o.obra}>
+                    <tr className="border-b border-line bg-cafe-50/60">
+                      <td className="px-5 py-2 font-mono text-[12px] font-semibold text-gris-900">
+                        {o.obra}
+                        <span className="ml-2 align-middle">
+                          <ProgramaBadge programa={o.programa} />
+                        </span>
+                        {o.subsegmento && (
+                          <span className="ml-2 text-[11px] font-normal text-gris-500">
+                            {o.subsegmento}
+                          </span>
+                        )}
+                      </td>
+                      <td colSpan={4} />
+                    </tr>
+                    {o.top.map((r) => {
+                      const fr = r.costo_neto ? r.desvio / r.costo_neto : null;
+                      return (
+                        <tr
+                          key={`${o.obra}-${r.cc_codigo}`}
+                          className="border-b border-line last:border-0 hover:bg-cafe-50"
+                        >
+                          <td className="px-5 py-2 pl-8">
+                            <span className="font-mono text-xs text-gris-500">
+                              {r.cc_codigo}
+                            </span>{" "}
+                            <span className="text-gris-800">{r.cc_nombre}</span>
+                          </td>
+                          <td className="px-3 py-2 text-right tabular text-gris-700">
+                            {formatCLP(r.costo_neto)}
+                          </td>
+                          <td className="px-3 py-2 text-right tabular text-gris-700">
+                            {formatCLP(r.proy_ultima)}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <DesvioPill monto={r.desvio} fraction={fr} />
+                          </td>
+                          <td className="px-5 py-2 text-right tabular text-gris-700">
+                            {(r.incidencia * 100).toFixed(0)}%
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </Fragment>
+                ))}
               </tbody>
             </table>
           </div>
