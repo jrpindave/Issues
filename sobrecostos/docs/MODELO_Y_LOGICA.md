@@ -305,12 +305,18 @@ y la nueva **Análisis** (`/analisis`).
   `SobrecostosDboard_neto_proy_cta` quedó creada pero **vacía/sin usar**
   (se puede dropear).
 
-### Pendiente (en curso)
-1. Panel en Reportes: **qué familia/clase incide más en el desvío** por obra/
-   segmento (desde `cta.json`).
-2. Página **`/analisis`**: dos paneles enfrentados, cada uno con filtro
-   programa+subsegmento → obra y selector de clase/familia; **dispersión**
-   X=neto, Y=proyección, línea y=x; puntos = centros de costo de esa obra para
-   la familia elegida (ej. "SUELDOS DE OBRA"). Incidencia de desvío visible.
-3. Agregar "Análisis" al nav (`SiteHeader`).
+### Hecho y desplegado (cont.)
+- Reportes: panel **"Familia de recurso que más incide en el desvío"**
+  (`incidenciaPorClase`, por clase del maestro, sobre las obras seleccionadas).
+- Pestaña **`/analisis`** (en nav): dos paneles enfrentados, cada uno con
+  filtro programa+subsegmento → obra + selector de familia/clase; **dispersión**
+  X=neto, Y=proyección, línea y=x (`ScatterNetoProy`); puntos = centros de costo
+  para la familia elegida (default **SUELDOS DE OBRA**), con incidencia de la
+  familia en el desvío de la obra. Estado en URL con prefijo a/b.
+- Helpers de detalle: `src/lib/cta.ts` (lee `src/data/cta.json`).
+
+### Pendientes / ideas futuras
+- Subir cobertura del match de familias (hoy 97,3%; 8 familias sin match quedan
+  como "SIN CLASIFICAR" conservando su texto).
+- Posible: incidencia de desvío también a nivel subclase (hoy clase) en Reportes.
 | `sobrecostos/src/` | App Next.js (queries, tipos, páginas, componentes) |
