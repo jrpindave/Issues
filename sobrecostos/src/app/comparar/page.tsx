@@ -310,65 +310,62 @@ export default async function CompararPage({
                     {o.top.map((r) => {
                       const fr = r.costo_neto ? r.desvio / r.costo_neto : null;
                       return (
-                        <tr
-                          key={`${o.obra}-${r.cc_codigo}`}
-                          className="border-b border-line last:border-0 hover:bg-cafe-50"
-                        >
-                          <td className="px-5 py-2 pl-8">
-                            <span className="font-mono text-xs text-gris-500">
-                              {r.cc_codigo}
-                            </span>{" "}
-                            <span className="text-gris-800">{r.cc_nombre}</span>
-                          </td>
-                          <td className="px-3 py-2 text-right tabular text-gris-700">
-                            {formatCLP(r.costo_neto)}
-                          </td>
-                          <td className="px-3 py-2 text-right tabular text-gris-700">
-                            {formatCLP(r.proy_ultima)}
-                          </td>
-                          <td className="px-3 py-2 text-right">
-                            <DesvioPill monto={r.desvio} fraction={fr} />
-                          </td>
-                          <td className="px-5 py-2 text-right tabular text-gris-700">
-                            {(r.incidencia * 100).toFixed(0)}%
-                          </td>
-                        </tr>
+                        <Fragment key={`${o.obra}-${r.cc_codigo}`}>
+                          <tr className="border-b border-line hover:bg-cafe-50">
+                            <td className="px-5 py-2 pl-8">
+                              <span className="font-mono text-xs text-gris-500">
+                                {r.cc_codigo}
+                              </span>{" "}
+                              <span className="text-gris-800">{r.cc_nombre}</span>
+                            </td>
+                            <td className="px-3 py-2 text-right tabular text-gris-700">
+                              {formatCLP(r.costo_neto)}
+                            </td>
+                            <td className="px-3 py-2 text-right tabular text-gris-700">
+                              {formatCLP(r.proy_ultima)}
+                            </td>
+                            <td className="px-3 py-2 text-right">
+                              <DesvioPill monto={r.desvio} fraction={fr} />
+                            </td>
+                            <td className="px-5 py-2 text-right tabular text-gris-700">
+                              {(r.incidencia * 100).toFixed(0)}%
+                            </td>
+                          </tr>
+                          {r.familias.length ? (
+                            <tr className="border-b border-line">
+                              <td colSpan={5} className="px-5 pb-1 pl-12 pt-0">
+                                <details name="ccfam" className="group">
+                                  <summary className="cursor-pointer list-none font-mono text-[10.5px] uppercase tracking-wide text-azul-600 hover:underline">
+                                    <span className="group-open:hidden">▸ </span>
+                                    <span className="hidden group-open:inline">▾ </span>
+                                    {r.cc_codigo} · top familias
+                                  </summary>
+                                  <ul className="mt-1 divide-y divide-line border border-line bg-white">
+                                    {r.familias.map((f) => (
+                                      <li
+                                        key={f.key}
+                                        className="flex items-center gap-3 px-3 py-1.5 text-[12.5px] text-gris-700"
+                                      >
+                                        <span
+                                          aria-hidden
+                                          className={`h-1.5 w-1.5 shrink-0 ${f.desvio > 0 ? "bg-danger-500" : "bg-success-500"}`}
+                                        />
+                                        <span className="flex-1 truncate">{f.key}</span>
+                                        <span
+                                          className={`tabular ${f.desvio > 0 ? "text-danger-700" : "text-success-700"}`}
+                                        >
+                                          {formatCLPCompact(f.desvio)}
+                                        </span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </details>
+                              </td>
+                            </tr>
+                          ) : null}
+                        </Fragment>
                       );
                     })}
-                    {o.top.map((r) =>
-                      r.familias.length ? (
-                        <tr key={`${o.obra}-${r.cc_codigo}-fam`}>
-                          <td colSpan={5} className="px-5 pb-1 pl-12 pt-0">
-                            <details className="group">
-                              <summary className="cursor-pointer list-none font-mono text-[10.5px] uppercase tracking-wide text-azul-600 hover:underline">
-                                <span className="group-open:hidden">▸ </span>
-                                <span className="hidden group-open:inline">▾ </span>
-                                {r.cc_codigo} · top familias
-                              </summary>
-                              <ul className="mt-1 divide-y divide-line border border-line bg-white">
-                                {r.familias.map((f) => (
-                                  <li
-                                    key={f.key}
-                                    className="flex items-center gap-3 px-3 py-1.5 text-[12.5px] text-gris-700"
-                                  >
-                                    <span
-                                      aria-hidden
-                                      className={`h-1.5 w-1.5 shrink-0 ${f.desvio > 0 ? "bg-danger-500" : "bg-success-500"}`}
-                                    />
-                                    <span className="flex-1 truncate">{f.key}</span>
-                                    <span
-                                      className={`tabular ${f.desvio > 0 ? "text-danger-700" : "text-success-700"}`}
-                                    >
-                                      {formatCLPCompact(f.desvio)}
-                                    </span>
-                                  </li>
-                                ))}
-                              </ul>
-                            </details>
-                          </td>
-                        </tr>
-                      ) : null,
-                    )}
                   </Fragment>
                 ))}
               </tbody>
