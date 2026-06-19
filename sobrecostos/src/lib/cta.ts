@@ -90,6 +90,8 @@ export interface FamiliaAgg {
   costo_neto: number;
   proy_ultima: number;
   desvio: number;
+  /** participación en el desvío absoluto del centro de costo (0–1) */
+  incidencia?: number;
 }
 
 /** Top familias (por |desvío|) de un centro de costo de una obra. */
@@ -175,13 +177,18 @@ export function topCentrosGlobal(n: number, nFam = 30): CentroGlobal[] {
   return [...cc.values()]
     .sort((a, b) => Math.abs(b.desvio) - Math.abs(a.desvio))
     .slice(0, n)
-    .map((c) => ({
-      ...c,
-      incidencia: sumAbs ? Math.abs(c.desvio) / sumAbs : 0,
-      familias: [...(fam.get(c.cc_codigo)?.values() ?? [])]
-        .sort((a, b) => Math.abs(b.desvio) - Math.abs(a.desvio))
-        .slice(0, nFam),
-    }));
+    .map((c) => {
+      const fams = [...(fam.get(c.cc_codigo)?.values() ?? [])];
+      const famAbs = fams.reduce((a, f) => a + Math.abs(f.desvio), 0);
+      for (const f of fams) f.incidencia = famAbs ? Math.abs(f.desvio) / famAbs : 0;
+      return {
+        ...c,
+        incidencia: sumAbs ? Math.abs(c.desvio) / sumAbs : 0,
+        familias: fams
+          .sort((a, b) => Math.abs(b.desvio) - Math.abs(a.desvio))
+          .slice(0, nFam),
+      };
+    });
 }
 
 /** Incidencia por clase sobre un conjunto de obras: desvío y participación en

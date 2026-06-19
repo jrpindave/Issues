@@ -127,7 +127,7 @@ export default async function CompararPage({
           proy_ultima: r.proy_ultima,
           desvio: r.desvio,
           incidencia: sumAbs ? Math.abs(r.desvio) / sumAbs : 0,
-          familias: topFamiliasDeCC(obra, r.cc_codigo, 3),
+          familias: topFamiliasDeCC(obra, r.cc_codigo, 5),
         }));
       return {
         obra,
@@ -338,25 +338,33 @@ export default async function CompararPage({
                     {o.top.map((r) =>
                       r.familias.length ? (
                         <tr key={`${o.obra}-${r.cc_codigo}-fam`}>
-                          <td colSpan={5} className="px-5 pb-2 pl-12 pt-0">
-                            <span className="font-mono text-[10px] uppercase tracking-wide text-gris-400">
-                              {r.cc_codigo} · top familias:
-                            </span>{" "}
-                            {r.familias.map((f, i) => (
-                              <span key={f.key} className="text-[12px] text-gris-600">
-                                {i > 0 && " · "}
-                                {f.key}{" "}
-                                <span
-                                  className={
-                                    f.desvio > 0
-                                      ? "text-danger-700"
-                                      : "text-success-700"
-                                  }
-                                >
-                                  {formatCLPCompact(f.desvio)}
-                                </span>
-                              </span>
-                            ))}
+                          <td colSpan={5} className="px-5 pb-1 pl-12 pt-0">
+                            <details className="group">
+                              <summary className="cursor-pointer list-none font-mono text-[10.5px] uppercase tracking-wide text-azul-600 hover:underline">
+                                <span className="group-open:hidden">▸ </span>
+                                <span className="hidden group-open:inline">▾ </span>
+                                {r.cc_codigo} · top familias
+                              </summary>
+                              <ul className="mt-1 divide-y divide-line border border-line bg-white">
+                                {r.familias.map((f) => (
+                                  <li
+                                    key={f.key}
+                                    className="flex items-center gap-3 px-3 py-1.5 text-[12.5px] text-gris-700"
+                                  >
+                                    <span
+                                      aria-hidden
+                                      className={`h-1.5 w-1.5 shrink-0 ${f.desvio > 0 ? "bg-danger-500" : "bg-success-500"}`}
+                                    />
+                                    <span className="flex-1 truncate">{f.key}</span>
+                                    <span
+                                      className={`tabular ${f.desvio > 0 ? "text-danger-700" : "text-success-700"}`}
+                                    >
+                                      {formatCLPCompact(f.desvio)}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </details>
                           </td>
                         </tr>
                       ) : null,

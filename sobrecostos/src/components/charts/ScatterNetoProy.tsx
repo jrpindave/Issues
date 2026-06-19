@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import {
   CartesianGrid,
   Cell,
@@ -26,9 +26,69 @@ export interface ScatterPoint {
 const ROJO = "#c0392b";
 const VERDE = "#3a8a5f";
 const BASE_H = 320;
+const MIN = 1;
+const MAX = 8;
 
 export function ScatterNetoProy({ data }: { data: ScatterPoint[] }) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const focal = useRef<{ fx: number; fy: number; cx: number; cy: number } | null>(
+    null,
+  );
   const [zoom, setZoom] = useState(1);
+  const [grabbing, setGrabbing] = useState(false);
+
+  // Zoom con la rueda (centrado en el cursor). Listener nativo no-pasivo.
+  useEffect(() => {
+    const el = boxRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      focal.current = {
+        fx: (el.scrollLeft + cx) / el.scrollWidth,
+        fy: (el.scrollTop + cy) / el.scrollHeight,
+        cx,
+        cy,
+      };
+      setZoom((z) =>
+        Math.min(MAX, Math.max(MIN, +(z + (e.deltaY < 0 ? 0.5 : -0.5)).toFixed(2))),
+      );
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
+
+  // Tras cambiar el zoom, mantener el punto bajo el cursor.
+  useLayoutEffect(() => {
+    const el = boxRef.current;
+    const f = focal.current;
+    if (!el || !f) return;
+    el.scrollLeft = f.fx * el.scrollWidth - f.cx;
+    el.scrollTop = f.fy * el.scrollHeight - f.cy;
+  }, [zoom]);
+
+  // Paneo con el botón central (rueda) presionado.
+  const onMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 1) return;
+    e.preventDefault();
+    const el = boxRef.current;
+    if (!el) return;
+    const start = { x: e.clientX, y: e.clientY, sl: el.scrollLeft, st: el.scrollTop };
+    setGrabbing(true);
+    const move = (ev: MouseEvent) => {
+      el.scrollLeft = start.sl - (ev.clientX - start.x);
+      el.scrollTop = start.st - (ev.clientY - start.y);
+    };
+    const up = () => {
+      window.removeEventListener("mousemove", move);
+      window.removeEventListener("mouseup", up);
+      setGrabbing(false);
+    };
+    window.addEventListener("mousemove", move);
+    window.addEventListener("mouseup", up);
+  };
 
   if (data.length === 0)
     return (
@@ -42,47 +102,33 @@ export function ScatterNetoProy({ data }: { data: ScatterPoint[] }) {
     ...data.map((d) => Math.max(d.costo_neto, d.proy_ultima)),
   );
 
-  const btn =
-    "flex h-7 w-7 items-center justify-center rounded-[2px] border border-line-strong bg-white text-gris-600 hover:bg-cafe-50 disabled:opacity-40";
-
   return (
     <div>
-      <div className="mb-1 flex items-center justify-end gap-1">
-        <span className="mr-1 font-mono text-[10px] uppercase tracking-wide text-gris-400">
-          {zoom > 1 ? `Zoom ${zoom}× · arrastrá para navegar` : "Zoom"}
+      <div className="mb-1 flex items-center justify-between">
+        <span className="font-mono text-[10px] uppercase tracking-wide text-gris-400">
+          Rueda = zoom · click-rueda + arrastrar = paneo
         </span>
-        <button
-          type="button"
-          className={btn}
-          onClick={() => setZoom((z) => Math.max(1, z - 1))}
-          disabled={zoom <= 1}
-          aria-label="Alejar"
-        >
-          −
-        </button>
-        <button
-          type="button"
-          className={btn}
-          onClick={() => setZoom((z) => Math.min(6, z + 1))}
-          disabled={zoom >= 6}
-          aria-label="Acercar"
-        >
-          +
-        </button>
-        <button
-          type="button"
-          className={btn}
-          onClick={() => setZoom(1)}
-          disabled={zoom === 1}
-          aria-label="Restablecer"
-        >
-          ⊡
-        </button>
+        <div className="flex items-center gap-2">
+          <span className="font-mono text-[10px] text-gris-400">{zoom.toFixed(1)}×</span>
+          <button
+            type="button"
+            onClick={() => setZoom(1)}
+            disabled={zoom === 1}
+            className="rounded-[2px] border border-line-strong bg-white px-2 py-0.5 text-[11px] text-gris-600 hover:bg-cafe-50 disabled:opacity-40"
+          >
+            Reset
+          </button>
+        </div>
       </div>
 
       <div
+        ref={boxRef}
+        onMouseDown={onMouseDown}
         className="overflow-auto"
-        style={{ height: BASE_H + 28, cursor: zoom > 1 ? "grab" : "default" }}
+        style={{
+          height: BASE_H + 28,
+          cursor: grabbing ? "grabbing" : "default",
+        }}
       >
         <div style={{ width: `${zoom * 100}%`, height: zoom * BASE_H }}>
           <ResponsiveContainer width="100%" height="100%">

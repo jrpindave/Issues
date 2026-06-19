@@ -139,7 +139,7 @@ export default async function AnalisisPage({
   const obrasMeta = await getNetoProyObra();
   const ds19 = obrasMeta.find((o) => o.programa === "DS19")?.obra ?? "";
   const ds49 = obrasMeta.find((o) => o.programa === "DS49")?.obra ?? "";
-  const topCentros = topCentrosGlobal(20, 30);
+  const topCentros = topCentrosGlobal(20, 20);
 
   return (
     <div className="space-y-8">

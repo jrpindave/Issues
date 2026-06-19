@@ -75,30 +75,32 @@ export function TopCcDrilldown({ centros }: { centros: CentroGlobal[] }) {
                         Familias con más desvío en {c.cc_codigo} — click para
                         verla en ambos paneles
                       </p>
-                      <div className="flex flex-wrap gap-1.5">
+                      <ul className="divide-y divide-line border border-line bg-white">
                         {c.familias.map((f) => (
-                          <button
-                            key={f.key}
-                            type="button"
-                            onClick={() => pickFamilia(f.key)}
-                            className="inline-flex items-center gap-1.5 rounded-[2px] border border-line-strong bg-white px-2 py-1 text-[12px] text-gris-700 transition-colors hover:border-azul-500 hover:bg-white"
-                            title={`${f.clase} · neto ${formatCLP(f.costo_neto)} · proy ${formatCLP(f.proy_ultima)}`}
-                          >
-                            <span
-                              aria-hidden
-                              className={`h-1.5 w-1.5 ${f.desvio > 0 ? "bg-danger-500" : "bg-success-500"}`}
-                            />
-                            {f.key}
-                            <span
-                              className={
-                                f.desvio > 0 ? "text-danger-700" : "text-success-700"
-                              }
+                          <li key={f.key}>
+                            <button
+                              type="button"
+                              onClick={() => pickFamilia(f.key)}
+                              className="flex w-full items-center gap-3 px-3 py-1.5 text-left text-[13px] text-gris-700 transition-colors hover:bg-cafe-50"
+                              title={`${f.clase} · neto ${formatCLP(f.costo_neto)} · proy ${formatCLP(f.proy_ultima)}`}
                             >
-                              {formatCLPCompact(f.desvio)}
-                            </span>
-                          </button>
+                              <span
+                                aria-hidden
+                                className={`h-1.5 w-1.5 shrink-0 ${f.desvio > 0 ? "bg-danger-500" : "bg-success-500"}`}
+                              />
+                              <span className="flex-1 truncate">{f.key}</span>
+                              <span
+                                className={`tabular ${f.desvio > 0 ? "text-danger-700" : "text-success-700"}`}
+                              >
+                                {formatCLPCompact(f.desvio)}
+                              </span>
+                              <span className="w-12 text-right tabular text-gris-500">
+                                {((f.incidencia ?? 0) * 100).toFixed(0)}%
+                              </span>
+                            </button>
+                          </li>
                         ))}
-                      </div>
+                      </ul>
                     </td>
                   </tr>
                 )}
