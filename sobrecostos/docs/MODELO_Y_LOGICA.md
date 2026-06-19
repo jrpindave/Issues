@@ -315,6 +315,15 @@ y la nueva **Análisis** (`/analisis`).
   familia en el desvío de la obra. Estado en URL con prefijo a/b.
 - Helpers de detalle: `src/lib/cta.ts` (lee `src/data/cta.json`).
 
+### Hecho y desplegado (cont. 2)
+- `ScatterNetoProy`: **zoom** (+/−/reset) con scroll para navegar el panel.
+- Reportes: bajo cada centro de costo, sus **top-3 familias/clases** con más
+  desvío (`topFamiliasDeCC`).
+- Análisis: **Top 20 centros de costo** (global, por código agregado sobre
+  todas las obras) con incidencia y **drill-down** a 30 familias; click en una
+  familia la fija en **ambos** paneles de dispersión (params `af`/`bf`).
+  Helpers `topCentrosGlobal`, `TopCcDrilldown`.
+
 ### Pendientes / ideas futuras
 - Subir cobertura del match de familias (hoy 97,3%; 8 familias sin match quedan
   como "SIN CLASIFICAR" conservando su texto).
