@@ -6,6 +6,8 @@ import type {
   DesvioProyObra,
   GastoFamilia,
   ItemizadoLinea,
+  NetoProyCc,
+  NetoProyObra,
   ObraResumen,
   ProyeccionMes,
 } from "@/lib/types";
@@ -18,7 +20,31 @@ const T = {
   desvioProyObra: "SobrecostosDboard_v_desvio_proy_obra",
   desvioProyCc: "SobrecostosDboard_v_desvio_proy_cc",
   gastoFamilia: "SobrecostosDboard_v_gasto_familia",
+  netoProyObra: "SobrecostosDboard_v_neto_proy_obra",
+  netoProyCc: "SobrecostosDboard_v_neto_proy_cc",
 } as const;
+
+/** Costo NETO vs última proyección registrada, por obra (parseo limpio ITEMIZADO). */
+export async function getNetoProyObra(): Promise<NetoProyObra[]> {
+  const supabase = await getSupabaseServer();
+  const { data, error } = await supabase
+    .from(T.netoProyObra)
+    .select("*")
+    .order("programa", { ascending: true })
+    .order("obra", { ascending: true });
+  if (error) throw new Error(`getNetoProyObra: ${error.message}`);
+  return (data ?? []) as NetoProyObra[];
+}
+
+/** Costo NETO vs última proyección por centro de costo. Opcionalmente de una obra. */
+export async function getNetoProyCc(obra?: string): Promise<NetoProyCc[]> {
+  const supabase = await getSupabaseServer();
+  let q = supabase.from(T.netoProyCc).select("*");
+  if (obra) q = q.eq("obra", obra);
+  const { data, error } = await q.order("cc_codigo", { ascending: true });
+  if (error) throw new Error(`getNetoProyCc: ${error.message}`);
+  return (data ?? []) as NetoProyCc[];
+}
 
 /** Resumen por obra (las 9 obras, con su programa DS19/DS49). */
 export async function getObraResumen(): Promise<ObraResumen[]> {

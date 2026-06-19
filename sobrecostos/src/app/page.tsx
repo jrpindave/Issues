@@ -3,23 +3,19 @@ import { KpiCard } from "@/components/KpiCard";
 import { ProgramaBadge } from "@/components/ProgramaBadge";
 import { DesvioPill } from "@/components/DesvioPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import {
-  CcScatterChart,
-  type CcScatterDatum,
-} from "@/components/charts/CcScatterChart";
-import { getCcObra, getDesvioProyObra, getObraResumen } from "@/lib/queries";
-import { formatCLP, formatMonthYear, formatPct } from "@/lib/format";
-import type { ObraResumen, Programa } from "@/lib/types";
+import { ObrasBarChart, type ObraBarDatum } from "@/components/charts/ObrasBarChart";
+import { getNetoProyObra } from "@/lib/queries";
+import { formatCLP, formatPct } from "@/lib/format";
+import type { NetoProyObra, Programa } from "@/lib/types";
 
-function totals(rows: ObraResumen[]) {
+function totals(rows: NetoProyObra[]) {
   return rows.reduce(
-    (acc, r) => ({
-      presupuesto: acc.presupuesto + r.presupuesto,
-      comprado: acc.comprado + r.comprado,
-      real_obra: acc.real_obra + r.real_obra,
-      sobrecosto: acc.sobrecosto + r.sobrecosto,
+    (a, r) => ({
+      costo_neto: a.costo_neto + r.costo_neto,
+      proy_ultima: a.proy_ultima + r.proy_ultima,
+      desvio: a.desvio + r.desvio,
     }),
-    { presupuesto: 0, comprado: 0, real_obra: 0, sobrecosto: 0 },
+    { costo_neto: 0, proy_ultima: 0, desvio: 0 },
   );
 }
 
@@ -28,10 +24,10 @@ function ProgramaCard({
   rows,
 }: {
   programa: Exclude<Programa, null>;
-  rows: ObraResumen[];
+  rows: NetoProyObra[];
 }) {
   const t = totals(rows);
-  const frac = t.presupuesto ? t.sobrecosto / t.presupuesto : null;
+  const frac = t.costo_neto ? t.desvio / t.costo_neto : null;
   return (
     <Card>
       <CardHeader>
@@ -43,17 +39,17 @@ function ProgramaCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-        <span className="text-gris-500">Presupuesto</span>
+        <span className="text-gris-500">Costo neto</span>
         <span className="text-right tabular text-gris-800">
-          {formatCLP(t.presupuesto)}
+          {formatCLP(t.costo_neto)}
         </span>
-        <span className="text-gris-500">Real a la fecha</span>
+        <span className="text-gris-500">Última proyección</span>
         <span className="text-right tabular text-gris-800">
-          {formatCLP(t.real_obra)}
+          {formatCLP(t.proy_ultima)}
         </span>
         <span className="text-gris-500">Desvío</span>
         <span className="text-right">
-          <DesvioPill monto={t.sobrecosto} fraction={frac} />
+          <DesvioPill monto={t.desvio} fraction={frac} />
         </span>
       </CardContent>
     </Card>
@@ -61,45 +57,43 @@ function ProgramaCard({
 }
 
 export default async function ResumenPage() {
-  const [rows, ccObra, desvioProy] = await Promise.all([
-    getObraResumen(),
-    getCcObra(),
-    getDesvioProyObra(),
-  ]);
+  const rows = await getNetoProyObra();
   const t = totals(rows);
-  const frac = t.presupuesto ? t.sobrecosto / t.presupuesto : null;
+  const frac = t.costo_neto ? t.desvio / t.costo_neto : null;
   const ds19 = rows.filter((r) => r.programa === "DS19");
   const ds49 = rows.filter((r) => r.programa === "DS49");
 
-  const scatter: CcScatterDatum[] = ccObra.map((r) => ({
+  const chartData: ObraBarDatum[] = rows.map((r) => ({
     obra: r.obra,
-    cc_codigo: r.cc_codigo,
-    cc_nombre: r.cc_nombre,
-    programa: r.programa,
-    presupuesto: r.presupuesto,
-    real: r.real_obra,
+    costo_neto: r.costo_neto,
+    proy_ultima: r.proy_ultima,
   }));
 
   return (
     <div className="space-y-8">
       <header>
         <p className="eyebrow">01 · Control de costos</p>
-        <h1 className="mt-1 text-2xl text-gris-900">Resumen de costos</h1>
+        <h1 className="mt-1 text-2xl text-gris-900">
+          Costo neto vs. última proyección
+        </h1>
         <p className="mt-1.5 max-w-2xl text-sm text-gris-500">
-          Presupuesto vs. ejecución real por obra. Desvío = real − presupuesto
-          (negativo = aún bajo presupuesto).
+          Por obra: el COSTO (NETO) del itemizado contra la última proyección
+          registrada completa. Desvío = proyección − costo neto (positivo =
+          sobrecosto proyectado, en rojo).
         </p>
       </header>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <KpiCard label="Presupuesto total" value={formatCLP(t.presupuesto)} />
-        <KpiCard label="Comprado" value={formatCLP(t.comprado)} />
-        <KpiCard label="Real a la fecha" value={formatCLP(t.real_obra)} />
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <KpiCard label="Costo neto total" value={formatCLP(t.costo_neto)} />
+        <KpiCard
+          label="Última proyección total"
+          value={formatCLP(t.proy_ultima)}
+        />
         <KpiCard
           label="Desvío"
-          value={formatCLP(t.sobrecosto)}
-          hint={frac != null ? formatPct(frac) + " vs. presupuesto" : undefined}
-          tone={t.sobrecosto > 0 ? "negative" : "positive"}
+          value={formatCLP(t.desvio)}
+          hint={frac != null ? formatPct(frac) + " vs. costo neto" : undefined}
+          tone={t.desvio > 0 ? "negative" : "positive"}
         />
       </section>
 
@@ -109,92 +103,11 @@ export default async function ResumenPage() {
       </section>
 
       <Card accent>
-        <CardHeader className="flex-col items-start gap-0.5">
-          <CardTitle>Dispersión de centros de costo</CardTitle>
-          <p className="text-xs text-gris-500">
-            Presupuesto vs. real de cada centro de costo, en todas las obras.
-            Detecta de un vistazo cuáles se desvían de la tendencia.
-          </p>
+        <CardHeader>
+          <CardTitle>Costo neto vs. proyección por obra</CardTitle>
         </CardHeader>
         <CardContent>
-          <CcScatterChart data={scatter} />
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader className="flex-col items-start gap-0.5">
-          <CardTitle>Costo neto vs. última proyección</CardTitle>
-          <p className="text-xs text-gris-500">
-            Compara el COSTO (NETO) presupuestado contra la última proyección
-            registrada de cada obra. Desvío = proyección − costo neto (positivo =
-            sobrecosto proyectado).
-          </p>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-line text-left font-mono text-[10.5px] uppercase tracking-[0.08em] text-gris-500">
-                  <th className="px-5 py-2.5 font-medium">Obra</th>
-                  <th className="px-3 py-2.5 font-medium">Última proy.</th>
-                  <th className="px-3 py-2.5 text-right font-medium">
-                    Costo neto
-                  </th>
-                  <th className="px-3 py-2.5 text-right font-medium">
-                    Proyección
-                  </th>
-                  <th className="px-5 py-2.5 text-right font-medium">Desvío</th>
-                </tr>
-              </thead>
-              <tbody>
-                {desvioProy.map((r) => {
-                  const f = r.costo_neto ? r.desvio / r.costo_neto : null;
-                  const parcial =
-                    r.lineas > 0 && r.lineas_con_proy < r.lineas;
-                  return (
-                    <tr
-                      key={r.obra}
-                      className="border-b border-line last:border-0 hover:bg-cafe-50"
-                    >
-                      <td className="px-5 py-2.5">
-                        <Link
-                          href={`/obra/${r.obra}`}
-                          className="font-mono font-medium text-gris-900 no-underline hover:text-azul-600 hover:underline"
-                        >
-                          {r.obra}
-                        </Link>
-                        <ProgramaBadge programa={r.programa} className="ml-2" />
-                      </td>
-                      <td className="px-3 py-2.5">
-                        <span className="font-mono text-xs uppercase text-gris-600">
-                          {r.proy_periodo
-                            ? formatMonthYear(r.proy_periodo)
-                            : "—"}
-                        </span>
-                        {parcial && (
-                          <span
-                            title={`Solo ${r.lineas_con_proy} de ${r.lineas} líneas tienen proyección en esta columna`}
-                            className="ml-2 font-mono text-[10px] text-danger-700"
-                          >
-                            parcial
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(r.costo_neto)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(r.proy_ultima)}
-                      </td>
-                      <td className="px-5 py-2.5 text-right">
-                        <DesvioPill monto={r.desvio} fraction={f} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <ObrasBarChart data={chartData} />
         </CardContent>
       </Card>
 
@@ -209,17 +122,19 @@ export default async function ResumenPage() {
                 <tr className="border-b border-line text-left font-mono text-[10.5px] uppercase tracking-[0.08em] text-gris-500">
                   <th className="px-5 py-2.5 font-medium">Obra</th>
                   <th className="px-3 py-2.5 font-medium">Programa</th>
+                  <th className="px-3 py-2.5 font-medium">Última proy.</th>
                   <th className="px-3 py-2.5 text-right font-medium">
-                    Presupuesto
+                    Costo neto
                   </th>
-                  <th className="px-3 py-2.5 text-right font-medium">Comprado</th>
-                  <th className="px-3 py-2.5 text-right font-medium">Real</th>
+                  <th className="px-3 py-2.5 text-right font-medium">
+                    Proyección
+                  </th>
                   <th className="px-5 py-2.5 text-right font-medium">Desvío</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r) => {
-                  const f = r.presupuesto ? r.sobrecosto / r.presupuesto : null;
+                  const f = r.costo_neto ? r.desvio / r.costo_neto : null;
                   return (
                     <tr
                       key={r.obra}
@@ -239,17 +154,17 @@ export default async function ResumenPage() {
                       <td className="px-3 py-2.5">
                         <ProgramaBadge programa={r.programa} />
                       </td>
-                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(r.presupuesto)}
+                      <td className="px-3 py-2.5 font-mono text-xs uppercase text-gris-600">
+                        {r.proy_label ?? "—"}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(r.comprado)}
+                        {formatCLP(r.costo_neto)}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(r.real_obra)}
+                        {formatCLP(r.proy_ultima)}
                       </td>
                       <td className="px-5 py-2.5 text-right">
-                        <DesvioPill monto={r.sobrecosto} fraction={f} />
+                        <DesvioPill monto={r.desvio} fraction={f} />
                       </td>
                     </tr>
                   );

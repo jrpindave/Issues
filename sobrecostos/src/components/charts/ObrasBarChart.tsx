@@ -14,17 +14,13 @@ import { formatCLP, formatCLPCompact } from "@/lib/format";
 
 export interface ObraBarDatum {
   obra: string;
-  presupuesto: number;
-  comprado: number;
-  recepcionado: number;
-  real_obra: number;
+  costo_neto: number;
+  proy_ultima: number;
 }
 
 const SERIES = [
-  { key: "presupuesto", name: "Presupuesto", color: "#beb4b1" },
-  { key: "comprado", name: "Comprado", color: "#7fb0e2" },
-  { key: "recepcionado", name: "Recepcionado", color: "#d4922a" },
-  { key: "real_obra", name: "Real obra", color: "#2871b8" },
+  { key: "costo_neto", name: "Costo neto", color: "#beb4b1" },
+  { key: "proy_ultima", name: "Última proyección", color: "#2871b8" },
 ] as const;
 
 export function ObrasBarChart({ data }: { data: ObraBarDatum[] }) {

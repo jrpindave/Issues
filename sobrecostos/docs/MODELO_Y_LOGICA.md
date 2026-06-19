@@ -133,24 +133,26 @@ embebida en el `recurso_cod`. Se importó el maestro del ERP como dimensiones:
   no la familia de material; está vacío para ~99% de los recursos → no sirve
   como clasificador de material. La familia vive en el código + el maestro.
 
-### 5.2 "Última proyección registrada"
-- **Definición:** la columna `PROY.` **más a la derecha** del Excel =
-  `max(col_idx)` por obra. **No** es el período cronológicamente más reciente.
-- Razón: hay obras con un segundo bloque de columnas a la derecha. En LA_365 el
-  bloque feb-24→dic-25 va seguido de otro ene–mar-25; la última registrada es
-  **`col_idx` 38 = MAR-25**, que coincide con lo indicado por el equipo.
-- Verificado: LA_365 última proyección = **$13.139.545.060** (col MAR-25).
+### 5.2 "Última proyección registrada"  *(redefinido — ver `etl/sql/05`)*
+- **Definición vigente:** la columna `PROY.` **más a la derecha que esté
+  COMPLETA** (cobertura ≥ 80% de los centros de costo de la obra). Excluye las
+  columnas "POR GASTAR" y "PROYECCION" sin mes.
+- **Por qué "completa" y no "la más a la derecha":** algunas obras tienen la
+  columna del último mes recién empezada. En **LA_179**, `PROY. ABR-26` tiene
+  solo 1 de 29 CC cargados (126 M); la última proyección real y completa es
+  `PROY. MES ANTERIOR` (10.670.730.474). La regla cae a esa columna.
+- Verificado contra los totales de control de cada hoja (`fila header − 1`):
+  **CH_228 = 11.569.296.530 (neto) / 12.122.064.667 (proy DIC-2025)**.
 
 ### 5.3 Métrica de desvío de proyección
 - `desvío = última_proyección − costo_neto`. **Positivo = sobrecosto proyectado**
-  (rojo); negativo = bajo presupuesto (verde). Consistente con el resto del
-  dashboard.
-- Se calcula sobre líneas `nivel='CTA'` (evita el doble conteo CC+CTA, que
-  inflaba ~2× las sumas de proyección).
-- **Cobertura:** se cuenta cuántas líneas CTA tienen valor en la última columna
-  (`lineas_con_proy` / `lineas`). Si < 100%, la UI marca **"parcial"** —
-  importante porque obras con una sola columna PROY parcial (LA_179, SP_296,
-  MU_293) dan desvíos grandes y poco representativos.
+  (rojo); negativo = bajo el neto (verde).
+- **Costo NETO** se suma **solo sobre las filas de centro de costo**
+  (`outline_level 0`) del bloque del itemizado — **no** sobre el detalle ni el
+  "Cuadro de Resumen". (El import anterior sumaba el Cuadro de Resumen y por eso
+  duplicaba el neto ~2×; ver §7.)
+- Fuente única: tabla `SobrecostosDboard_neto_proy` (parseada de las hojas
+  ITEMIZADO), con vistas `_v_neto_proy_obra` / `_v_neto_proy_cc`.
 
 ### 5.4 Mapeo obra → unidad de negocio (para gasto por familia)
 - En compras la obra se identifica por **`unidad_negocio`**, no por centro de
@@ -204,16 +206,18 @@ embebida en el `recurso_cod`. Se importó el maestro del ERP como dimensiones:
   `SobrecostosDboard_obra`, expuesta en `..._v_obra_resumen` y `..._v_cc_obra`.
 
 ### 6.2 Dashboard (Next.js 16, `sobrecostos/src/`)
-- `/` (resumen): nueva sección **"Costo neto vs. última proyección"** por obra,
-  con período (ej. MAR-25) y aviso "parcial" según cobertura.
-- `/obra/[obra]` (detalle): **desvío de proyección por centro de costo** y
-  **gasto por familia** (con barra de participación).
-- `/comparar` (multiobra): **subsegmento/tipología como dimensión de
-  comparación** — selector de subsegmento, columna en el detalle y tabla
-  **"Comparación por subsegmento"** (agregada por tipología sobre las obras
-  seleccionadas).
-- Datos vía `src/lib/queries.ts` (tipos en `src/lib/types.ts`); RSC-first.
-- Verificado: `tsc --noEmit`, `eslint`, `next build` en verde.
+El tablero se centra **solo en Costo NETO vs. última proyección + desvío** (no
+muestra comprado / presupuesto-con-IVA / real-obra, por pedido del equipo).
+- `/` (resumen): KPIs (neto, proyección, desvío), tarjetas por programa, gráfico
+  neto vs. proyección y tabla de obras (con mes de la última proyección).
+- `/comparar` (multiobra): filtros por programa / **subsegmento** / centro de
+  costo; tabla **"Comparación por subsegmento"** y detalle por obra, todo en
+  neto vs. proyección.
+- `/obra/[obra]` (detalle): KPIs + **neto vs. proyección por centro de costo** +
+  **gasto por familia**.
+- Datos vía `src/lib/queries.ts` → vistas `_v_neto_proy_*` (tipos en
+  `src/lib/types.ts`); RSC-first.
+- Verificado: `eslint`, `next build` (con typecheck) en verde.
 
 ### 6.3 ETL reproducible (`sobrecostos/etl/`)
 - `maerecurso_parse.py` (Excel → JSON) y `maerecurso_load.py` (JSON → Supabase
@@ -223,6 +227,17 @@ embebida en el `recurso_cod`. Se importó el maestro del ERP como dimensiones:
 
 ## 7. Hallazgos de calidad de datos
 
+- **Doble conteo del import anterior (corregido):** la primera carga del
+  itemizado sumaba también el "Cuadro de Resumen" del final de cada hoja, por lo
+  que el costo neto salía ~2× (CH_228 daba 24,4 MMM en vez de 11,57 MMM). El
+  parseo nuevo (`etl/itemizado_neto_proy.py`) suma solo las filas de centro de
+  costo (`outline_level 0`) del bloque del itemizado y reconcilia con el total
+  de control de cada hoja.
+- **Cada hoja ITEMIZADO tiene un layout de columnas distinto** (NETO en col D, F
+  o G según la obra; algunas con columna "TIPO" CC/CTA). Por eso las columnas se
+  localizan por texto de encabezado, no por posición.
+- **LA_179**: la columna del último mes (`ABR-26`) está a medio cargar (1/29 CC);
+  se usa `PROY. MES ANTERIOR`, que está completa.
 - **SP_296 = MU_293**: itemizados numéricamente idénticos en el Excel origen
   (probable copia sin actualizar) → sus desvíos de proyección salen iguales.
 - **RLS**: las tablas tienen RLS; el dashboard usa la anon key (solo lectura) y
@@ -253,6 +268,7 @@ embebida en el `recurso_cod`. Se importó el maestro del ERP como dimensiones:
 | `sobrecostos/DEPLOY.md` | Runbook de deploy + continuidad de cuenta |
 | `sobrecostos/docs/MODELO_Y_LOGICA.md` | **Este documento** |
 | `sobrecostos/etl/MODELO_DATOS.md` | Referencia técnica del modelo de datos |
-| `sobrecostos/etl/sql/00–04_*.sql` | DDL y vistas aplicadas en Supabase |
+| `sobrecostos/etl/sql/00–05_*.sql` | DDL y vistas aplicadas en Supabase |
 | `sobrecostos/etl/maerecurso_*.py` | ETL del maestro de recursos |
+| `sobrecostos/etl/itemizado_neto_proy.py` | ETL NETO vs última proyección (hojas ITEMIZADO) |
 | `sobrecostos/src/` | App Next.js (queries, tipos, páginas, componentes) |

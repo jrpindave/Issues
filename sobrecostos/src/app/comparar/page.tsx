@@ -3,18 +3,18 @@ import { ObrasBarChart, type ObraBarDatum } from "@/components/charts/ObrasBarCh
 import { ProgramaBadge } from "@/components/ProgramaBadge";
 import { DesvioPill } from "@/components/DesvioPill";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
-import { getCcObra, getCentrosCosto, getObraResumen } from "@/lib/queries";
+import { getNetoProyCc, getNetoProyObra } from "@/lib/queries";
 import { formatCLP } from "@/lib/format";
+import type { CentroCosto, Programa } from "@/lib/types";
 
 interface Row {
   obra: string;
-  programa: "DS19" | "DS49" | null;
+  programa: Programa;
   subsegmento: string | null;
-  presupuesto: number;
-  comprado: number;
-  recepcionado: number;
-  real_obra: number;
-  sobrecosto: number;
+  proy_label: string | null;
+  costo_neto: number;
+  proy_ultima: number;
+  desvio: number;
 }
 
 export default async function CompararPage({
@@ -25,9 +25,9 @@ export default async function CompararPage({
   const sp = await searchParams;
   const cc = sp.cc ?? "";
 
-  const [resumen, centros] = await Promise.all([
-    getObraResumen(),
-    getCentrosCosto(),
+  const [resumen, ccAll] = await Promise.all([
+    getNetoProyObra(),
+    getNetoProyCc(),
   ]);
 
   const obraOpts = resumen.map((r) => ({
@@ -49,28 +49,39 @@ export default async function CompararPage({
     .map(([label, obras]) => ({ label, obras }))
     .sort((a, b) => a.label.localeCompare(b.label, "es"));
 
-  // Selección: por defecto todas las obras.
+  // Catálogo de centros de costo (para comparar un mismo CC entre obras).
+  const centros: CentroCosto[] = [
+    ...ccAll
+      .reduce((m, r) => {
+        if (!m.has(r.cc_codigo)) m.set(r.cc_codigo, r.cc_nombre);
+        return m;
+      }, new Map<string, string | null>())
+      .entries(),
+  ]
+    .map(([cc_codigo, cc_nombre]) => ({ cc_codigo, cc_nombre }))
+    .sort((a, b) => a.cc_codigo.localeCompare(b.cc_codigo, "es"));
+
   const selected = sp.obras
     ? sp.obras.split(",").filter(Boolean)
     : resumen.map((r) => r.obra);
 
-  // Datos según haya o no filtro de centro de costo.
+  // Filas según haya o no filtro de centro de costo.
   let rows: Row[];
   if (cc) {
-    const ccRows = (await getCcObra()).filter((r) => r.cc_codigo === cc);
-    const byObra = new Map(ccRows.map((r) => [r.obra, r]));
+    const byObra = new Map(
+      ccAll.filter((r) => r.cc_codigo === cc).map((r) => [r.obra, r]),
+    );
     rows = selected.map((obra) => {
-      const r = byObra.get(obra);
       const meta = resumen.find((x) => x.obra === obra);
+      const r = byObra.get(obra);
       return {
         obra,
         programa: meta?.programa ?? null,
         subsegmento: meta?.subsegmento ?? null,
-        presupuesto: r?.presupuesto ?? 0,
-        comprado: r?.comprado ?? 0,
-        recepcionado: r?.recepcionado ?? 0,
-        real_obra: r?.real_obra ?? 0,
-        sobrecosto: r?.sobrecosto ?? 0,
+        proy_label: meta?.proy_label ?? null,
+        costo_neto: r?.costo_neto ?? 0,
+        proy_ultima: r?.proy_ultima ?? 0,
+        desvio: r?.desvio ?? 0,
       };
     });
   } else {
@@ -80,27 +91,24 @@ export default async function CompararPage({
         obra: r.obra,
         programa: r.programa,
         subsegmento: r.subsegmento,
-        presupuesto: r.presupuesto,
-        comprado: r.comprado,
-        recepcionado: r.recepcionado,
-        real_obra: r.real_obra,
-        sobrecosto: r.sobrecosto,
+        proy_label: r.proy_label,
+        costo_neto: r.costo_neto,
+        proy_ultima: r.proy_ultima,
+        desvio: r.desvio,
       }));
   }
 
   const chartData: ObraBarDatum[] = rows.map((r) => ({
     obra: r.obra,
-    presupuesto: r.presupuesto,
-    comprado: r.comprado,
-    recepcionado: r.recepcionado,
-    real_obra: r.real_obra,
+    costo_neto: r.costo_neto,
+    proy_ultima: r.proy_ultima,
   }));
 
   const ccLabel = cc
     ? centros.find((c) => c.cc_codigo === cc)?.cc_nombre ?? cc
     : null;
 
-  // Comparación agregada por subsegmento (sobre las obras seleccionadas).
+  // Agregación por subsegmento (sobre las obras seleccionadas).
   const segRows = [
     ...rows
       .reduce((map, r) => {
@@ -112,26 +120,23 @@ export default async function CompararPage({
               subsegmento: key,
               programa: r.programa,
               obras: 0,
-              presupuesto: 0,
-              comprado: 0,
-              real_obra: 0,
-              sobrecosto: 0,
+              costo_neto: 0,
+              proy_ultima: 0,
+              desvio: 0,
             })
             .get(key)!;
         acc.obras += 1;
-        acc.presupuesto += r.presupuesto;
-        acc.comprado += r.comprado;
-        acc.real_obra += r.real_obra;
-        acc.sobrecosto += r.sobrecosto;
+        acc.costo_neto += r.costo_neto;
+        acc.proy_ultima += r.proy_ultima;
+        acc.desvio += r.desvio;
         return map;
       }, new Map<string, {
         subsegmento: string;
-        programa: "DS19" | "DS49" | null;
+        programa: Programa;
         obras: number;
-        presupuesto: number;
-        comprado: number;
-        real_obra: number;
-        sobrecosto: number;
+        costo_neto: number;
+        proy_ultima: number;
+        desvio: number;
       }>())
       .values(),
   ].sort((a, b) => a.subsegmento.localeCompare(b.subsegmento, "es"));
@@ -143,8 +148,8 @@ export default async function CompararPage({
         <h1 className="mt-1 text-2xl text-gris-900">Comparar obras</h1>
         <p className="mt-1.5 max-w-2xl text-sm text-gris-500">
           {ccLabel
-            ? `Centro de costo: ${cc} · ${ccLabel}`
-            : "Todos los centros de costo. Filtra por uno para comparar el mismo ítem entre obras."}
+            ? `Centro de costo: ${cc} · ${ccLabel} — costo neto vs. última proyección.`
+            : "Costo neto vs. última proyección. Filtra por programa, subsegmento o centro de costo."}
         </p>
       </header>
 
@@ -158,7 +163,7 @@ export default async function CompararPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Presupuesto vs. ejecución</CardTitle>
+          <CardTitle>Costo neto vs. última proyección</CardTitle>
         </CardHeader>
         <CardContent>
           <ObrasBarChart data={chartData} />
@@ -178,16 +183,17 @@ export default async function CompararPage({
                   <th className="px-3 py-2.5 font-medium">Programa</th>
                   <th className="px-3 py-2.5 text-right font-medium">Obras</th>
                   <th className="px-3 py-2.5 text-right font-medium">
-                    Presupuesto
+                    Costo neto
                   </th>
-                  <th className="px-3 py-2.5 text-right font-medium">Comprado</th>
-                  <th className="px-3 py-2.5 text-right font-medium">Real</th>
+                  <th className="px-3 py-2.5 text-right font-medium">
+                    Proyección
+                  </th>
                   <th className="px-5 py-2.5 text-right font-medium">Desvío</th>
                 </tr>
               </thead>
               <tbody>
                 {segRows.map((s) => {
-                  const f = s.presupuesto ? s.sobrecosto / s.presupuesto : null;
+                  const f = s.costo_neto ? s.desvio / s.costo_neto : null;
                   return (
                     <tr
                       key={s.subsegmento}
@@ -203,16 +209,13 @@ export default async function CompararPage({
                         {s.obras}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(s.presupuesto)}
+                        {formatCLP(s.costo_neto)}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(s.comprado)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(s.real_obra)}
+                        {formatCLP(s.proy_ultima)}
                       </td>
                       <td className="px-5 py-2.5 text-right">
-                        <DesvioPill monto={s.sobrecosto} fraction={f} />
+                        <DesvioPill monto={s.desvio} fraction={f} />
                       </td>
                     </tr>
                   );
@@ -220,7 +223,7 @@ export default async function CompararPage({
                 {segRows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={6}
                       className="px-5 py-8 text-center text-gris-500"
                     >
                       Selecciona obras para comparar por subsegmento.
@@ -235,7 +238,7 @@ export default async function CompararPage({
 
       <Card>
         <CardHeader>
-          <CardTitle>Detalle</CardTitle>
+          <CardTitle>Detalle por obra</CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -246,19 +249,17 @@ export default async function CompararPage({
                   <th className="px-3 py-2.5 font-medium">Programa</th>
                   <th className="px-3 py-2.5 font-medium">Subsegmento</th>
                   <th className="px-3 py-2.5 text-right font-medium">
-                    Presupuesto
+                    Costo neto
                   </th>
-                  <th className="px-3 py-2.5 text-right font-medium">Comprado</th>
                   <th className="px-3 py-2.5 text-right font-medium">
-                    Recepcionado
+                    Proyección
                   </th>
-                  <th className="px-3 py-2.5 text-right font-medium">Real</th>
                   <th className="px-5 py-2.5 text-right font-medium">Desvío</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((r) => {
-                  const f = r.presupuesto ? r.sobrecosto / r.presupuesto : null;
+                  const f = r.costo_neto ? r.desvio / r.costo_neto : null;
                   return (
                     <tr
                       key={r.obra}
@@ -274,19 +275,13 @@ export default async function CompararPage({
                         {r.subsegmento ?? "—"}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(r.presupuesto)}
+                        {formatCLP(r.costo_neto)}
                       </td>
                       <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(r.comprado)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(r.recepcionado)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right tabular text-gris-800">
-                        {formatCLP(r.real_obra)}
+                        {formatCLP(r.proy_ultima)}
                       </td>
                       <td className="px-5 py-2.5 text-right">
-                        <DesvioPill monto={r.sobrecosto} fraction={f} />
+                        <DesvioPill monto={r.desvio} fraction={f} />
                       </td>
                     </tr>
                   );
@@ -294,7 +289,7 @@ export default async function CompararPage({
                 {rows.length === 0 && (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={6}
                       className="px-5 py-8 text-center text-gris-500"
                     >
                       Selecciona obras para comparar.

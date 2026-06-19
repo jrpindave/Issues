@@ -88,3 +88,29 @@ export interface GastoFamilia {
   lineas: number;
   gasto: number;
 }
+
+/** Costo NETO vs última proyección registrada — por obra. */
+export interface NetoProyObra {
+  obra: string;
+  nombre: string | null;
+  programa: Programa;
+  subsegmento: string | null;
+  proy_label: string | null;
+  proy_periodo: string | null;
+  costo_neto: number;
+  proy_ultima: number;
+  desvio: number;
+}
+
+/** Costo NETO vs última proyección registrada — por centro de costo de una obra. */
+export interface NetoProyCc {
+  obra: string;
+  programa: Programa;
+  subsegmento: string | null;
+  cc_codigo: string;
+  cc_nombre: string | null;
+  proy_label: string | null;
+  costo_neto: number;
+  proy_ultima: number;
+  desvio: number;
+}

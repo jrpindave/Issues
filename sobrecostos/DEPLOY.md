@@ -19,13 +19,15 @@
 - Next.js 16 (App Router, RSC-first) · React 19 · Tailwind v4 · Recharts · Supabase SSR.
 - UI alineada al **Design System García**: tema claro, papel cálido, azul `#2871B8`
   + cafés, tipografías Jost / IBM Plex, AppShell solo topbar (aún **Prototipo**).
-- Rutas: `/` (resumen + DS19/DS49 + dispersión de CC + **costo neto vs última
-  proyección**), `/comparar` (multiobra + **comparación por subsegmento/tipología**),
-  `/obra/[obra]` (detalle + **desvío de proyección por CC** + **gasto por familia**).
-- Datos en Supabase (ver `etl/MODELO_DATOS.md`): taxonomía de recursos
-  `MaeRecurso_*` (`sql/02`), vistas de desvío de proyección y gasto por familia
-  (`sql/03`), subsegmento/tipología por obra (`sql/04`). Migraciones ya aplicadas
-  en el proyecto.
+- El tablero se centra en **Costo NETO vs. última proyección registrada +
+  desvío** (no muestra comprado/presupuesto/real). Rutas: `/` (resumen +
+  DS19/DS49 + gráfico + tabla), `/comparar` (multiobra + **subsegmento** + CC),
+  `/obra/[obra]` (neto vs proy por CC + **gasto por familia**).
+- Datos en Supabase (ver `etl/MODELO_DATOS.md` y `docs/MODELO_Y_LOGICA.md`):
+  taxonomía `MaeRecurso_*` (`sql/02`), gasto por familia (`sql/03`),
+  subsegmento/tipología (`sql/04`), y **NETO vs última proyección**
+  (`sql/05` + `etl/itemizado_neto_proy.py`, parseo limpio de las hojas
+  ITEMIZADO). Migraciones ya aplicadas.
 - `next build` + typecheck + lint en verde; verificado en local con datos reales.
 
 ## Variables de entorno (producción y local)
